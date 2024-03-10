@@ -2,8 +2,10 @@
 // README at: https://github.com/devcontainers/templates/tree/main/src/ubuntu
 {
 	"name": "Ubuntu",
-	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
-	"image": "mcr.microsoft.com/devcontainers/base:jammy"
+
+	"build": {
+		"dockerfile": "Dockerfile"
+	},
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
@@ -12,10 +14,10 @@
 	// "forwardPorts": [],
 
 	// Use 'postCreateCommand' to run commands after the container is created.
-	,"postCreateCommand": "apt-get update && apt-get -y install --no-install-recommends gcc gdb cmake"
+	// "postCreateCommand": "apt-get update && apt-get -y install gcc gdb cmake"
 
 	// Configure tool-specific properties.
-	,"customizations": {
+	"customizations": {
 		// Configure properties specific to VS Code.
 		"vscode": {
 		  // Add the IDs of extensions you want installed when the container is created.
