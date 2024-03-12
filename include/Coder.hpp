@@ -1,6 +1,4 @@
-#ifndef CODER_HPP
-#define CODER_HPP
-
+#pragma once
 
 namespace Coder {
     template<typename T> class Encoder {
@@ -17,5 +15,3 @@ namespace Coder {
         virtual bool reached_end() = 0;
     };
 }
-
-#endif

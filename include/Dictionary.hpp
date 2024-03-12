@@ -1,5 +1,4 @@
-#ifndef DICTIONARY_HPP
-#define DICTIONAY_HPP
+#pragma once
 
 #include <string>
 
@@ -20,5 +19,3 @@ namespace Dictionary
         virtual size_t size() = 0;
     };
 }
-
-#endif

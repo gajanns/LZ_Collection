@@ -1,5 +1,4 @@
-#ifndef TEXT_CODER_HPP
-#define TEXT_CODER_HPP
+#pragma once
 
 #include "Coder.hpp"
 #include "Factor.hpp"
@@ -116,6 +115,3 @@ namespace TextCoder
         }
     };
 }
-
-
-#endif

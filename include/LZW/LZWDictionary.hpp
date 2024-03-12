@@ -1,5 +1,4 @@
-#ifndef LZWDICTIONARY_HPP
-#define LZWDICTIONARY_HPP
+#pragma once
 
 #include "Dictionary.hpp"
 #include "Factor.hpp"
@@ -19,5 +18,3 @@ public:
     std::pair<LZW::factor,std::string> getFactor(std::string p_factor) override;
     inline size_t size() { return m_id_to_val.size();};
 };
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef LZW_BIN_CODER_HPP
-#define LZW_BIN_CODER_HPP
+#pragma once
 
 #include "Coder.hpp"
 #include "Factor.hpp"
@@ -62,4 +61,3 @@ public:
         return m_bitin.reached_end();
     }
 };
-#endif

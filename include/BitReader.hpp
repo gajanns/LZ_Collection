@@ -1,5 +1,4 @@
-#ifndef BIT_READER_HPP
-#define BIT_READER_HPP
+#pragma once
 
 #include <iostream>
 
@@ -15,17 +14,15 @@ public:
     BitReader(std::istream &p_in);
 
     /**
-     * @brief Read data into a variable of type T
+     * @brief Read data into a variable any type
      * 
-     * @tparam T Type of data to read
      * @param p_dest Destination variable
      * @param p_bit_size Number of bits to read
      * @return size_t Number of bits successfully read
      */
-    template<typename T>
-    size_t readInto(T& p_dest, size_t p_bit_size) {
+    size_t readInto(auto& p_dest, size_t p_bit_size) {
         p_dest = 0;
-        return readInto(reinterpret_cast<char*>(&p_dest), sizeof(T), p_bit_size);
+        return readInto(reinterpret_cast<char*>(&p_dest), sizeof(p_dest), p_bit_size);
     }
 
     /**
@@ -39,14 +36,12 @@ public:
     size_t readInto(char* p_dest, size_t p_size, size_t p_bit_size);
 
     /**
-     * @brief Read data into a variable of type T
+     * @brief Read data into a variable any type
      * 
-     * @tparam T Type of data to read
      * @param p_dest Destination variable
      * @return size_t Number of bits successfully read
      */
-    template<typename T>
-    inline size_t readInto(T& p_dest){return readInto(p_dest, sizeof(T)*8);}
+    size_t readInto(auto& p_dest){return readInto(p_dest, sizeof(p_dest)*8);}
 
     /**
      * @brief Check if the end of the stream has been reached
@@ -56,5 +51,3 @@ public:
      */
     bool reached_end();
 };
-
-#endif
