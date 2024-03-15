@@ -5,7 +5,7 @@ file(GLOB_RECURSE HEADERS ${CMAKE_SOURCE_DIR}/include/ *.hpp)
 
 add_executable(${BINARY} ${SOURCES})
 
-if(PERFORMANCE_MEASUREMENT AND (NOT TESTING))
+if(PERFORMANCE_MEASUREMENT)
     add_compile_definitions(PERF)
 endif()
 

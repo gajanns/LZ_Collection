@@ -68,16 +68,15 @@ void debug(){
              "ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et "
              "dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. "
              "Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.";
-    LZW::DebugEncoder encoder(ss_out);
     StreamView sv_in(ss_in);
+    LZWEncoder encoder(ss_out);
     compressor.compress(sv_in, encoder);
-    std::cout << ss_out.str()<<std::endl;
     ss_out.clear();
     ss_out.seekg(0);
 
-    LZW::DebugDecoder decoder2(ss_out);
-    StreamView encoder2(ss_out2,ss_out2);
-    compressor.decompress(decoder2, encoder2);
+    LZWDecoder decoder(ss_out);
+    StreamView sv_out(ss_out2);
+    compressor.decompress(decoder, sv_out);
 }
 
 int main(int argc, char** argv){

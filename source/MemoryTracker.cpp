@@ -23,7 +23,7 @@ void log_mem_alloc(size_t p_size) {
 void* operator new(std::size_t p_size) {
 
     if (void *ptr = std::malloc(p_size)) {
-        MemoryTracker::log_mem_alloc(p_size);
+        log_mem_alloc(p_size);
         return ptr;
     }
     throw std::bad_alloc{};
@@ -31,7 +31,7 @@ void* operator new(std::size_t p_size) {
  
 void* operator new[](std::size_t p_size) {
     if (void *ptr = std::malloc(p_size)) {
-        MemoryTracker::log_mem_alloc(p_size);
+        log_mem_alloc(p_size);
         return ptr;
     } 
     throw std::bad_alloc{};

@@ -22,7 +22,7 @@ namespace Compression {
             std::cout << "Output size: " << m_output_size << std::endl;
             std::cout << "Compression ratio: " << (double) m_output_size / m_input_size << std::endl;
             std::cout << "Compression time: " << m_run_time_milliseconds << "ms" << std::endl;
-            std::cout << "Memory Usage: " << m_input_size << " Bytes" << std::endl;
+            std::cout << "Memory Usage: " << m_mem_usage << " Bytes" << std::endl;
         }
     };
 
