@@ -15,9 +15,9 @@ void MemoryTracker::stop_mem_record() {
     recording = false;
 }
 
-void MemoryTracker::log_mem_alloc(size_t p_size) {
+void log_mem_alloc(size_t p_size) {
     if(!recording) return;
-    curr_mem_usage += p_size;
+    MemoryTracker::curr_mem_usage += p_size;
 }
 
 void* operator new(std::size_t p_size) {

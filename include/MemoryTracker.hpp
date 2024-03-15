@@ -5,12 +5,23 @@
 
 namespace MemoryTracker
 {
+    /**
+     * @brief Allocated Memory on Heap since call to start_mem_record.
+     * 
+     */
     extern size_t curr_mem_usage;
 
+    /**
+     * @brief (Re-)Start tracking memory allocations on Heap
+     * 
+     */
     void start_mem_record();
+
+    /**
+     * @brief Stop tracking memory allocations on Heap
+     * 
+     */
     void stop_mem_record();
-    void log_mem_alloc(size_t p_size);
-    //void log_mem_free(size_t p_size);
 }
 
 

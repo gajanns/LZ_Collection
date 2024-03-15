@@ -1,17 +1,63 @@
 #pragma once
 
 namespace Coder {
-    template<typename T> class Encoder {
+    /**
+     * @brief Template for any Encoder
+     * 
+     * @tparam Factor Format of compressed factor as defined in factor.hpp
+     */
+    template<typename Factor> class Encoder {
     public:
-        virtual void encode(T p_value) = 0;
+        /**
+         * @brief Encode factor into output
+         * 
+         * @param p_value Factor
+         * @return int 1: Success, 0:Failed
+         */
+        virtual int encode(Factor p_value) = 0;
+
+        /**
+         * @brief Dump any residual data.
+         * 
+         */
         virtual void flush() = 0;
+
+        /**
+         * @brief Return number of bytes written through Encoder
+         * 
+         * @return size_t Number of Bytes
+         */
         virtual size_t bytes_written() = 0;
     };
 
-    template<typename T> class Decoder {
+    /**
+     * @brief Template for any Decoder
+     * 
+     * @tparam Factor Format of compressed factor as defined in factor.hpp
+     */
+    template<typename Factor> class Decoder {
     public:
-        virtual T decode() = 0;
+        /**
+         * @brief Decode factor from input
+         * 
+         * @param p_value Factor
+         * @return int 1: Success, 0:Failed
+         */
+        virtual int decode(Factor &p_value) = 0;
+        
+        /**
+         * @brief Return number of bytes read through Decoder
+         * 
+         * @return size_t Number of Bytes
+         */
         virtual size_t bytes_read() = 0;
+
+        /**
+         * @brief Return whether anymore data can be read from Input
+         * 
+         * @return true 
+         * @return false 
+         */
         virtual bool reached_end() = 0;
     };
 }

@@ -4,17 +4,17 @@
 #include "Factor.hpp"
 #include <map>
 
-class LZWDictionary : public Dictionary::Dictionary<LZW::factor> {
+class LZWDictionary : public Dictionary::Dictionary<LZW::factor_id> {
 private:
-    std::map<LZW::factor, std::string> m_id_to_val;
-    std::map<std::string, LZW::factor> m_val_to_id;
-    LZW::factor m_next_id = 0;
+    std::map<LZW::factor_id, std::string> m_id_to_val;
+    std::map<std::string, LZW::factor_id> m_val_to_id;
+    LZW::factor_id m_next_id = 0;
 
 public:
-    void addEntry(LZW::factor p_factor_id, std::string p_factor) override;
+    void addEntry(LZW::factor_id p_factor_id, std::string p_factor) override;
     void addEntry(std::string p_factor) override;
 
-    std::pair<LZW::factor,std::string> getFactor(LZW::factor p_factor_id) override;
-    std::pair<LZW::factor,std::string> getFactor(std::string p_factor) override;
+    std::pair<LZW::factor_id,std::string> getFactor(LZW::factor_id p_factor_id) override;
+    std::pair<LZW::factor_id,std::string> getFactor(std::string p_factor) override;
     inline size_t size() { return m_id_to_val.size();};
 };

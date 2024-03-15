@@ -3,7 +3,8 @@
 #include <sstream>
 #include "LZWCompressor.hpp"
 #include "LZWBinCoder.hpp"
-#include "TextCoder.hpp"
+#include "DebugCoder.hpp"
+#include "StreamView.hpp"
 
 
 enum Algorithm {lzw, lz77, appr77seq, appr77par};
@@ -17,7 +18,7 @@ void print_usage(){
     std::endl << "\t(optional)direction: -d => (Decompress) , -c => (Compress, default)" << std::endl;
 }
 
-void extract_userinput(std::string &input_str, std::string &output_str, Algorithm &algo, bool &decompress, int &argc, char *argv[]){
+void extract_userinput(auto &input_str, auto &output_str, auto &algo, bool &decompress, int &argc, char *argv[]){
     if (argc < 4 || argc > 5) {
         std::cerr << "Usage not correct" << std::endl;
         print_usage();
@@ -67,15 +68,15 @@ void debug(){
              "ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et "
              "dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. "
              "Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.";
-    TextCoder::TextDecoder decoder(ss_in);
-    LZWEncoder encoder(ss_out);
-
-    compressor.compress(decoder, encoder);
+    LZW::DebugEncoder encoder(ss_out);
+    StreamView sv_in(ss_in);
+    compressor.compress(sv_in, encoder);
+    std::cout << ss_out.str()<<std::endl;
     ss_out.clear();
     ss_out.seekg(0);
 
-    LZWDecoder decoder2(ss_out);
-    TextCoder::TextEncoder encoder2(ss_out2);
+    LZW::DebugDecoder decoder2(ss_out);
+    StreamView encoder2(ss_out2,ss_out2);
     compressor.decompress(decoder2, encoder2);
 }
 

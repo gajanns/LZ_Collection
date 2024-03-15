@@ -10,7 +10,10 @@ set(TESTING ON)
 include(GoogleTest)
 enable_testing()
 
-include_directories(include include/LZW)
+include_directories(include)
+include_directories(include/LZ77)
+include_directories(include/LZW)
+
 add_subdirectory(source)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})

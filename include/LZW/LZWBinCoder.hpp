@@ -5,7 +5,7 @@
 #include "BitWriter.hpp"
 #include "BitReader.hpp"
 
-class LZWEncoder : public Coder::Encoder<LZW::factor> {
+class LZWEncoder : public Coder::Encoder<LZW::factor_id> {
 private:
     BitWriter m_bitout;
     size_t m_bytes_written = 0, m_bit_counter = 0;
@@ -15,13 +15,16 @@ public:
     LZWEncoder(std::ostream &p_out): m_bitout(BitWriter(p_out)){};
     ~LZWEncoder(){};
 
-    void encode(LZW::factor p_value) {
+    int encode(LZW::factor_id p_value) {
         size_t bit_size = 1, tmp = dict_size++;
         while(tmp >>= 1) bit_size++;
-        m_bitout.writeFrom(p_value, bit_size);
+        if(m_bitout.writeFrom(p_value, bit_size) != bit_size) {
+            return 0;
+        }
         m_bit_counter += bit_size;
         m_bytes_written += m_bit_counter/8;
         m_bit_counter %= 8;
+        return 1;
     }
 
     size_t bytes_written() {
@@ -29,11 +32,11 @@ public:
     }
 
     void flush() {
-        m_bitout.flush();
+        if(m_bit_counter) m_bitout.flush();
     }
 };
 
-class LZWDecoder : public Coder::Decoder<LZW::factor> {
+class LZWDecoder : public Coder::Decoder<LZW::factor_id> {
 private:
     BitReader m_bitin;
     size_t m_bytes_read = 0, m_bit_counter = 0, dict_size = 256;
@@ -42,15 +45,15 @@ public:
     LZWDecoder(std::istream &p_in): m_bitin(BitReader(p_in)){};
     ~LZWDecoder(){};
 
-    LZW::factor decode() {
+    int decode(LZW::factor_id &p_value) {
         size_t bit_size = 1, tmp = dict_size++;
         while(tmp >>= 1) bit_size++;
-        LZW::factor id;
-        auto bits_read = m_bitin.readInto(id, bit_size);
+        LZW::factor_id id;
+        auto bits_read = m_bitin.readInto(p_value, bit_size);
         m_bit_counter += bits_read;
         m_bytes_read += m_bit_counter/8;
         m_bit_counter %= 8;
-        return bit_size == bits_read ? id : -1;
+        return bit_size == bits_read;
     }
 
     size_t bytes_read() {

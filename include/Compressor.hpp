@@ -4,8 +4,13 @@
 #include <chrono>
 #include "MemoryTracker.hpp"
 #include "Coder.hpp"
+#include "StreamView.hpp"
 
 namespace Compression {
+    /**
+     * @brief Structure for collecting Performance-Stats. To be populated by Compressor.
+     * 
+     */
     struct CompressionStatistics {
         size_t m_input_size;
         size_t m_output_size;
@@ -21,17 +26,27 @@ namespace Compression {
         }
     };
 
-    template <typename IN, typename OUT>
+    template <typename Factor>
     class Compressor
     { 
         private:
-            virtual void compress_impl(Coder::Decoder<IN> &p_in, Coder::Encoder<OUT> &p_out) = 0;
-            virtual void decompress_impl(Coder::Decoder<OUT> &p_in, Coder::Encoder<IN> &p_out) = 0;
+            virtual void compress_impl(StreamView &p_in, Coder::Encoder<Factor> &p_out) = 0;
+            virtual void decompress_impl(Coder::Decoder<Factor> &p_in, StreamView &p_out) = 0;
 
         public:
+            /**
+             * @brief Collection of Performance-Stats
+             * 
+             */
             CompressionStatistics m_stats;
 
-            inline void compress(Coder::Decoder<IN> &p_in, Coder::Encoder<OUT> &p_out) {
+            /**
+             * @brief Perform Compression
+             * 
+             * @param p_in Raw Input-Stream
+             * @param p_out Encoded Output-Stream
+             */
+            void compress(StreamView &p_in, Coder::Encoder<Factor> &p_out) {
                 #ifdef PERF
                 MemoryTracker::start_mem_record();
                 auto start = std::chrono::high_resolution_clock::now();
@@ -49,13 +64,18 @@ namespace Compression {
                 #endif
             }
             
-            inline void decompress(Coder::Decoder<OUT> &p_in, Coder::Encoder<IN> &p_out) {
+            /**
+             * @brief Perform Decompression
+             * 
+             * @param p_in Encoded Input-Stream
+             * @param p_out Raw Output-Stream
+             */
+            void decompress(Coder::Decoder<Factor> &p_in, StreamView &p_out) {
                 #ifdef PERF
                 MemoryTracker::start_mem_record();
                 auto start = std::chrono::high_resolution_clock::now();
                 #endif
                 decompress_impl(p_in, p_out);
-                p_out.flush();
                 #ifdef PERF
                 auto end = std::chrono::high_resolution_clock::now();
                 MemoryTracker::stop_mem_record();
