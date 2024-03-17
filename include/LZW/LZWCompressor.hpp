@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Compressor.hpp"
-#include "Factor.hpp"
+#include "Definition.hpp"
 
 class LZWCompressor : public Compression::Compressor<LZW::factor_id > {
     private:

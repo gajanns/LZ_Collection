@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Dictionary.hpp"
-#include "Factor.hpp"
+#include "Definition.hpp"
 #include <map>
 
 class LZWDictionary : public Dictionary::Dictionary<LZW::factor_id> {

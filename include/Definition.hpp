@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stddef.h>
 #include <cstdint>
 
 
@@ -10,6 +11,8 @@ namespace LZW
      * 
      */
     using factor_id = int32_t;
+
+    const size_t initial_dict_size = 256;
 }
 
 namespace LZ77
@@ -23,4 +26,8 @@ namespace LZ77
         int32_t length;
         unsigned char next_char;
     };
+
+    const size_t search_buffer_size = 32;
+    const size_t preview_buffer_size = 32;
+    const size_t window_size = search_buffer_size + preview_buffer_size;
 }

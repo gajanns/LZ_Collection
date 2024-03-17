@@ -18,7 +18,7 @@ void print_usage(){
     std::endl << "\t(optional)direction: -d => (Decompress) , -c => (Compress, default)" << std::endl;
 }
 
-void extract_userinput(auto &input_str, auto &output_str, auto &algo, bool &decompress, int &argc, char *argv[]){
+void extract_userinput(std::string &input_str, std::string &output_str, Algorithm &algo, bool &decompress, int &argc, char *argv[]){
     if (argc < 4 || argc > 5) {
         std::cerr << "Usage not correct" << std::endl;
         print_usage();

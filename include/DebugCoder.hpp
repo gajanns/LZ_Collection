@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Coder.hpp"
-#include "Factor.hpp"
+#include "Definition.hpp"
 #include <string>
 #include <iostream>
 #include <sstream>
