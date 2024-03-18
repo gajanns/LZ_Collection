@@ -12,11 +12,18 @@ class StreamView {
 private:
     std::istream *m_in;
     std::ostream *m_out;
+    std::streamsize m_in_size;
     size_t m_bytes_written = 0, m_bytes_read = 0;
 public:
-    StreamView(std::istream &p_in, std::ostream &p_out): m_in(&p_in), m_out(&p_out){}
-    StreamView(std::stringstream &p_sstream): m_in(&p_sstream), m_out(&p_sstream){}
-    StreamView(std::fstream &p_fstream): m_in(&p_fstream), m_out(&p_fstream){}
+    StreamView(std::istream &p_in, std::ostream &p_out): m_in(&p_in), m_out(&p_out){
+        m_in->seekg(0,std::ios::beg);
+        auto beg = m_in->tellg();
+        m_in->seekg(0,std::ios::end);
+        auto end = m_in->tellg();
+        m_in_size = end-beg;
+    }
+    StreamView(std::stringstream &p_sstream): StreamView(p_sstream, p_sstream){}
+    StreamView(std::fstream &p_fstream): StreamView(p_fstream, p_fstream){}
     ~StreamView(){}
 
     /**
@@ -30,11 +37,11 @@ public:
     int extractSlice(char* p_dest, auto p_offset, auto p_size) {
         std::streampos cur_read_pos = m_in->tellg();
         m_in->seekg(p_offset, m_in->beg);
-        if(m_in->read(p_dest, p_size)) {
+        if(m_in->readsome(p_dest, p_size)) {
             m_in->seekg(cur_read_pos);
             return m_in->gcount();
         }
-        return -1;
+        return 0;
     }
 
     /**
@@ -46,7 +53,7 @@ public:
      * @return int Actual Number of bytes read. -1 if failed to read.
      */
     int extractSlice(std::string &p_dest, auto p_offset, auto p_size) {
-        if(p_dest.size() < p_size) {
+        if(p_dest.size() != p_size) {
             p_dest.resize(p_size);
         }
         return extractSlice(&p_dest[0], p_offset, p_size);
@@ -59,7 +66,6 @@ public:
      * @return int 1: Data read, 0: Data not read.
      */
     int get(char &c) {
-        m_bytes_read++;
         return (m_in->get(c)?1:0);
     }
 
@@ -90,7 +96,7 @@ public:
      * @return size_t Number of Bytes
      */
     size_t bytes_read() {
-        return m_bytes_read;
+        return m_in_size;
     }
 
 };

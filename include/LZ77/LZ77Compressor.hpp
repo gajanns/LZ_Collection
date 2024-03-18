@@ -3,7 +3,7 @@
 #include "Compressor.hpp"
 #include "Definition.hpp"
 
-class LZ77Compressor : public Compression::Compressor<LZ77::factor_id > {
+class LZ77Compressor : public Compression::Compressor<LZ77::factor_id> {
     private:
         void compress_impl(StreamView &p_in, Coder::Encoder<LZ77::factor_id> &p_out) override;
         void decompress_impl(Coder::Decoder<LZ77::factor_id> &p_in, StreamView &p_out) override;

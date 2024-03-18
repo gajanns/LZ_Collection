@@ -24,12 +24,12 @@ namespace LZ77
     struct factor_id{
         int32_t offset;
         int32_t length;
-        unsigned char next_char;
+        char next_char;
     };
 
-    const size_t search_buffer_size = 32;
-    const size_t preview_buffer_size = 32;
-    const size_t window_size = search_buffer_size + preview_buffer_size;
+    const int32_t search_buffer_size = 32;
+    const int32_t preview_buffer_size = 32;
+    const int32_t window_size = search_buffer_size + preview_buffer_size;
 }
 
 inline size_t log2(auto p_in){

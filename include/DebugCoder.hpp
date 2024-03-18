@@ -67,3 +67,31 @@ namespace LZW
         }
     };
 }
+
+namespace LZ77
+{
+    class DebugEncoder: public Coder::Encoder<LZ77::factor_id> {
+    private:
+        std::ostream *m_out;
+        size_t m_bytes_written = 0;
+    public:
+        DebugEncoder(std::ostream &p_out): m_out(&p_out){};
+        ~DebugEncoder(){};
+
+        int encode(LZ77::factor_id p_value) {
+            std::stringstream ss;
+            ss << p_value.offset << "," << p_value.length << "," << p_value.next_char;
+            *m_out << ss.str() << "|";
+            m_bytes_written += ss.str().size();
+            return 1;
+        }
+
+        size_t bytes_written() {
+            return m_bytes_written;
+        }
+
+        void flush() {
+            m_out->flush();
+        }
+    };
+}
