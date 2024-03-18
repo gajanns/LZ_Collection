@@ -94,4 +94,40 @@ namespace LZ77
             m_out->flush();
         }
     };
+
+    class DebugDecoder : public Coder::Decoder<LZ77::factor_id> {
+    private:
+        std::istream *m_in;
+        size_t m_bytes_read = 0;
+
+    public:
+        DebugDecoder(std::istream &p_in): m_in(&p_in){};
+        ~DebugDecoder(){};
+
+        int decode(LZ77::factor_id & p_value) {
+            std::string p_res;
+            char tmp;
+
+            if(std::getline(*m_in, p_res, '|')){
+                m_bytes_read += p_res.size();
+                int tmp = std::sscanf(p_res.c_str(), "%d,%d,%c", &(p_value.offset), &(p_value.length), &(p_value.next_char));
+                if(tmp < 3){
+                    p_value.next_char = '\0';
+                }
+                if(tmp < 2){
+                    return 0;
+                }
+                return 1;
+            }
+            return 0;
+        }
+
+        size_t bytes_read() {
+            return m_bytes_read;
+        }
+
+        bool reached_end() {
+            return m_in->eof();
+        }
+    };
 }

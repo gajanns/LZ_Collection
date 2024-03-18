@@ -11,7 +11,6 @@ void LZ77Compressor::compress_impl(StreamView &p_in, Coder::Encoder<LZ77::factor
         auto preview_size = x - search_size;
         LZ77::factor_id id = {.offset = 0, .length = 0, .next_char = window[search_size]};
 
-        // Search for the longest match in the search buffer
         for (int offset = 1; offset <= search_size; offset++)
         {
             int len = 0;
@@ -20,7 +19,6 @@ void LZ77Compressor::compress_impl(StreamView &p_in, Coder::Encoder<LZ77::factor
                 len++;
             }
           
-            // Update the token if a longer match is found
             if (len > id.length)
             {
                 id.offset = offset;
@@ -33,4 +31,32 @@ void LZ77Compressor::compress_impl(StreamView &p_in, Coder::Encoder<LZ77::factor
     }
 }
 
-void LZ77Compressor::decompress_impl(Coder::Decoder<LZ77::factor_id> &p_in, StreamView &p_out){}
+void LZ77Compressor::decompress_impl(Coder::Decoder<LZ77::factor_id> &p_in, StreamView &p_out){
+
+    LZ77::factor_id id;
+    size_t pos = 0;
+    while(p_in.decode(id)) {
+        if(id.offset == 0) {
+            pos++;
+        }
+        else {
+            std::string tmp;
+            auto size = p_out.extractSlice(tmp, pos-id.offset, id.length);
+            
+            for(int i = id.length; i>0;){
+                if(i >= size){
+                    p_out.write(tmp);
+                    i -= size;
+                }
+                else{
+                    p_out.write(tmp.substr(0,i));
+                    break;
+                }
+            }
+            pos += id.length+1;
+        }
+        if(id.next_char != '\0'){
+            p_out.write(std::string{id.next_char});
+        }
+    }
+}

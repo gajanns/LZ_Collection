@@ -21,6 +21,7 @@ public:
         m_in->seekg(0,std::ios::end);
         auto end = m_in->tellg();
         m_in_size = end-beg;
+        m_in->seekg(0,std::ios::beg);
     }
     StreamView(std::stringstream &p_sstream): StreamView(p_sstream, p_sstream){}
     StreamView(std::fstream &p_fstream): StreamView(p_fstream, p_fstream){}
@@ -56,7 +57,11 @@ public:
         if(p_dest.size() != p_size) {
             p_dest.resize(p_size);
         }
-        return extractSlice(&p_dest[0], p_offset, p_size);
+        auto size = extractSlice(&p_dest[0], p_offset, p_size);
+        if(p_dest.size() != size) {
+            p_dest.resize(size);
+        }
+        return size;
     }
 
     /**

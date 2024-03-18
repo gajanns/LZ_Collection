@@ -27,8 +27,8 @@ namespace LZ77
         char next_char;
     };
 
-    const int32_t search_buffer_size = 32;
-    const int32_t preview_buffer_size = 32;
+    const int32_t search_buffer_size = 64;
+    const int32_t preview_buffer_size = 64;
     const int32_t window_size = search_buffer_size + preview_buffer_size;
 }
 
