@@ -48,7 +48,6 @@ public:
     int decode(LZW::factor_id &p_value) {
         size_t bit_size = 1, tmp = dict_size++;
         while(tmp >>= 1) bit_size++;
-        LZW::factor_id id;
         auto bits_read = m_bitin.readInto(p_value, bit_size);
         m_bit_counter += bits_read;
         m_bytes_read += m_bit_counter/8;

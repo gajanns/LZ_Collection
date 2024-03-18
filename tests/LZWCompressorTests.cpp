@@ -17,11 +17,6 @@ TEST(LZWCompressorTests, CompressEmptyString) {
     LZWDecoder decoder2(ss_out);
     StreamView sv_out2(ss_out2, ss_out2);
     compressor.decompress(decoder2, sv_out2);
-    auto z0 = ss_out.str().size();
-    std::string s1 = ss_in.str();
-    auto z1 = ss_in.str().size();
-    std::string s2 = ss_out2.str();
-    auto z2 = ss_out2.str().size();
     EXPECT_TRUE(ss_in.str().compare(ss_out2.str())==0);
 }
 

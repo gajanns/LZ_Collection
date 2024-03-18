@@ -31,3 +31,9 @@ namespace LZ77
     const size_t preview_buffer_size = 32;
     const size_t window_size = search_buffer_size + preview_buffer_size;
 }
+
+inline size_t log2(auto p_in){
+    size_t res = 1, tmp = p_in;
+    while(tmp >>= 1) res++;
+    return res;
+}

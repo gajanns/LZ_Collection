@@ -20,6 +20,8 @@ set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 include(CPack)
 
+add_compile_options(-Wall -Wextra -pedantic -Werror)
+
 if(TESTING) 
   include(FetchContent)
   FetchContent_Declare(
