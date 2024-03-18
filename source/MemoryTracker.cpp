@@ -3,12 +3,13 @@
 #include <unordered_map>
 #include <new>
 
-size_t MemoryTracker::curr_mem_usage = 0;
+size_t MemoryTracker::max_mem_usage = 0, curr_mem_usage = 0;
 bool recording = false;
 std::unordered_map<void*, size_t> alloc_size_table;
 
 void MemoryTracker::start_mem_record() {
     curr_mem_usage = 0;
+    max_mem_usage = 0;
     recording = true;
 }
 
@@ -18,7 +19,8 @@ void MemoryTracker::stop_mem_record() {
 
 void log_mem_alloc(void* p_alloc_ptr, size_t p_size) {
     if(!recording) return;
-    MemoryTracker::curr_mem_usage += p_size;
+    curr_mem_usage += p_size;
+    MemoryTracker::max_mem_usage = std::max(MemoryTracker::max_mem_usage, curr_mem_usage);
     recording = false;
     alloc_size_table[p_alloc_ptr] = p_size;
     recording = true;
@@ -27,7 +29,7 @@ void log_mem_alloc(void* p_alloc_ptr, size_t p_size) {
 void unlog_mem_alloc(void* p_alloc_ptr) {
     if(!recording) return;
     recording = false;
-    MemoryTracker::curr_mem_usage -= alloc_size_table[p_alloc_ptr];
+    curr_mem_usage -= alloc_size_table[p_alloc_ptr];
     alloc_size_table.erase(p_alloc_ptr);
     recording = true;
 }

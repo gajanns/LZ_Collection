@@ -9,7 +9,7 @@ class LZWEncoder : public Coder::Encoder<LZW::factor_id> {
 private:
     BitWriter m_bitout;
     size_t m_bytes_written = 0, m_bit_counter = 0;
-    size_t dict_size = 256;
+    size_t dict_size = LZW::initial_dict_size;
 
 public:
     LZWEncoder(std::ostream &p_out): m_bitout(BitWriter(p_out)){};
@@ -39,7 +39,7 @@ public:
 class LZWDecoder : public Coder::Decoder<LZW::factor_id> {
 private:
     BitReader m_bitin;
-    size_t m_bytes_read = 0, m_bit_counter = 0, dict_size = 256;
+    size_t m_bytes_read = 0, m_bit_counter = 0, dict_size = LZW::initial_dict_size;
 
 public:
     LZWDecoder(std::istream &p_in): m_bitin(BitReader(p_in)){};

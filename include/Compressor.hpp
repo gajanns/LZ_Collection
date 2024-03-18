@@ -56,7 +56,7 @@ namespace Compression {
                 #ifdef PERF
                 auto end = std::chrono::high_resolution_clock::now();
                 MemoryTracker::stop_mem_record();
-                m_stats.m_mem_usage = MemoryTracker::curr_mem_usage;
+                m_stats.m_mem_usage = MemoryTracker::max_mem_usage;
                 m_stats.m_run_time_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
                 m_stats.m_input_size = p_in.bytes_read();
                 m_stats.m_output_size = p_out.bytes_written();
@@ -79,7 +79,7 @@ namespace Compression {
                 #ifdef PERF
                 auto end = std::chrono::high_resolution_clock::now();
                 MemoryTracker::stop_mem_record();
-                m_stats.m_mem_usage = MemoryTracker::curr_mem_usage;
+                m_stats.m_mem_usage = MemoryTracker::max_mem_usage;
                 m_stats.m_run_time_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
                 m_stats.m_input_size = p_in.bytes_read();
                 m_stats.m_output_size = p_out.bytes_written();
