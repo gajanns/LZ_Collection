@@ -58,7 +58,7 @@ void debug(){
     LZWCompressor compressor;
     std::stringstream ss_in, ss_out, ss_out2;
     ss_in << "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut "
-             "labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores "
+"labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores "
              "et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem "
              "ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et "
              "dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. "
@@ -71,13 +71,13 @@ void debug(){
     StreamView sv_in(ss_in);
     LZWEncoder encoder(ss_out);
     compressor.compress(sv_in, encoder);
-    ss_out.clear();
+        ss_out.clear();
     ss_out.seekg(0);
 
     LZWDecoder decoder(ss_out);
     StreamView sv_out(ss_out2);
     compressor.decompress(decoder, sv_out);
-}
+    }
 
 int main(int argc, char** argv){
 
@@ -89,6 +89,6 @@ int main(int argc, char** argv){
         Algorithm algorithm;
         bool decompress = false;
         extract_userinput(input_str, output_str, algorithm, decompress, argc, argv);
-
+        // ToDo: Select suitable Inputdata(Files) so command-line call makes sense
     }
 }

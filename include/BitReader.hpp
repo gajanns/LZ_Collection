@@ -3,7 +3,10 @@
 #include <iostream>
 
 
-
+/**
+ * @brief Read data from a stream bit by bit
+ * 
+ */
 class BitReader {
 private:
     std::istream* m_in;

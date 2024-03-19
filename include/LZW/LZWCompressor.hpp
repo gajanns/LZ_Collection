@@ -3,6 +3,10 @@
 #include "Compressor.hpp"
 #include "Definition.hpp"
 
+/**
+ * @brief Compressor using LZW-Algorithm
+ * 
+ */
 class LZWCompressor : public Compression::Compressor<LZW::factor_id > {
     private:
         void compress_impl(StreamView &p_in, Coder::Encoder<LZW::factor_id> &p_out) override;

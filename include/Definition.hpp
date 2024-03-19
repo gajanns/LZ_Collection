@@ -32,6 +32,12 @@ namespace LZ77
     const int32_t window_size = search_buffer_size + preview_buffer_size;
 }
 
+/**
+ * @brief Extract number of bit needed to express value
+ * 
+ * @param p_in Numeric value
+ * @return size_t Number of bits
+ */
 inline size_t log2(auto p_in){
     size_t res = 1, tmp = p_in;
     while(tmp >>= 1) res++;

@@ -4,6 +4,10 @@
 #include "Definition.hpp"
 #include <map>
 
+/**
+ * @brief Class represents naive dictionary for LZW.(ToDo:SuffixTrie)
+ * 
+ */
 class LZWDictionary : public Dictionary::Dictionary<LZW::factor_id> {
 private:
     std::map<LZW::factor_id, std::string> m_id_to_val;

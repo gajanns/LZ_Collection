@@ -5,6 +5,10 @@
 #include "BitWriter.hpp"
 #include "BitReader.hpp"
 
+/**
+ * @brief Encoder of LZW-Factors into binary format
+ * 
+ */
 class LZWEncoder : public Coder::Encoder<LZW::factor_id> {
 private:
     BitWriter m_bitout;
