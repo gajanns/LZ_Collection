@@ -14,8 +14,8 @@ Simple Collection of Prototypes of LZ-Algorithms:LZW, LZ77, Approx. LZ77 (seq+ p
 |String Matching    |-          |-          |           |-          |
 | -SuffixTrie(seq)  |-          |-          |-          |-          |
 | -Hashmap(seq)     |-          |-          |-          |-          |
-| -Rabin-Karp       |-          |-          |-          |-          |
+| -Rabin-Karp       |-          |Draft      |Yes        |25/03      |
 |LZ78/LZW           |20/03      |Draft      |Yes        |18/03      |
-|LZ77               |-          |-          |-          |-          |
+|exact LZ77         |-          |-          |-          |-          |
 |Approx.LZ77(seq)   |-          |-          |-          |-          |
 |Approx.LZ77(par)   |-          |-          |-          |-          |
