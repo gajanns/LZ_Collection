@@ -2,7 +2,7 @@
 
 #include "Dictionary.hpp"
 #include "Definition.hpp"
-#include <map>
+#include <unordered_map>
 
 /**
  * @brief Class represents naive dictionary for LZW.(ToDo:SuffixTrie)
@@ -10,8 +10,8 @@
  */
 class LZWDictionary : public Dictionary::Dictionary<LZW::factor_id> {
 private:
-    std::map<LZW::factor_id, std::string> m_id_to_val;
-    std::map<std::string, LZW::factor_id> m_val_to_id;
+    std::unordered_map<LZW::factor_id, std::string> m_id_to_val;
+    std::unordered_map<std::string, LZW::factor_id> m_val_to_id;
     LZW::factor_id m_next_id = 0;
 
 public:

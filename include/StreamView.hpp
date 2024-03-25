@@ -33,9 +33,9 @@ public:
      * @param p_dest Buffer to copy data into
      * @param p_offset Startposition of slice in stream
      * @param p_size  Length of slice
-     * @return int Actual Number of bytes read. -1 if failed to read.
+     * @return int Actual Number of bytes read.
      */
-    int extractSlice(char* p_dest, auto p_offset, auto p_size) {
+    size_t extractSlice(char* p_dest, auto p_offset, auto p_size) {
         std::streampos cur_read_pos = m_in->tellg();
         m_in->seekg(p_offset, m_in->beg);
         if(m_in->readsome(p_dest, p_size)) {
@@ -104,4 +104,34 @@ public:
         return m_in_size;
     }
 
+};
+
+/**
+ * @brief Class represents specific slice of Inputstream. Data will be dynamically loaded upon call.
+ * 
+ */
+class StreamSliceReference{
+private:
+    StreamView *m_view;
+
+public:
+    const size_t m_pos, m_length;
+
+    StreamSliceReference(StreamView& p_view, size_t p_pos, size_t p_length):m_view(&p_view), m_pos(p_pos), m_length(p_length){}
+
+    /**
+     * @brief Load reference String form Inputstream
+     * 
+     * @param res Slice of Stream
+     */
+    void getData(std::string& res) const{
+        m_view->extractSlice(res, m_pos, m_length);
+    }
+
+    bool operator==(StreamSliceReference& p_ref){
+        std::string s1, s2; 
+        getData(s1);
+        p_ref.getData(s2);
+        return s1 == s2;
+    }
 };
