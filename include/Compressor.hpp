@@ -60,7 +60,6 @@ namespace Compression {
                 m_stats.m_run_time_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
                 m_stats.m_input_size = p_in.bytes_read();
                 m_stats.m_output_size = p_out.bytes_written();
-                m_stats.dump();
                 #endif
             }
             

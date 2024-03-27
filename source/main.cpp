@@ -1,14 +1,17 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <vector>
 #include "LZWCompressor.hpp"
 #include "LZWBinCoder.hpp"
+#include "LZ77BinCoder.hpp"
+#include "LZ77Compressor.hpp"
 #include "DebugCoder.hpp"
 #include "StreamView.hpp"
 
 
-enum Algorithm {lzw, lz77, appr77seq, appr77par};
-size_t used_memory = 0;
+enum Algorithm {lzw, lz77, appr77seq, appr77par, all};
+std::string algo_names[] = {"LZW", "LZ77", "Appr.LZ77_Seq", "Appr.LZ77_Par"};
 
 void print_usage(){
     std::cout << "Usage: LZ_Collection [input] [output] [algorithm] [direction]" << 
@@ -54,41 +57,80 @@ void extract_userinput(std::string &input_str, std::string &output_str, Algorith
     }
 }
 
-void debug(){
-    LZWCompressor compressor;
-    std::stringstream ss_in, ss_out, ss_out2;
-    ss_in << "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut "
-"labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores "
-             "et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem "
-             "ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et "
-             "dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. "
-             "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut "
-             "labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores "
-             "et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem "
-             "ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et "
-             "dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. "
-             "Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.";
-    StreamView sv_in(ss_in);
-    LZWEncoder encoder(ss_out);
-    compressor.compress(sv_in, encoder);
-        ss_out.clear();
-    ss_out.seekg(0);
-
-    LZWDecoder decoder(ss_out);
-    StreamView sv_out(ss_out2);
-    compressor.decompress(decoder, sv_out);
+void execute_algorithms(std::vector<std::pair<std::string, std::iostream&>> &input_streams, std::ostream &output_stream, 
+                                        const std::vector<Algorithm> &algorithms, std::ostream *report_stream = nullptr) {
+    if(report_stream) {
+        (*report_stream)    << "Input,Input-Size[Bytes],Algorithm,Output-Size[Bytes],"
+                            << "Compression-Ratio,Compression-Time[ms],Memory-Usage[Bytes]\n";
     }
+
+    for(auto in_stream: input_streams) {
+        StreamView in_view(in_stream.second);
+        for(auto algo:algorithms) {
+            Compression::CompressionStatistics stats;
+            
+            switch(algo) {
+                case Algorithm::lzw: {
+                    LZWCompressor comp;
+                    LZWEncoder encoder(output_stream);
+                    comp.compress(in_view, encoder);
+                    stats = comp.m_stats;
+                    break;
+                }
+                case Algorithm::lz77: {
+                    LZ77Compressor comp;
+                    LZ77Encoder encoder(output_stream);
+                    comp.compress(in_view, encoder);
+                    stats = comp.m_stats;
+                    break;
+                }
+                default:
+                    std::cerr << "Not implemented" << std::endl;
+                    exit(-1);
+            }
+            in_stream.second.seekg(std::ios::beg);
+            output_stream.seekp(std::ios::beg);
+            char buf[512];
+            auto n = std::sprintf(buf, "%s,%d,%s,%d,%.2f,%d,%d\n",in_stream.first.c_str(), (int)stats.m_input_size, algo_names[algo].c_str(), 
+                                (int)stats.m_output_size, (double)stats.m_input_size/stats.m_output_size, (int)stats.m_run_time_milliseconds, 
+                                                                                                                    (int)stats.m_mem_usage);
+            (*report_stream).write(buf, n);
+        }
+    }
+}
 
 int main(int argc, char** argv){
-
+    std::string input_str, output_str;
+    Algorithm algorithm;
+    bool decompress = false;
     if(argc == 1) {
-        debug();
+        input_str = "data/dummy.txt";
+        output_str = "dummy_res";
+        algorithm = lzw;
     }
     else {
-        std::string input_str, output_str;
-        Algorithm algorithm;
-        bool decompress = false;
         extract_userinput(input_str, output_str, algorithm, decompress, argc, argv);
-        // ToDo: Select suitable Inputdata(Files) so command-line call makes sense
     }
+
+    std::fstream f_in(input_str);
+    std::ofstream f_out(output_str);
+    if(!f_in.is_open()){
+        std::cerr << "Could not open Input-File" << std::endl;
+        exit(-1);
+    }
+
+    if(!f_out.is_open()){
+        std::cerr << "Could not open Output-File" << std::endl;
+        exit(-1);
+    }
+
+    std::ofstream f_report("report.csv");
+    if(!f_report.is_open()){
+        std::cerr << "Could not open Report-File" << std::endl;
+        exit(-1);
+    }
+    
+    std::vector<std::pair<std::string, std::iostream&>> input{{input_str,f_in}};
+    std::vector<Algorithm> algorithms{algorithm};
+    execute_algorithms(input, f_out, algorithms, &f_report);
 }

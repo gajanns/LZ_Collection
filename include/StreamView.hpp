@@ -23,8 +23,7 @@ public:
         m_in_size = end-beg;
         m_in->seekg(0,std::ios::beg);
     }
-    StreamView(std::stringstream &p_sstream): StreamView(p_sstream, p_sstream){}
-    StreamView(std::fstream &p_fstream): StreamView(p_fstream, p_fstream){}
+    StreamView(std::iostream &p_iostream): StreamView(p_iostream, p_iostream){}
     ~StreamView(){}
 
     /**
