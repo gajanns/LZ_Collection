@@ -35,7 +35,7 @@
             "program": "${workspaceFolder}/build/source/LZ_Collection",
             "args": [],
             "stopAtEntry": false,
-            "cwd": "${fileDirname}",
+            "cwd": "${workspaceFolder}",
             "environment": [],
             "externalConsole": false,
             "MIMode": "gdb",
