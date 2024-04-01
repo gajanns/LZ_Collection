@@ -9,7 +9,7 @@ Simple Collection of Prototypes of LZ-Algorithms:LZW, LZ77, Approx. LZ77 (seq+ p
 | -Perf-Measurement |-          |Draft      |No         |12/03      |
 |  --Time           |-          |Draft      |-          |12/03      |
 |  --Memory         |-          |Draft      |-          |18/03      |
-|  --nFactor        |-          |-          |-          |-          |
+|  --nFactor        |-          |Draft      |Yes        |01/04      |
 |  --Plot           |-          |-          |-          |-          |
 |String Matching    |-          |-          |           |-          |
 | -SuffixTrie(seq)  |-          |-          |-          |-          |
