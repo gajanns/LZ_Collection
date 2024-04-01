@@ -158,7 +158,7 @@ int main(int argc, char** argv){
 
     std::unique_ptr<std::ofstream> report_stream = nullptr;
     if(setup.benchmark) {
-        report_stream = std::unique_ptr<std::ofstream>(new std::ofstream("report.csv"));
+        report_stream = std::unique_ptr<std::ofstream>(new std::ofstream("report/report.csv"));
     } 
     
     execute_algorithms(setup, input_streams, output_stream, report_stream);
