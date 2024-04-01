@@ -5,6 +5,14 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Plot-Debugger",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/report/report_plotter.py",
+            "cwd": "${fileDirname}",
+            "console": "integratedTerminal"
+        },
+        {
             "name": "Test",
             "type": "cppdbg",
             "request": "launch",
@@ -33,7 +41,13 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/source/LZ_Collection",
-            "args": ["all", "dummy_res", "all", "-c", "-b"],
+            "args": [
+                "all",
+                "dummy_res",
+                "all",
+                "-c",
+                "-b"
+            ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
