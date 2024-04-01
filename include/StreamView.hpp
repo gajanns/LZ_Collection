@@ -37,11 +37,10 @@ public:
     size_t extractSlice(char* p_dest, auto p_offset, auto p_size) {
         std::streampos cur_read_pos = m_in->tellg();
         m_in->seekg(p_offset, m_in->beg);
-        if(m_in->readsome(p_dest, p_size)) {
-            m_in->seekg(cur_read_pos);
-            return m_in->gcount();
-        }
-        return 0;
+        m_in->read(p_dest, p_size);
+        m_in->clear();
+        m_in->seekg(cur_read_pos);
+        return m_in->gcount();
     }
 
     /**
@@ -50,7 +49,7 @@ public:
      * @param p_dest String to copy data into
      * @param p_offset Startposition of slice in stream
      * @param p_size  Length of slice
-     * @return int Actual Number of bytes read. -1 if failed to read.
+     * @return int Actual Number of bytes read.
      */
     int extractSlice(std::string &p_dest, auto p_offset, auto p_size) {
         if(p_dest.size() != p_size) {

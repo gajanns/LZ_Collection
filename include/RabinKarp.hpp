@@ -67,9 +67,10 @@ public:
     }
 
     /**
-     * @brief Generate Hashvalue as result of appending single Dataelement to underlying Dataphrase
+     * @brief Generate Hashvalue as result of erasing single Dataelement from left end of underlying Dataphrase
+     * No coherence check of p_left possible.
      * 
-     * @param p_left Single Dataelement to append
+     * @param p_left Single Dataelement to erase
      * @param p_value Hashvalue of concatenation
      * @return RabinKarpFingerprint 
      */
@@ -81,10 +82,9 @@ public:
     }
 
     /**
-     * @brief Generate Hashvalue as result of erase single Dataelement from left end of underlying Dataphrase
-     * No coherence check of p_left possible.
+     * @brief Generate Hashvalue as result of appending single Dataelement to right end of underlying Dataphrase
      * 
-     * @param p_left Single Dataelement to erase
+     * @param p_left Single Dataelement to append
      * @param p_value Hashvalue of concatenation
      * @return RabinKarpFingerprint 
      */
