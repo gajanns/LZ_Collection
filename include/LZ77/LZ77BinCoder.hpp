@@ -15,7 +15,7 @@ public:
     LZ77Encoder(std::ostream &p_out): m_bitout(BitWriter(p_out)){};
     ~LZ77Encoder(){};
 
-    int encode(LZ77::factor_id p_value) {
+    int encode_impl(LZ77::factor_id p_value) {
         if(m_bitout.writeFrom(p_value.offset, offset_bit_size) != offset_bit_size ||
            m_bitout.writeFrom(p_value.length, length_bit_size) != length_bit_size ||
            m_bitout.writeFrom(p_value.next_char, 8) != 8) {
@@ -32,7 +32,7 @@ public:
     }
 
     void flush() {
-        if(m_bit_counter) m_bitout.flush();
+        if(m_bit_counter) {m_bitout.flush();m_bytes_written++;}
     }
 };
 
@@ -46,7 +46,7 @@ public:
     LZ77Decoder(std::istream &p_in): m_bitin(BitReader(p_in)){};
     ~LZ77Decoder(){};
 
-    int decode(LZ77::factor_id &p_value) {
+    int decode_impl(LZ77::factor_id &p_value) {
         if(m_bitin.readInto(p_value.offset, offset_bit_size) != offset_bit_size ||
            m_bitin.readInto(p_value.length, length_bit_size) != length_bit_size ||
            m_bitin.readInto(p_value.next_char, 8) != 8) {

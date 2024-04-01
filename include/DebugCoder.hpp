@@ -17,7 +17,7 @@ namespace LZW
         DebugEncoder(std::ostream &p_out): m_out(&p_out){};
         ~DebugEncoder(){};
 
-        int encode(LZW::factor_id p_value) {
+        int encode_impl(LZW::factor_id p_value) {
             std::stringstream ss;
             ss << p_value;
             *m_out << ss.str() << "|";
@@ -43,7 +43,7 @@ namespace LZW
         DebugDecoder(std::istream &p_in): m_in(&p_in){};
         ~DebugDecoder(){};
 
-        int decode(LZW::factor_id & p_value) {
+        int decode_impl(LZW::factor_id &p_value) {
             std::string p_res;
             char tmp;
             while(m_in -> get(tmp) && tmp != '|') {
@@ -78,7 +78,7 @@ namespace LZ77
         DebugEncoder(std::ostream &p_out): m_out(&p_out){};
         ~DebugEncoder(){};
 
-        int encode(LZ77::factor_id p_value) {
+        int encode_impl(LZ77::factor_id p_value) {
             std::stringstream ss;
             ss << p_value.offset << "," << p_value.length << "," << p_value.next_char;
             *m_out << ss.str() << "|";
@@ -104,7 +104,7 @@ namespace LZ77
         DebugDecoder(std::istream &p_in): m_in(&p_in){};
         ~DebugDecoder(){};
 
-        int decode(LZ77::factor_id & p_value) {
+        int decode_impl(LZ77::factor_id &p_value) {
             std::string p_res;
             char tmp;
 

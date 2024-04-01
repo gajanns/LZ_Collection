@@ -16,6 +16,7 @@ namespace Compression {
         size_t m_output_size;
         size_t m_run_time_milliseconds;
         size_t m_mem_usage;
+        size_t m_factor_count;
 
         void dump() {
             std::cout << "Input size: " << m_input_size << std::endl;
@@ -23,6 +24,7 @@ namespace Compression {
             std::cout << "Compression ratio: " << (double) m_output_size / m_input_size << std::endl;
             std::cout << "Compression time: " << m_run_time_milliseconds << "ms" << std::endl;
             std::cout << "Memory Usage: " << m_mem_usage << " Bytes" << std::endl;
+            std::cout << "nFactors: " << m_factor_count << std::endl;
         }
     };
 
@@ -60,6 +62,7 @@ namespace Compression {
                 m_stats.m_run_time_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
                 m_stats.m_input_size = p_in.bytes_read();
                 m_stats.m_output_size = p_out.bytes_written();
+                m_stats.m_factor_count = p_out.factors_written();
                 #endif
             }
             

@@ -84,7 +84,7 @@ void execute_algorithms(ExecutionSetup &exec_setup, std::vector<std::unique_ptr<
                         std::unique_ptr<std::ofstream> &output_stream, std::unique_ptr<std::ofstream> &report_stream) {
     if(report_stream) {
         (*report_stream)<< "Input,Input-Size[Bytes],Algorithm,Output-Size[Bytes],"
-                        << "Compression-Ratio,Compression-Time[ms],Memory-Usage[Bytes]\n";
+                        << "Compression-Ratio,nFactors,Compression-Time[ms],Memory-Usage[Bytes]\n";
     }
 
     for(size_t idx = 0; auto& in_stream: input_streams) {
@@ -116,8 +116,8 @@ void execute_algorithms(ExecutionSetup &exec_setup, std::vector<std::unique_ptr<
             output_stream->seekp(0);
             if(report_stream != nullptr) {
                 char tmp[500];
-                auto size = sprintf(tmp, "%s,%zu,%s,%zu,%.2f,%zu,%zu\n", exec_setup.fin_names[idx].c_str(), stats.m_input_size, algorithm_to_name.at(algo).c_str(), stats.m_output_size,
-                (double)stats.m_input_size/stats.m_output_size, stats.m_run_time_milliseconds, stats.m_mem_usage);
+                auto size = sprintf(tmp, "%s,%zu,%s,%zu,%.2f,%zu,%zu,%zu\n", exec_setup.fin_names[idx].c_str(), stats.m_input_size, algorithm_to_name.at(algo).c_str(), stats.m_output_size,
+                (double)stats.m_input_size/stats.m_output_size, stats.m_factor_count, stats.m_run_time_milliseconds, stats.m_mem_usage);
                 report_stream->write(tmp, size);
             }
         }

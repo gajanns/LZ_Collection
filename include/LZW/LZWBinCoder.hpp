@@ -19,7 +19,7 @@ public:
     LZWEncoder(std::ostream &p_out): m_bitout(BitWriter(p_out)){};
     ~LZWEncoder(){};
 
-    int encode(LZW::factor_id p_value) {
+    int encode_impl(LZW::factor_id p_value) {
         size_t bit_size = 1, tmp = dict_size++;
         while(tmp >>= 1) bit_size++;
         if(m_bitout.writeFrom(p_value, bit_size) != bit_size) {
@@ -36,7 +36,7 @@ public:
     }
 
     void flush() {
-        if(m_bit_counter) m_bitout.flush();
+        if(m_bit_counter) {m_bitout.flush();m_bytes_written++;}
     }
 };
 
@@ -49,7 +49,7 @@ public:
     LZWDecoder(std::istream &p_in): m_bitin(BitReader(p_in)){};
     ~LZWDecoder(){};
 
-    int decode(LZW::factor_id &p_value) {
+    int decode_impl(LZW::factor_id &p_value) {
         size_t bit_size = 1, tmp = dict_size++;
         while(tmp >>= 1) bit_size++;
         auto bits_read = m_bitin.readInto(p_value, bit_size);
