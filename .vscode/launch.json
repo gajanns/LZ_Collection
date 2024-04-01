@@ -33,7 +33,7 @@
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build/source/LZ_Collection",
-            "args": [],
+            "args": ["all", "dummy_res", "all", "-c", "-b"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],

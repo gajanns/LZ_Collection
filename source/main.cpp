@@ -81,7 +81,7 @@ void extract_userinput(ExecutionSetup &exec_setup, int argc, char *argv[]){
 }
 
 void execute_algorithms(ExecutionSetup &exec_setup, std::vector<std::unique_ptr<std::fstream>> &input_streams, 
-                        std::unique_ptr<std::fstream> &output_stream, std::unique_ptr<std::ofstream> &report_stream) {
+                        std::unique_ptr<std::ofstream> &output_stream, std::unique_ptr<std::ofstream> &report_stream) {
     if(report_stream) {
         (*report_stream)<< "Input,Input-Size[Bytes],Algorithm,Output-Size[Bytes],"
                         << "Compression-Ratio,Compression-Time[ms],Memory-Usage[Bytes]\n";
@@ -114,7 +114,6 @@ void execute_algorithms(ExecutionSetup &exec_setup, std::vector<std::unique_ptr<
             in_stream->seekg(0);
             output_stream->clear();
             output_stream->seekp(0);
-            output_stream->seekg(0);
             if(report_stream != nullptr) {
                 char tmp[500];
                 auto size = sprintf(tmp, "%s,%zu,%s,%zu,%.2f,%zu,%zu\n", exec_setup.fin_names[idx].c_str(), stats.m_input_size, algorithm_to_name.at(algo).c_str(), stats.m_output_size,
@@ -151,7 +150,7 @@ int main(int argc, char** argv){
         input_streams.push_back(std::move(in_stream));
     }
 
-    std::unique_ptr<std::fstream> output_stream(new std::fstream(setup.fout_name));
+    std::unique_ptr<std::ofstream> output_stream(new std::ofstream(setup.fout_name));
     if(!output_stream->is_open()){
         std::cerr << "Could not open output-file" <<std::endl;
         exit(EXIT_FAILURE);
