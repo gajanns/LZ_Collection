@@ -5,10 +5,8 @@
 #include <cstdlib>
 #include <utility>
 #include "StreamView.hpp"
+#include "Definition.hpp"
 
-
-template<typename T>
-concept Hashable = requires { std::ranges::bidirectional_range<T> && std::is_integral_v<typename T::value_type>; };
     
 /**
  * @brief Class covers generation and manipulation of Rabin-Karp-Hashfunction 
@@ -29,8 +27,8 @@ public:
     static const size_t base_inverse = 74;
     static const size_t prime = 997;
 
-
-    RabinKarpFingerprint(Hashable auto& p_data): val(calc_hash_value(p_data, &m_acc_base)){}
+    
+    RabinKarpFingerprint(NumRange auto& p_data): val(calc_hash_value(p_data, &m_acc_base)){}
     RabinKarpFingerprint(const size_t p_acc_base, const size_t p_hash_value):m_acc_base(p_acc_base),val(p_hash_value){}
 
     /**
@@ -40,7 +38,7 @@ public:
      * @param p_acc_base Export auxiliary number
      * @return size_t Hashvalue
      */
-    static size_t calc_hash_value(Hashable auto& p_data, size_t *p_acc_base=nullptr){
+    static size_t calc_hash_value(NumRange auto& p_data, size_t *p_acc_base=nullptr){
         size_t acc_base = 1;
         size_t val = 0;
         for(auto it = p_data.crbegin(); it!=p_data.crend();++it) {

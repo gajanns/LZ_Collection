@@ -8,6 +8,9 @@ enum Algorithm {lzw, lz77, appr77seq, appr77par, all};
 const std::map<std::string, Algorithm> algorithm_from_name{{"LZW", lzw}, {"LZ77", lz77}, {"Approx.LZ77", appr77seq}, {"Approx.LZ77Par", appr77par}};
 const std::map<Algorithm, std::string> algorithm_to_name{{lzw, "LZW"}, {lz77, "LZ77"}, {appr77seq, "Approx.LZ77"}, {appr77par, "Approx.LZ77Par"}}; 
 
+template<typename T>
+concept NumRange = requires { std::ranges::bidirectional_range<T> && std::is_integral_v<typename T::value_type>; };
+
 namespace LZW
 {
     /**
