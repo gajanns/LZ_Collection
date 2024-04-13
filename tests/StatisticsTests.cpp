@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 #include "LZ77Compressor.hpp"
 #include "StreamView.hpp"
+#include "MemoryTracker.hpp"
 #include "LZ77BinCoder.hpp"
 
 TEST(StatisticsTests, FactorCountEmptyString) {
@@ -51,4 +52,11 @@ TEST(StatisticsTests, OutputSizeText) {
     LZ77Encoder encoder(ss_out);
     compressor.compress(sv_in, encoder);
     EXPECT_TRUE(compressor.m_stats.m_output_size == ss_out.str().size());
+}
+
+TEST(StatisticsTests, VectorMemory) {
+    MemoryTracker::start_mem_record();
+    std::vector<u_char> v(256);
+    MemoryTracker::stop_mem_record();
+    EXPECT_EQ(MemoryTracker::max_mem_usage, 256);
 }
