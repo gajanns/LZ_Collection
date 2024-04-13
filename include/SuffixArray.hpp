@@ -199,4 +199,13 @@ namespace SuffixArray
         phase2(p_value, bucket_sizes, types, lms_positions, result);
         return result;
     }
+
+    std::vector<int> invert_suffix_array(const std::vector<int> &p_sa) {
+        
+        std::vector<int> result(p_sa.size(), -1);
+        for(size_t i = 0; i < p_sa.size(); i++) {
+            result[p_sa[i]] = i;
+        }
+        return result;
+    }
 }

@@ -33,3 +33,6 @@
 
 build/
 .vscode/
+
+report/plots/
+report/report.csv

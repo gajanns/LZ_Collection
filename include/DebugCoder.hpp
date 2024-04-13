@@ -68,9 +68,9 @@ namespace LZW
     };
 }
 
-namespace LZ77
+namespace LZ77_Wndw
 {
-    class DebugEncoder: public Coder::Encoder<LZ77::factor_id> {
+    class DebugEncoder: public Coder::Encoder<LZ77_Wndw::factor_id> {
     private:
         std::ostream *m_out;
         size_t m_bytes_written = 0;
@@ -78,7 +78,7 @@ namespace LZ77
         DebugEncoder(std::ostream &p_out): m_out(&p_out){};
         ~DebugEncoder(){};
 
-        int encode_impl(LZ77::factor_id p_value) {
+        int encode_impl(LZ77_Wndw::factor_id p_value) {
             std::stringstream ss;
             ss << p_value.offset << "," << p_value.length << "," << p_value.next_char;
             *m_out << ss.str() << "|";
@@ -95,7 +95,7 @@ namespace LZ77
         }
     };
 
-    class DebugDecoder : public Coder::Decoder<LZ77::factor_id> {
+    class DebugDecoder : public Coder::Decoder<LZ77_Wndw::factor_id> {
     private:
         std::istream *m_in;
         size_t m_bytes_read = 0;
@@ -104,7 +104,7 @@ namespace LZ77
         DebugDecoder(std::istream &p_in): m_in(&p_in){};
         ~DebugDecoder(){};
 
-        int decode_impl(LZ77::factor_id &p_value) {
+        int decode_impl(LZ77_Wndw::factor_id &p_value) {
             std::string p_res;
             char tmp;
 
