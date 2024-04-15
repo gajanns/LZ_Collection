@@ -2,8 +2,11 @@
 
 Simple Collection of Prototypes of LZ-Algorithms:LZW, LZ77, Approx. LZ77 (seq+ par)
 
-## Thesis-Plan(Status: ❌ &rarr; ⟳ &harr; ✔ &rarr; 🌟 &nbsp;&nbsp;&nbsp;&nbsp; Tested: ⛔ &harr; ✅)
----
+## Thesis-Plan
+
+(Status: ❌ &rarr; ⟳ &harr; ✔ &rarr; 🌟 &nbsp;&nbsp;&nbsp;&nbsp; Tested: ⛔ &harr; ✅)
+
+
 ### Phase 1:
 |Task               |Deadline   |Status  |Tested     |Last Update|
 |-------------------|:---------:|:------:|:---------:|:---------:|
@@ -12,7 +15,7 @@ Simple Collection of Prototypes of LZ-Algorithms:LZW, LZ77, Approx. LZ77 (seq+ p
 | -Perf-Measurement |-          |✔       |✅        |13/04      |
 | -Plot             |-          |⟳       |⛔        |13/04      |
 |LZ78/LZW           |-          |✔       |✅        |18/03      |
-|exact LZ77         |-          |⟳       |⛔        |12/04      |
+|exact LZ77         |-          |✔       |✅        |15/04      |
 
 ---
 ### Phase 2:
