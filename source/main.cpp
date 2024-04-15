@@ -99,7 +99,7 @@ void execute_algorithms(ExecutionSetup &exec_setup, std::vector<std::unique_ptr<
                     break;
                 }
                 case lz77: {
-                    LZ77Encoder encoder(*output_stream);
+                    LZ77Encoder encoder(*output_stream, view.bytes_read());
                     LZ77Compressor comp;
                     comp.compress(view, encoder);
                     stats = comp.m_stats;

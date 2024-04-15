@@ -62,6 +62,13 @@ public:
         return size;
     }
 
+    // Read all data from stream
+    std::string readAll() {
+        std::stringstream ss;
+        ss << m_in->rdbuf();
+        return ss.str();
+    }
+
     /**
      * @brief Read single byte/char from stream.
      * 

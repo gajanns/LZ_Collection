@@ -23,37 +23,13 @@ namespace LZW
     const size_t initial_dict_size = 256;
 }
 
-namespace LZ77_Wndw
-{
-    /**
-     * @brief Representation of Factor in LZ77-Algorithm
-     * 
-     */
-    struct factor_id{
-        int32_t offset;
-        int32_t length;
-        char next_char;
-    };
-
-    const int32_t search_buffer_size = 63;
-    const int32_t preview_buffer_size = 63;
-    const int32_t window_size = search_buffer_size + preview_buffer_size;
-}
-
 namespace LZ77
 {
-    /**
-     * @brief Distinction between data(literal) and reference factor
-     * 
-    */
-    enum class FactorType:bool {data, ref};
-
     /**
      * @brief Representation of Factor in LZ77-Algorithm(LZSS-Style)
      * 
      */
     struct factor_id{
-        FactorType type;
         std::variant<char, size_t> value;
         size_t length;
     };

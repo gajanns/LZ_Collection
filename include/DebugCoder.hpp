@@ -68,9 +68,9 @@ namespace LZW
     };
 }
 
-namespace LZ77_Wndw
+namespace LZ77
 {
-    class DebugEncoder: public Coder::Encoder<LZ77_Wndw::factor_id> {
+    class DebugEncoder: public Coder::Encoder<LZ77::factor_id> {
     private:
         std::ostream *m_out;
         size_t m_bytes_written = 0;
@@ -78,9 +78,16 @@ namespace LZ77_Wndw
         DebugEncoder(std::ostream &p_out): m_out(&p_out){};
         ~DebugEncoder(){};
 
-        int encode_impl(LZ77_Wndw::factor_id p_value) {
+        int encode_impl(LZ77::factor_id p_value) {
             std::stringstream ss;
-            ss << p_value.offset << "," << p_value.length << "," << p_value.next_char;
+
+            ss << p_value.length;
+            if(p_value.length == 0){
+                ss << "," << std::get<char>(p_value.value);
+            } else {
+                ss << "," << std::get<size_t>(p_value.value);
+            }
+            
             *m_out << ss.str() << "|";
             m_bytes_written += ss.str().size();
             return 1;
@@ -95,7 +102,7 @@ namespace LZ77_Wndw
         }
     };
 
-    class DebugDecoder : public Coder::Decoder<LZ77_Wndw::factor_id> {
+    class DebugDecoder : public Coder::Decoder<LZ77::factor_id> {
     private:
         std::istream *m_in;
         size_t m_bytes_read = 0;
@@ -104,16 +111,29 @@ namespace LZ77_Wndw
         DebugDecoder(std::istream &p_in): m_in(&p_in){};
         ~DebugDecoder(){};
 
-        int decode_impl(LZ77_Wndw::factor_id &p_value) {
+        int decode_impl(LZ77::factor_id &p_value) {
             std::string p_res;
-            char tmp;
 
             if(std::getline(*m_in, p_res, '|')){
                 m_bytes_read += p_res.size();
-                int tmp = std::sscanf(p_res.c_str(), "%d,%d,%c", &(p_value.offset), &(p_value.length), &(p_value.next_char));
-                if(tmp < 3){
-                    p_value.next_char = '\0';
+
+
+                int tmp = std::sscanf(p_res.c_str(), "%zu,", &(p_value.length));
+                if(tmp < 1){
+                    return 0;
                 }
+
+                if(p_value.length == 0 ) {
+                    char c;
+                    tmp = std::sscanf(p_res.c_str(), "%zu,%c", &(p_value.length), &c);
+                    p_value.value = c;
+                }
+                else {
+                    size_t pos;
+                    tmp = std::sscanf(p_res.c_str(), "%zu,%zu", &(p_value.length), &(pos));
+                    p_value.value = pos;
+                }
+
                 if(tmp < 2){
                     return 0;
                 }

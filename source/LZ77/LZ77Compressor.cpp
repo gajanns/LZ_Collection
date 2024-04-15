@@ -1,47 +1,67 @@
 #include "LZ77Compressor.hpp"
+#include "SuffixArray.hpp"
+#include <bit>
 
-void LZ77Compressor::compress_impl(StreamView &p_in, Coder::Encoder<LZ77_Wndw::factor_id> &p_out) {
-    std::string window;
-    size_t window_offset = 0;
-    int32_t pos = 0;
-    LZ77_Wndw::factor_id id;
-    while(size_t x = p_in.extractSlice(window, std::max(pos - LZ77_Wndw::search_buffer_size, 0), LZ77_Wndw::window_size+std::min(pos - LZ77_Wndw::search_buffer_size, 0))){
-        auto search_size = LZ77_Wndw::search_buffer_size - std::max(LZ77_Wndw::search_buffer_size - pos, 0);
-        if(search_size >= x) break;
-        auto preview_size = x - search_size;
-        LZ77_Wndw::factor_id id = {.offset = 0, .length = 0, .next_char = window[search_size]};
+void LZ77Compressor::compress_impl(StreamView &p_in, Coder::Encoder<LZ77::factor_id> &p_out) {
+    std::string input_str = p_in.readAll();
+    auto sa = SuffixArray::generate_suffix_array(input_str, 255);
+    std::vector<int32_t> psv(sa.size()-1, -1), nsv(sa.size()-1, -1);
+    sa[0] = -1;
+    sa.push_back(-1);
+    
+    for(size_t i = 1; i < sa.size()-1; i++) {
+        auto j = sa[i-1];
+        auto k = sa[i];
 
-        for (int offset = 1; offset <= search_size; offset++)
-        {
-            int len = 0;
-            while (len < preview_size && window[search_size - offset + len] == window[search_size + len])
-            {
-                len++;
+        while( k < j ) {
+            nsv[j] = k;
+            j = psv[j];
+        }
+        psv[k] = j;
+    }
+
+    size_t k = 0;
+    while(k < input_str.size()) {
+
+        size_t lcp_psv=0, lcp_nsv=0;
+        if(psv[k] != -1) {
+            while(k+lcp_psv < input_str.length() && input_str[k+lcp_psv] == input_str[psv[k]+lcp_psv]) lcp_psv++;
+        }
+        if(nsv[k] != -1) {
+            while(k+lcp_nsv < input_str.length() && input_str[k+lcp_nsv] == input_str[nsv[k]+lcp_nsv]) lcp_nsv++;
+        }
+
+        if(lcp_psv < lcp_nsv) {
+            p_out.encode(LZ77::factor_id{.value = static_cast<size_t>(nsv[k]), .length = lcp_nsv});
+            k = k+lcp_nsv;
+        }
+        else {
+            if(lcp_psv == 0) {
+                p_out.encode(LZ77::factor_id{.value = input_str[k], .length = lcp_psv});
+                k++;
             }
-          
-            if (len > id.length)
-            {
-                id.offset = offset;
-                id.length = len;
-                id.next_char = window[search_size+len];
+            else {
+                p_out.encode(LZ77::factor_id{.value = static_cast<size_t>(psv[k]), .length = lcp_psv});
+                k = k+lcp_psv;
             }
         }
-        p_out.encode(id);
-        pos += id.length + 1;
     }
 }
 
-void LZ77Compressor::decompress_impl(Coder::Decoder<LZ77_Wndw::factor_id> &p_in, StreamView &p_out){
+void LZ77Compressor::decompress_impl(Coder::Decoder<LZ77::factor_id> &p_in, StreamView &p_out){
 
-    LZ77_Wndw::factor_id id;
-    size_t pos = 0;
+    LZ77::factor_id id;
     while(p_in.decode(id)) {
-        if(id.offset == 0) {
-            pos++;
+
+        if(id.length == 0) {
+            if(std::get<char>(id.value) != 0){
+                p_out.write(std::string{std::get<char>(id.value)});
+            }
+            continue;
         }
         else {
             std::string tmp;
-            auto size = p_out.extractSlice(tmp, pos-id.offset, id.length);
+            auto size = p_out.extractSlice(tmp, std::get<size_t>(id.value), id.length);
             
             for(int i = id.length; i>0;){
                 if(i >= size){
@@ -53,10 +73,6 @@ void LZ77Compressor::decompress_impl(Coder::Decoder<LZ77_Wndw::factor_id> &p_in,
                     break;
                 }
             }
-            pos += id.length+1;
-        }
-        if(id.next_char != '\0'){
-            p_out.write(std::string{id.next_char});
         }
     }
 }

@@ -10,10 +10,11 @@
 /**
  * Suffix Array by Induced Sorting
  * Modified from Source: https://www.rahmannlab.de/lehre/alsa21/02-3-sais.pdf
+ * ToDo: Waste less space => Optimal Time and Space Construction of Suffix Arrays and LCP Arrays for Integer Alphabets[https://arxiv.org/pdf/1703.01009.pdf]
 */
 namespace SuffixArray
 {
-    enum LS_Type {S, L};
+    enum LS_Type:bool {S, L};
 
     std::vector<int> generate_suffix_array(const NumRange auto &p_value, size_t alphabet_size);
 
@@ -23,12 +24,12 @@ namespace SuffixArray
      * @param p_value Data-Sequence to generate Suffix Array from
      * @return std::vector<int> Suffix Array
      */
-    std::vector<int> generate_suffixarray_naive(const std::string &p_value) {
+    inline std::vector<int> generate_suffixarray_naive(const std::string &p_value) {
     
-        std::vector<std::string> suffixes;
+        std::vector<std::string_view> suffixes;
         suffixes.push_back("");
         for(auto it = p_value.begin(); it != p_value.end(); it++){
-            suffixes.push_back(std::string{it, p_value.end()});
+            suffixes.push_back(std::string_view{it, p_value.end()});
         }
 
         std::vector<int> result;
@@ -247,7 +248,7 @@ namespace SuffixArray
      * @param p_sa Suffix Array
      * @return std::vector<int> Inverse Suffix Array
      */
-    std::vector<int> invert_suffix_array(const std::vector<int> &p_sa) {
+    inline std::vector<int> invert_suffix_array(const std::vector<int> &p_sa) {
         
         std::vector<int> result(p_sa.size(), -1);
         for(size_t i = 0; i < p_sa.size(); i++) {

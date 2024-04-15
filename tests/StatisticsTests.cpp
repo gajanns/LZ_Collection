@@ -9,7 +9,7 @@ TEST(StatisticsTests, FactorCountEmptyString) {
     std::stringstream ss_in, ss_out, ss_out2;
     ss_in << "";
     StreamView sv_in(ss_in,ss_in);
-    LZ77Encoder encoder(ss_out);
+    LZ77Encoder encoder(ss_out, sv_in.bytes_read());
 
     compressor.compress(sv_in, encoder);
     ss_out.clear();
@@ -25,9 +25,9 @@ TEST(StatisticsTests, FactorCountEmptyString) {
 TEST(StatisticsTests, FactorCountText) {
     LZ77Compressor compressor;
     std::stringstream ss_in, ss_out, ss_out2;
-    ss_in << "abaababaab$";
+    ss_in << "abaababaab";
     StreamView sv_in(ss_in,ss_in);
-    LZ77Encoder encoder(ss_out);
+    LZ77Encoder encoder(ss_out, sv_in.bytes_read());
     compressor.compress(sv_in, encoder);
     EXPECT_TRUE(compressor.m_stats.m_factor_count == 5);
     ss_out.clear();
@@ -49,7 +49,7 @@ TEST(StatisticsTests, OutputSizeText) {
             "dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. "
             "Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.";
     StreamView sv_in(ss_in,ss_in);
-    LZ77Encoder encoder(ss_out);
+    LZ77Encoder encoder(ss_out, sv_in.bytes_read());
     compressor.compress(sv_in, encoder);
     EXPECT_TRUE(compressor.m_stats.m_output_size == ss_out.str().size());
 }
