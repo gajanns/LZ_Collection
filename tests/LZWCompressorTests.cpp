@@ -39,5 +39,8 @@ TEST(LZWCompressorTests, CompressText) {
     LZWDecoder decoder2(ss_out);
     StreamView sv_out2(ss_out2, ss_out2);
     compressor.decompress(decoder2, sv_out2);
+
+    std::string str_in = ss_in.str();
+    std::string str_out2 = ss_out2.str();
     EXPECT_TRUE(ss_in.str().compare(ss_out2.str())==0);
 }

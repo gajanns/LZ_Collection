@@ -4,7 +4,8 @@
 
 void LZ77Compressor::compress_impl(StreamView &p_in, Coder::Encoder<LZ77::factor_id> &p_out) {
     std::string input_str = p_in.readAll();
-    auto sa = SuffixArray::generate_suffix_array(input_str, 255);
+    std::u8string_view input_view = std::u8string_view(reinterpret_cast<const char8_t*>(input_str.data()), input_str.size());
+    auto sa = SuffixArray::generate_suffix_array(input_view, 255);
     std::vector<int32_t> psv(sa.size()-1, -1), nsv(sa.size()-1, -1);
     sa[0] = -1;
     sa.push_back(-1);

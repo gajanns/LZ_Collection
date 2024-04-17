@@ -5,7 +5,8 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(PERFORMANCE_MEASUREMENT ON)
-set(TESTING ON)
+set(TESTING OFF)
+set(LOAD_PIZZA OFF)
 
 include(GoogleTest)
 enable_testing()
@@ -31,3 +32,15 @@ if(TESTING)
   FetchContent_MakeAvailable(googletest)
   add_subdirectory(tests)
 endif()
+
+# Looks Dumb, Is Dumb 
+set(pizza_sources ${CMAKE_SOURCE_DIR}/data/sources.50MB)
+set(pizza_proteins ${CMAKE_SOURCE_DIR}/data/proteins.50MB)
+if(LOAD_PIZZA AND NOT EXISTS ${pizza_sources})
+  message(STATUS "Downloading Samples from Pizza&Chili Corpus")
+  file(DOWNLOAD https://pizzachili.dcc.uchile.cl/texts/code/sources.50MB.gz ${pizza_sources}.gz)
+  file(DOWNLOAD https://pizzachili.dcc.uchile.cl/texts/protein/proteins.50MB.gz ${pizza_proteins}.gz)
+  execute_process(COMMAND gunzip ${pizza_sources}.gz > ${pizza_sources})
+  execute_process(COMMAND gunzip ${pizza_proteins}.gz > ${pizza_proteins})
+endif()
+

@@ -24,12 +24,12 @@ namespace SuffixArray
      * @param p_value Data-Sequence to generate Suffix Array from
      * @return std::vector<int> Suffix Array
      */
-    inline std::vector<int> generate_suffixarray_naive(const std::string &p_value) {
+    inline std::vector<int> generate_suffixarray_naive(const std::u8string_view &p_value) {
     
-        std::vector<std::string_view> suffixes;
-        suffixes.push_back("");
+        std::vector<std::u8string_view> suffixes;
+        suffixes.push_back(u8"");
         for(auto it = p_value.begin(); it != p_value.end(); it++){
-            suffixes.push_back(std::string_view{it, p_value.end()});
+            suffixes.push_back(std::u8string_view{it, p_value.end()});
         }
 
         std::vector<int> result;
