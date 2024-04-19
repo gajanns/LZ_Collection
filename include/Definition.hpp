@@ -12,7 +12,7 @@ const std::map<std::string, Algorithm> algorithm_from_name{{"LZW", lzw}, {"LZ77"
 const std::map<Algorithm, std::string> algorithm_to_name{{lzw, "LZW"}, {lz77, "LZ77"}, {appr77seq, "Approx.LZ77"}, {appr77par, "Approx.LZ77Par"}}; 
 
 template<typename T>
-concept NumRange = requires { std::ranges::bidirectional_range<T> && std::is_integral_v<typename T::value_type>; };
+concept NumRange = std::ranges::range<T> && std::is_integral_v<std::ranges::range_value_t<T>>;
 
 namespace LZW
 {

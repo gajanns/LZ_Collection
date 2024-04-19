@@ -21,23 +21,24 @@ namespace SuffixArray
     /**
      * @brief Generate Suffix Array using Naive Sorting
      * 
-     * @param p_value Data-Sequence to generate Suffix Array from
+     * @param p_value Data-Sequence to generate Suffix Array from(without sentinel)
      * @return std::vector<int> Suffix Array
      */
-    inline std::vector<int> generate_suffixarray_naive(const std::u8string_view &p_value) {
+    inline std::vector<int> generate_suffixarray_naive(NumRange auto p_value) {
     
-        std::vector<std::u8string_view> suffixes;
-        suffixes.push_back(u8"");
-        for(auto it = p_value.begin(); it != p_value.end(); it++){
-            suffixes.push_back(std::u8string_view{it, p_value.end()});
-        }
-
+        std::vector<decltype(p_value)> suffixes;
         std::vector<int> result;
+        result.reserve(p_value.size()+1);
+        result.push_back(p_value.size());
+
+        for(auto it = p_value.begin(); it != p_value.end(); it++){
+            decltype(p_value) suffix(it, p_value.end());
+            suffixes.push_back(suffix);
+        }
         std::sort(suffixes.begin(), suffixes.end());
         for(auto i: suffixes){
             result.push_back(p_value.size()-i.size());
         }
-
         return result;
     }
 
