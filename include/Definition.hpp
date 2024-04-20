@@ -31,14 +31,16 @@ namespace LZW
             return value == p_rhs;
         }
 
-        bool operator>>(std::string &p_out) {
-            p_out += std::to_string(value);
+        bool operator>>(std::u8string &p_out) {
+            std::basic_stringstream<char8_t> ss;
+            ss << value;
+            p_out += ss.str();
             return true;
         }
 
-        bool operator<<(std::string &p_in) {
+        bool operator<<(std::u8string &p_in) {
             try {
-                value = std::stoi(p_in);
+                value = std::stoi(std::string{p_in.begin(), p_in.end()});
                 return true;
             }
             catch(std::invalid_argument &e) {
@@ -57,38 +59,39 @@ namespace LZ77
      * 
      */
     struct factor_id{
-        std::variant<char, size_t> value;
+        std::variant<char8_t, size_t> value;
         size_t length;
 
-        bool operator>>(std::string &p_out) {
-            p_out += std::to_string(length) + ",";
+        bool operator>>(std::u8string &p_out) {
+
+            std::basic_stringstream<char8_t> ss;
+            ss << length << u8",";
 
             if(length == 0) {
-                p_out += std::get<char>(value);
+                ss << std::get<char8_t>(value);
             }
             else {
-                p_out += std::to_string(std::get<size_t>(value));
+                ss << std::get<size_t>(value);
             }
+            p_out += ss.str();
             return true;
         }
 
-        bool operator<<(std::string &p_in) {
-            std::string_view tmp{p_in};
-
-            auto pos = tmp.find(',');
+        bool operator<<(std::u8string &p_in) {
+            
+            auto pos = p_in.find(u8',');
             if(pos == std::string::npos) {
                 return false;
             }
 
-            length = std::stoul(std::string{tmp.substr(0, pos)});
-            tmp.remove_prefix(pos+1);
-
+            length = std::stoul(std::string{p_in.begin(), p_in.begin()+pos});
+            
             if(length == 0) {
-                value = tmp[0];
+                value = p_in[pos+1];
             }
             else {
                 try {
-                    value = std::stoul(std::string{tmp});
+                    value = std::stoul(std::string{p_in.begin()+pos+1, p_in.end()});
                 }
                 catch(std::invalid_argument &e) {
                     return false;

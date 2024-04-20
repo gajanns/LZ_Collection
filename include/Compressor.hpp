@@ -32,8 +32,8 @@ namespace Compression {
     class Compressor
     { 
         private:
-            virtual void compress_impl(StreamView &p_in, Coder::Encoder<Factor> &p_out) = 0;
-            virtual void decompress_impl(Coder::Decoder<Factor> &p_in, StreamView &p_out) = 0;
+            virtual void compress_impl(InStreamView &p_in, Coder::Encoder<Factor> &p_out) = 0;
+            virtual void decompress_impl(Coder::Decoder<Factor> &p_in, OutStreamView &p_out) = 0;
 
         public:
             /**
@@ -48,7 +48,7 @@ namespace Compression {
              * @param p_in Raw Input-Stream
              * @param p_out Encoded Output-Stream
              */
-            void compress(StreamView &p_in, Coder::Encoder<Factor> &p_out) {
+            void compress(InStreamView &p_in, Coder::Encoder<Factor> &p_out) {
                 #ifdef PERF
                 MemoryTracker::start_mem_record();
                 auto start = std::chrono::high_resolution_clock::now();
@@ -60,7 +60,7 @@ namespace Compression {
                 MemoryTracker::stop_mem_record();
                 m_stats.m_mem_usage = MemoryTracker::max_mem_usage;
                 m_stats.m_run_time_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-                m_stats.m_input_size = p_in.bytes_read();
+                m_stats.m_input_size = p_in.size();
                 m_stats.m_output_size = p_out.bytes_written();
                 m_stats.m_factor_count = p_out.factors_written();
                 #endif
@@ -72,7 +72,7 @@ namespace Compression {
              * @param p_in Encoded Input-Stream
              * @param p_out Raw Output-Stream
              */
-            void decompress(Coder::Decoder<Factor> &p_in, StreamView &p_out) {
+            void decompress(Coder::Decoder<Factor> &p_in, OutStreamView &p_out) {
                 #ifdef PERF
                 MemoryTracker::start_mem_record();
                 auto start = std::chrono::high_resolution_clock::now();
@@ -84,7 +84,7 @@ namespace Compression {
                 m_stats.m_mem_usage = MemoryTracker::max_mem_usage;
                 m_stats.m_run_time_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
                 m_stats.m_input_size = p_in.bytes_read();
-                m_stats.m_output_size = p_out.bytes_written();
+                m_stats.m_output_size = p_out.size();
                 #endif
             }
     };

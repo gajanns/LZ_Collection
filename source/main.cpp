@@ -81,13 +81,13 @@ void extract_userinput(ExecutionSetup &exec_setup, int argc, char *argv[]){
 }
 
 void execute_algorithms(ExecutionSetup &exec_setup, std::vector<std::unique_ptr<std::fstream>> &input_streams, 
-                        std::unique_ptr<std::ofstream> &output_stream, std::unique_ptr<std::ofstream> &report_stream) {
+                        std::unique_ptr<std::fstream> &output_stream, std::unique_ptr<std::fstream> &report_stream) {
     if(report_stream) {
         (*report_stream)<< "input,in_size,algorithm,out_size,n_factors,comp_time,mem_usage";
     }
 
     for(size_t idx = 0; auto& in_stream: input_streams) {
-        StreamView view(*in_stream);
+        InStreamView view(*in_stream);
         for(auto& algo: exec_setup.algorithms) {
             Compression::CompressionStatistics stats;
             switch(algo) {
@@ -99,7 +99,7 @@ void execute_algorithms(ExecutionSetup &exec_setup, std::vector<std::unique_ptr<
                     break;
                 }
                 case lz77: {
-                    LZ77Encoder encoder(*output_stream, view.bytes_read());
+                    LZ77Encoder encoder(*output_stream, view.size());
                     LZ77Compressor comp;
                     comp.compress(view, encoder);
                     stats = comp.m_stats;
@@ -149,15 +149,15 @@ int main(int argc, char** argv){
         input_streams.push_back(std::move(in_stream));
     }
 
-    std::unique_ptr<std::ofstream> output_stream(new std::ofstream(setup.fout_name));
+    std::unique_ptr<std::fstream> output_stream(new std::fstream(setup.fout_name, std::ios::in | std::ios::out | std::ios::binary | std::ios::trunc));
     if(!output_stream->is_open()){
         std::cerr << "Could not open output-file" <<std::endl;
         exit(EXIT_FAILURE);
     }
 
-    std::unique_ptr<std::ofstream> report_stream = nullptr;
+    std::unique_ptr<std::fstream> report_stream = nullptr;
     if(setup.benchmark) {
-        report_stream = std::unique_ptr<std::ofstream>(new std::ofstream("report/report.csv"));
+        report_stream = std::unique_ptr<std::fstream>(new std::fstream("report/report.csv",  std::ios::in | std::ios::out | std::ios::trunc));
     } 
     
     execute_algorithms(setup, input_streams, output_stream, report_stream);

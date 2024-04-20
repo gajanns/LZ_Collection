@@ -1,142 +1,215 @@
 #pragma once
 
 #include <iostream>
-#include <sstream>
-#include <fstream>
+#include <span>
+#include<vector>
+#include <ranges>
+
 
 /**
- * @brief Class allows random read-access to slices of istream in addition to simple read/write operations
+ * @brief Class enables read-access to istream w or w/o pre-buffering and random access to slices of data
  * 
  */
-class StreamView {
+class InStreamView {
+
 private:
     std::istream *m_in;
-    std::ostream *m_out;
-    std::streamsize m_in_size;
-    size_t m_bytes_written = 0, m_bytes_read = 0;
+    std::vector<char8_t> m_buffer;
+    size_t m_size = 0, m_offset = 0;
+    bool m_buffered;
+
 public:
-    StreamView(std::istream &p_in, std::ostream &p_out): m_in(&p_in), m_out(&p_out){
-        m_in->seekg(0,std::ios::beg);
-        auto beg = m_in->tellg();
-        m_in->seekg(0,std::ios::end);
-        auto end = m_in->tellg();
-        m_in_size = end-beg;
-        m_in->seekg(0,std::ios::beg);
-    }
-    StreamView(std::iostream &p_iostream): StreamView(p_iostream, p_iostream){}
-    ~StreamView(){}
+    InStreamView(std::istream &p_in, bool buffered = true): m_in(&p_in), m_buffered(buffered) {
+        m_in->seekg(0, std::ios::end);
+        m_size = m_in->tellg();
+        m_in->seekg(0, std::ios::beg);
 
-    /**
-     * @brief Extract slice of data from specific area in stream.Doesn't affect other read-operations.
-     * 
-     * @param p_dest Buffer to copy data into
-     * @param p_offset Startposition of slice in stream
-     * @param p_size  Length of slice
-     * @return int Actual Number of bytes read.
-     */
-    size_t extractSlice(char* p_dest, auto p_offset, auto p_size) {
-        std::streampos cur_read_pos = m_in->tellg();
-        m_in->seekg(p_offset, m_in->beg);
-        m_in->read(p_dest, p_size);
+        if(buffered) {
+            m_buffer.resize(m_size);
+            if(!m_in->read(reinterpret_cast<char*>(m_buffer.data()), m_size)) {
+                std::cerr << "Cannot read from Input-Stream" << std::endl;
+                exit(EXIT_FAILURE);
+            }
+        }
+    }
+    ~InStreamView() {
         m_in->clear();
-        m_in->seekg(cur_read_pos);
-        return m_in->gcount();
+        m_in->seekg(0, std::ios::beg);
     }
 
     /**
-     * @brief Extract slice of data from specific area in stream.Doesn't affect other read-operations.
+     * @brief Create a light-weight view to a slice of the input stream
      * 
-     * @param p_dest String to copy data into
-     * @param p_offset Startposition of slice in stream
-     * @param p_size  Length of slice
-     * @return int Actual Number of bytes read.
+     * @param p_offset Startposition of slice
+     * @param p_size Length of slice
+     * @return std::span<const char8_t> Reference to slice
      */
-    int extractSlice(std::string &p_dest, auto p_offset, auto p_size) {
-        if(p_dest.size() != p_size) {
-            p_dest.resize(p_size);
+    std::span<const char8_t> slice_ref(size_t p_offset, size_t p_size) {
+        if(p_size == 0) {
+            return std::span<const char8_t>();
         }
-        auto size = extractSlice(&p_dest[0], p_offset, p_size);
-        if(p_dest.size() != size) {
-            p_dest.resize(size);
+        if(!m_buffered) {
+            std::cerr << "Cannot create slice reference without buffer" << std::endl;
+            exit(EXIT_FAILURE);
         }
-        return size;
-    }
-
-    // Read all data from stream
-    std::string readAll() {
-        std::stringstream ss;
-        ss << m_in->rdbuf();
-        return ss.str();
+        if(p_offset >= m_size) {
+            std::cerr << "Input-Stream: Out of Bounds" << std::endl;
+            exit(EXIT_FAILURE);
+        }
+        return std::span<const char8_t>(m_buffer.data()+p_offset, std::min(p_size, m_size-p_offset));
     }
 
     /**
-     * @brief Read single byte/char from stream.
+     * @brief Create a copy of a slice of the input stream
      * 
-     * @param c Target space for read data.
-     * @return int 1: Data read, 0: Data not read.
+     * @param p_offset Startposition of slice
+     * @param p_size Length of slice
+     * @return std::vector<char8_t> Copy of slice
      */
-    int get(char &c) {
-        return (m_in->get(c)?1:0);
+    std::vector<char8_t> slice_val(size_t p_offset, size_t p_size) {
+        if(p_size == 0) {
+            return std::vector<char8_t>();
+        }
+        if(p_offset >= m_size) {
+            std::cerr << "Input-Stream: Out of Bounds" << std::endl;
+            exit(EXIT_FAILURE);
+        }
+
+        std::vector<char8_t> result(p_size);
+        if(!m_buffered) {
+            m_in->seekg(p_offset, std::ios::beg);
+            if(!m_in->read(reinterpret_cast<char*>(result.data()), std::min(p_size, m_size-p_offset))) {
+                std::cerr << "Cannot read from Input-Stream" << std::endl;
+                exit(EXIT_FAILURE);
+            }
+            m_in->seekg(m_offset, std::ios::beg);
+        }
+        else {
+            std::copy(m_buffer.begin()+p_offset, m_buffer.begin()+p_offset+std::min(p_size, m_size-p_offset), result.begin());
+        }
+        return result;
     }
 
     /**
-     * @brief Write string of data into ostream.
+     * @brief Get size of input stream
      * 
-     * @param p_value Data to be written
-     * @return int Number bytes actually written
+     * @return size_t Size of stream
      */
-    int write(std::string p_value) {
-        (*m_out) << p_value;
-        m_bytes_written += p_value.size();
-        return p_value.size();
+    size_t size() {
+        return m_size;
     }
 
     /**
-     * @brief Get number of bytes written into ostream through StreamView
+     * @brief Read single Byte from stream
      * 
-     * @return size_t Number of Bytes
+     * @param c Target space for read data
+     * @return true Data read
+     * @return false Data not read
      */
-    size_t bytes_written() {
-        return m_bytes_written;
-    }
+    bool get(char8_t &c) {
+        if(m_offset >= m_size) {
+            return false;
+        }
 
-    /**
-     * @brief Get number of bytes read from istream through StreamView
-     * 
-     * @return size_t Number of Bytes
-     */
-    size_t bytes_read() {
-        return m_in_size;
+        if(!m_buffer.empty()) {
+            c = m_buffer[m_offset];
+            m_offset++;
+            return true;
+        }
+        else if(m_in->read(reinterpret_cast<char*>(&c), 1)) {
+            m_offset++;
+            return true;
+        }
+        return false;
     }
 
 };
 
 /**
- * @brief Class represents specific slice of Inputstream. Data will be dynamically loaded upon call.
+ * @brief Class enables single-pass write-access to ostream and random read-access to slices of data
  * 
  */
-class StreamSliceReference{
+class OutStreamView {
+
 private:
-    StreamView *m_view;
+    std::iostream *m_io;
+    size_t m_size = 0, m_offset = 0;
 
 public:
-    const size_t m_pos, m_length;
-
-    StreamSliceReference(StreamView& p_view, size_t p_pos, size_t p_length):m_view(&p_view), m_pos(p_pos), m_length(p_length){}
-
-    /**
-     * @brief Load reference String form Inputstream
-     * 
-     * @param res Slice of Stream
-     */
-    void getData(std::string& res) const{
-        m_view->extractSlice(res, m_pos, m_length);
+    OutStreamView(std::iostream &p_io): m_io(&p_io) {}
+    ~OutStreamView() {
+        m_io->flush();
+        m_io->seekp(0, std::ios::beg);
+        m_io->seekg(0, std::ios::beg);
+        m_io->clear();
     }
 
-    bool operator==(StreamSliceReference& p_ref){
-        std::string s1, s2; 
-        getData(s1);
-        p_ref.getData(s2);
-        return s1 == s2;
+    /**
+     * @brief Write sequence of data to output stream
+     * 
+     * @tparam T Range-Type of data
+     * @param p_data Data to be written
+     */
+    template<typename T>
+    requires std::ranges::range<T> && std::is_same_v<std::ranges::range_value_t<T>, char8_t>
+    void write(T p_data) {
+        if(!m_io->write(reinterpret_cast<const char*>(p_data.data()), p_data.size())) {
+            std::cerr << "Cannot write to Output-Stream" << std::endl;
+            exit(EXIT_FAILURE);
+        }
+        m_offset += p_data.size();
+        if(m_offset > m_size) {
+            m_size = m_offset;
+        }
+    }
+
+    /**
+     * @brief Write single Byte to output stream
+     * 
+     * @param p_data Data to be written
+     */
+    void put(char8_t p_data) {
+        if(!m_io->write(reinterpret_cast<const char*>(&p_data), 1)) {
+            std::cerr << "Cannot write to Output-Stream" << std::endl;
+            exit(EXIT_FAILURE);
+        }
+        m_offset++;
+        if(m_offset > m_size) {
+            m_size = m_offset;
+        }
+    }
+
+    /**
+     * @brief Get size of output stream
+     * 
+     * @return size_t Size of stream
+     */
+    size_t size() {
+        return m_size;
+    }
+
+    /**
+     * @brief Create a copy of a slice of the output stream
+     * 
+     * @param p_offset Startposition of slice
+     * @param p_size Length of slice
+     * @return std::vector<char8_t> Copy of slice
+     */
+    std::vector<char8_t> slice_val(size_t p_offset, size_t p_size) {
+        if(p_size == 0) {
+            return std::vector<char8_t>();
+        }
+        if(p_offset >= m_size) {
+            std::cerr << "Output-Stream: Out of Bounds" << std::endl;
+            exit(EXIT_FAILURE);
+        }
+        std::vector<char8_t> result(p_size);
+        m_io->seekg(p_offset, std::ios::beg);
+        if(!m_io->read(reinterpret_cast<char*>(result.data()), std::min(p_size, m_size-p_offset))) {
+            std::cerr << "Cannot read from Output-Stream" << std::endl;
+            exit(EXIT_FAILURE);
+        }
+        m_io->seekg(m_offset, std::ios::beg);
+        return result;
     }
 };

@@ -24,7 +24,7 @@ public:
 
         if(p_value.length == 0){
             if(m_bitout.writeFrom(0, 1) != 1 ||
-               m_bitout.writeFrom(std::get<char>(p_value.value), 8) != 8) {
+               m_bitout.writeFrom(std::get<char8_t>(p_value.value), 8) != 8) {
                 return 0;
             }
             m_bit_counter += 9;
@@ -71,7 +71,7 @@ public:
             return 0;
         }
         if(!is_offset){
-            char c;
+            char8_t c;
             if(m_bitin.readInto(c, 8) != 8) {
                 return 0;
             }

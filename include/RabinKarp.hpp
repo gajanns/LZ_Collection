@@ -97,15 +97,3 @@ public:
         return m_acc_base == p_value.m_acc_base && val == p_value.val;
     }
 };
-
-/**
- * @brief Hashfunction for StreamSliceReference in accordance to format of std::hash
- * 
- */
-struct RabinKarpHasher : std::hash<StreamSliceReference> {
-    std::size_t operator()(const StreamSliceReference& p_ref) const noexcept {
-        std::string s;
-        p_ref.getData(s);
-        return RabinKarpFingerprint::calc_hash_value(s);
-    }
-};

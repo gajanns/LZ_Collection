@@ -2,10 +2,9 @@
 #include "SuffixArray.hpp"
 #include <bit>
 
-void LZ77Compressor::compress_impl(StreamView &p_in, Coder::Encoder<LZ77::factor_id> &p_out) {
-    std::string input_str = p_in.readAll();
-    std::u8string_view input_view = std::u8string_view(reinterpret_cast<const char8_t*>(input_str.data()), input_str.size());
-    auto sa = SuffixArray::generate_suffix_array(input_view, 255);
+void LZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<LZ77::factor_id> &p_out) {
+    std::span<const char8_t> input_span(p_in.slice_ref(0, p_in.size()));
+    auto sa = SuffixArray::generate_suffix_array(input_span, 255);
     std::vector<int32_t> psv(sa.size()-1, -1), nsv(sa.size()-1, -1);
     sa[0] = -1;
     sa.push_back(-1);
@@ -22,14 +21,14 @@ void LZ77Compressor::compress_impl(StreamView &p_in, Coder::Encoder<LZ77::factor
     }
 
     size_t k = 0;
-    while(k < input_str.size()) {
+    while(k < input_span.size()) {
 
         size_t lcp_psv=0, lcp_nsv=0;
         if(psv[k] != -1) {
-            while(k+lcp_psv < input_str.length() && input_str[k+lcp_psv] == input_str[psv[k]+lcp_psv]) lcp_psv++;
+            while(k+lcp_psv < input_span.size() && input_span[k+lcp_psv] == input_span[psv[k]+lcp_psv]) lcp_psv++;
         }
         if(nsv[k] != -1) {
-            while(k+lcp_nsv < input_str.length() && input_str[k+lcp_nsv] == input_str[nsv[k]+lcp_nsv]) lcp_nsv++;
+            while(k+lcp_nsv < input_span.size() && input_span[k+lcp_nsv] == input_span[nsv[k]+lcp_nsv]) lcp_nsv++;
         }
 
         if(lcp_psv < lcp_nsv) {
@@ -38,7 +37,7 @@ void LZ77Compressor::compress_impl(StreamView &p_in, Coder::Encoder<LZ77::factor
         }
         else {
             if(lcp_psv == 0) {
-                p_out.encode(LZ77::factor_id{.value = input_str[k], .length = lcp_psv});
+                p_out.encode(LZ77::factor_id{.value = input_span[k], .length = lcp_psv});
                 k++;
             }
             else {
@@ -49,28 +48,27 @@ void LZ77Compressor::compress_impl(StreamView &p_in, Coder::Encoder<LZ77::factor
     }
 }
 
-void LZ77Compressor::decompress_impl(Coder::Decoder<LZ77::factor_id> &p_in, StreamView &p_out){
+void LZ77Compressor::decompress_impl(Coder::Decoder<LZ77::factor_id> &p_in, OutStreamView &p_out){
 
     LZ77::factor_id id;
     while(p_in.decode(id)) {
 
         if(id.length == 0) {
-            if(std::get<char>(id.value) != 0){
-                p_out.write(std::string{std::get<char>(id.value)});
+            if(std::get<char8_t>(id.value) != 0){
+                p_out.put(std::get<char8_t>(id.value));
             }
             continue;
         }
         else {
-            std::string tmp;
-            auto size = p_out.extractSlice(tmp, std::get<size_t>(id.value), id.length);
-            
+
+            auto data = p_out.slice_val(std::get<size_t>(id.value), id.length);            
             for(int i = id.length; i>0;){
-                if(i >= size){
-                    p_out.write(tmp);
-                    i -= size;
+                if(i >= data.size()){
+                    p_out.write(data);
+                    i -= data.size();
                 }
                 else{
-                    p_out.write(tmp.substr(0,i));
+                    p_out.write(std::span(data.data(), i));
                     break;
                 }
             }

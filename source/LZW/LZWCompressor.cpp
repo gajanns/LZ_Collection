@@ -3,14 +3,14 @@
 #include <string>
 
 
-void LZWCompressor::compress_impl(StreamView &p_in, Coder::Encoder<LZW::factor_id> &p_out) {
+void LZWCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<LZW::factor_id> &p_out) {
 
     LZTrie<char> trie;
     for (int i = 0; i < LZW::alphabet_size; i++) {
         trie.insert_back(std::string(1,i)[0]);
     }
 
-    char c;
+    char8_t c;
     int32_t last_code = -1;
     while(p_in.get(c)) {
         if(!trie.traverse(c)) {
@@ -27,21 +27,21 @@ void LZWCompressor::compress_impl(StreamView &p_in, Coder::Encoder<LZW::factor_i
     }
 }
 
-void LZWCompressor::decompress_impl(Coder::Decoder<LZW::factor_id> &p_in, StreamView &p_out) {
+void LZWCompressor::decompress_impl(Coder::Decoder<LZW::factor_id> &p_in, OutStreamView &p_out) {
 
-    std::vector<std::string> dictionary;
+    std::vector<std::u8string> dictionary;
     dictionary.reserve(LZW::alphabet_size);
 
     for (int i = 0; i < LZW::alphabet_size; i++) {
-        dictionary.push_back(std::string(1, i));
+        dictionary.push_back(std::u8string(1, i));
     }
 
     LZW::factor_id prev_code;
     if(!p_in.decode(prev_code)){
         return;
     }
-    std::string prev_string = dictionary[prev_code.value];
-    std::string curr_string; 
+    std::u8string prev_string = dictionary[prev_code.value];
+    std::u8string curr_string; 
     LZW::factor_id curr_code;
     p_out.write(prev_string);
     while(!p_in.reached_end() && p_in.decode(curr_code) && curr_code != 0) {
