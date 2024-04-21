@@ -20,12 +20,13 @@ namespace DebugCoder
         ~DebugEncoder(){};
 
         int encode_impl(Factor p_value) {
-            std::string tmp;
-            if(!(p_value >> tmp)) {
+            std::u8string p_res;
+            if(!(p_value >> p_res)) {
                 return 0;
             }
-            *m_out << tmp << "|";
-            m_bytes_written += tmp.size();
+            (*m_out).write(reinterpret_cast<const char*>(p_res.data()), p_res.size());
+            *m_out << "|";
+            m_bytes_written += p_res.size();
             return 1;
         }
 
@@ -49,14 +50,18 @@ namespace DebugCoder
         ~DebugDecoder(){};
 
         int decode_impl(Factor &p_value) {
-            std::string p_res;
-            if(!std::getline(*m_in, p_res, '|')) {
-                return 0;
+            std::u8string p_res;
+            char8_t c;
+            while(m_in->get(reinterpret_cast<char&>(c))) {
+                m_bytes_read++;
+                if(c == '|') {
+                    break;
+                }
+                p_res += c;
             }
             if(!(p_value << p_res)) {
                 return 0;
             }
-            m_bytes_read += p_res.size();
             return 1;
         }
 

@@ -32,9 +32,9 @@ namespace LZW
         }
 
         bool operator>>(std::u8string &p_out) {
-            std::basic_stringstream<char8_t> ss;
-            ss << value;
-            p_out += ss.str();
+            
+            std::string tmp = std::to_string(value);
+            p_out += std::u8string{tmp.begin(), tmp.end()};
             return true;
         }
 
@@ -64,23 +64,24 @@ namespace LZ77
 
         bool operator>>(std::u8string &p_out) {
 
-            std::basic_stringstream<char8_t> ss;
-            ss << length << u8",";
-
+            std::stringstream ss;
+            ss << length << ",";
+        
             if(length == 0) {
-                ss << std::get<char8_t>(value);
+                ss << reinterpret_cast<char&>(std::get<char8_t>(value));
             }
             else {
                 ss << std::get<size_t>(value);
             }
-            p_out += ss.str();
+            std::string tmp = ss.str();
+            p_out += std::u8string{tmp.begin(), tmp.end()};
             return true;
         }
 
         bool operator<<(std::u8string &p_in) {
             
-            auto pos = p_in.find(u8',');
-            if(pos == std::string::npos) {
+            auto pos = p_in.find(',');
+            if(pos == std::u8string::npos) {
                 return false;
             }
 
