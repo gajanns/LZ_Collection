@@ -1,6 +1,11 @@
 #pragma once
 
 #include <iostream>
+#include <fstream>
+#include <sys/mman.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/stat.h>
 #include <span>
 #include<vector>
 #include <ranges>
@@ -13,28 +18,82 @@
 class InStreamView {
 
 private:
+    enum SourceType {
+        FILE,
+        STREAM
+    };
+
     std::istream *m_in;
-    std::vector<char8_t> m_buffer;
+    char8_t* m_buffer;
     size_t m_size = 0, m_offset = 0;
     bool m_buffered;
+    SourceType m_source;
 
 public:
-    InStreamView(std::istream &p_in, bool buffered = true): m_in(&p_in), m_buffered(buffered) {
+
+    InStreamView(std::istream &p_in, bool buffered = true): m_in(&p_in), m_buffered(buffered), m_source(STREAM) {
         m_in->seekg(0, std::ios::end);
         m_size = m_in->tellg();
         m_in->seekg(0, std::ios::beg);
 
         if(buffered) {
-            m_buffer.resize(m_size);
-            if(!m_in->read(reinterpret_cast<char*>(m_buffer.data()), m_size)) {
+            m_buffer = new char8_t[m_size];
+            if(!m_in->read(reinterpret_cast<char*>(m_buffer), m_size)) {
                 std::cerr << "Cannot read from Input-Stream" << std::endl;
                 exit(EXIT_FAILURE);
             }
         }
     }
+
+    InStreamView(const char* p_filename, bool buffered = true): m_buffered(buffered), m_source(FILE) {
+        
+        if(buffered) {
+            int fd = open(p_filename, O_RDONLY);
+            if(fd == -1) {
+                std::cerr << "Cannot open file: " << p_filename << std::endl;
+                exit(EXIT_FAILURE);
+            }
+            struct stat sb;
+            if(fstat(fd, &sb) == -1) {
+                std::cerr << "Cannot get file stats" << std::endl;
+                exit(EXIT_FAILURE);
+            }
+            m_size = sb.st_size;
+            m_buffer = static_cast<char8_t*>(mmap(NULL, m_size, PROT_READ, MAP_PRIVATE, fd, 0));
+            if(m_buffer == MAP_FAILED) {
+                std::cerr << "Cannot map file to memory" << std::endl;
+                exit(EXIT_FAILURE);
+            }
+            m_in = nullptr;
+            close(fd);
+        }
+        else {
+            m_in = new std::ifstream(p_filename, std::ios::binary);
+            if(!m_in->good()) {
+                std::cerr << "Cannot open file: " << p_filename << std::endl;
+                exit(EXIT_FAILURE);
+            }
+            m_in->seekg(0, std::ios::end);
+            m_size = m_in->tellg();
+            m_in->seekg(0, std::ios::beg);
+        }
+    }
+
     ~InStreamView() {
-        m_in->clear();
-        m_in->seekg(0, std::ios::beg);
+        if(m_source == FILE) {
+            if(m_buffered) {
+                munmap(m_buffer, m_size);
+            }
+            else {
+                delete m_in;
+            }
+        }
+        else {
+            if(m_buffered) {
+                delete[] m_buffer;
+            }
+            m_in->seekg(0, std::ios::beg);
+        }
     }
 
     /**
@@ -56,7 +115,7 @@ public:
             std::cerr << "Input-Stream: Out of Bounds" << std::endl;
             exit(EXIT_FAILURE);
         }
-        return std::span<const char8_t>(m_buffer.data()+p_offset, std::min(p_size, m_size-p_offset));
+        return std::span<const char8_t>(m_buffer+p_offset, std::min(p_size, m_size-p_offset));
     }
 
     /**
@@ -85,7 +144,7 @@ public:
             m_in->seekg(m_offset, std::ios::beg);
         }
         else {
-            std::copy(m_buffer.begin()+p_offset, m_buffer.begin()+p_offset+std::min(p_size, m_size-p_offset), result.begin());
+            std::copy(m_buffer+p_offset, m_buffer+p_offset+std::min(p_size, m_size-p_offset), result.begin());
         }
         return result;
     }
@@ -111,7 +170,7 @@ public:
             return false;
         }
 
-        if(!m_buffer.empty()) {
+        if(m_buffered) {
             c = m_buffer[m_offset];
             m_offset++;
             return true;
