@@ -2,6 +2,7 @@
 
 #include <stddef.h>
 #include <map>
+#include <sstream>
 #include <stdexcept>
 #include <variant>
 #include <cstdint>
