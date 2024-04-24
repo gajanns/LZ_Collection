@@ -52,7 +52,7 @@ namespace SuffixArray
     std::vector<size_t> const &p_lms_positions, std::vector<int> &p_sa) {
         
         std::fill(p_sa.begin(), p_sa.end(), -1);
-
+        
         for( auto p : p_lms_positions | std::ranges::views::reverse) {
             if(p == p_value.size()) {
                 p_sa[0] = p;
@@ -70,10 +70,10 @@ namespace SuffixArray
      * @param p_types Type-Sequence of Data-Sequence
      * @param p_sa Modified Suffix Array (Output)
      */
-    void induce_sort_L(const NumRange auto &p_value, std::vector<size_t> p_bucket_sizes, std::vector<LS_Type> const &p_types, std::vector<int> &p_sa) {
+    void induce_sort_L(const NumRange auto &p_value, std::vector<size_t> p_bucket_sizes, std::vector<int> &p_sa) {
         
-        for( auto p : p_sa) {
-            if(p > 0 && p_types[p-1] == L) {
+        for(auto p : p_sa) {
+            if(p > 0 && (p == static_cast<int>(p_value.size()) || p_value[p-1] >= p_value[p])) {
                 p_sa[(p_bucket_sizes[p_value[p-1]-1]++)] = p-1;
             }
         }
@@ -87,21 +87,21 @@ namespace SuffixArray
      * @param p_types Type-Sequence of Data-Sequence
      * @param p_sa Modified Suffix Array (Output)
      */
-    void induce_sort_S(const NumRange auto &p_value, std::vector<size_t> p_bucket_sizes, std::vector<LS_Type> const &p_types, std::vector<int> &p_sa) {
-        
-        for( auto p : p_sa | std::ranges::views::reverse) {
-            if(p > 0 && p_types[p-1] == S) {
+    void induce_sort_S(const NumRange auto &p_value, std::vector<size_t> p_bucket_sizes, std::vector<int> &p_sa) {
+        size_t id = p_value.size()-1;
+        for(auto p : p_sa | std::ranges::views::reverse) {
+            if(p > 0 && p < static_cast<int>(p_value.size()) && ( p_value[p-1] < p_value[p] || (p_value[p-1] == p_value[p] && p_bucket_sizes[p_value[p-1]-1] < id))) {
                 p_sa[(--p_bucket_sizes[p_value[p-1]])] = p-1;
             }
+            id--;
         }
     }
 
-    void phase2(const NumRange auto &p_value, std::vector<size_t> &p_bucket_sizes, 
-    std::vector<LS_Type> const &p_types, std::vector<size_t> const &p_lms_positions, std::vector<int> &p_sa) {
+    void phase2(const NumRange auto &p_value, std::vector<size_t> &p_bucket_sizes, std::vector<size_t> const &p_lms_positions, std::vector<int> &p_sa) {
         
         estimate_sa(p_value, p_bucket_sizes, p_lms_positions, p_sa);
-        induce_sort_L(p_value, p_bucket_sizes, p_types, p_sa);
-        induce_sort_S(p_value, p_bucket_sizes, p_types, p_sa);
+        induce_sort_L(p_value, p_bucket_sizes, p_sa);
+        induce_sort_S(p_value, p_bucket_sizes, p_sa);
     }
 
     /**
@@ -182,7 +182,7 @@ namespace SuffixArray
 
     void phase1(const NumRange auto &p_value, std::vector<size_t> &p_bucket_sizes, std::vector<LS_Type> &p_types, std::vector<size_t> &p_lms_positions, std::vector<int> &p_sa) {
         
-        phase2(p_value, p_bucket_sizes, p_types, p_lms_positions, p_sa);
+        phase2(p_value, p_bucket_sizes, p_lms_positions, p_sa);
 
         auto [reduced_string, reduced_alphabet_size, reduced_lms_positions] = 
         reduce_text(p_value, p_types, p_sa, p_lms_positions);
@@ -239,7 +239,7 @@ namespace SuffixArray
        /* #endregion */
 
         phase1(p_value, bucket_sizes, types, lms_positions, result);
-        phase2(p_value, bucket_sizes, types, lms_positions, result);
+        phase2(p_value, bucket_sizes, lms_positions, result);
         return result;
     }
 
