@@ -15,7 +15,7 @@ Simple Collection of Prototypes of LZ-Algorithms:LZW, LZ77, Approx. LZ77 (seq+ p
 | -Perf-Measurement |-          |✔       |✅        |13/04      |
 | -Plot             |-          |⟳       |⛔        |13/04      |
 |LZ78/LZW           |-          |✔       |✅        |17/04      |
-|exact LZ77         |-          |✔       |✅        |15/04      |
+|exact LZ77         |-          |✔       |✅        |23/04      |
 
 ---
 ### Phase 2:
