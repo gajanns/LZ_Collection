@@ -10,25 +10,25 @@ Simple Collection of Prototypes of LZ-Algorithms:LZW, LZ77, Approx. LZ77 (seq+ p
 ### Phase 1:
 |Task               |Deadline   |Status  |Tested     |Last Update|
 |-------------------|:---------:|:------:|:---------:|:---------:|
-|Framework          |-          |✔       |✅        |12/03      |
-| -IO               |-          |✔       |✅        |12/03      |
-| -Perf-Measurement |-          |✔       |✅        |13/04      |
-| -Plot             |-          |⟳       |⛔        |13/04      |
-|LZ78/LZW           |-          |✔       |✅        |17/04      |
-|exact LZ77         |-          |✔       |✅        |23/04      |
+|Framework          |-          |✔       |✅          |12/03      |
+| -IO               |-          |✔       |✅          |12/03      |
+| -Perf-Measurement |-          |✔       |✅          |13/04      |
+| -Plot             |-          |⟳       |⛔          |13/04      |
+|LZ78/LZW           |-          |✔       |✅          |17/04      |
+|exact LZ77         |-          |⟳       |✅          |29/04      |
 
 ---
 ### Phase 2:
 |Task               |Deadline   |Status  |Tested     |Last Update|
 |-------------------|:---------:|:------:|:---------:|:---------:|
-|Approx. LZ77(seq)  |-          |❌     |⛔         |-          |
-| -Rabin-Karp       |-          |✔      |✅         |25/03      |
-| -Custom Hashmap   |-          |❌     |⛔         |-          |
+|Approx. LZ77(seq)  |-          |⟳       |⛔          |29/04      |
+| -Rabin-Karp       |-          |✔       |✅          |25/03      |
+| -Custom Hashmap   |-          |❌       |⛔          |-          |
 
 ---
 ### Phase 3:
 |Task               |Deadline   |Status  |Tested     |Last Update|
 |-------------------|:---------:|:------:|:---------:|:---------:|
-|Approx. LZ77(par)  |-          |❌     |⛔         |-          |
+|Approx. LZ77(par)  |-          |❌       |⛔          |-          |
 
 
