@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0.0)
+cmake_minimum_required(VERSION 3.28.0)
 project(LZ_Collection VERSION 0.1.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -14,6 +14,7 @@ enable_testing()
 include_directories(include)
 include_directories(include/LZ77)
 include_directories(include/LZW)
+include_directories(include/ApproxLZ77)
 
 add_subdirectory(source)
 
