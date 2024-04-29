@@ -1,10 +1,10 @@
 #include "gtest/gtest.h"
-#include "LZ77Compressor.hpp"
+#include "ApproxLZ77Compressor.hpp"
 #include "StreamView.hpp"
 #include "LZ77BinCoder.hpp"
 
-TEST(LZ77CompressorTests, CompressEmptyString) {
-    LZ77Compressor compressor;
+TEST(ApproxLZ77CompressorTests, CompressEmptyString) {
+    ApproxLZ77Compressor compressor;
     std::stringstream ss_in, ss_out, ss_out2;
     ss_in << "";
     InStreamView sv_in(ss_in);
@@ -20,8 +20,8 @@ TEST(LZ77CompressorTests, CompressEmptyString) {
     EXPECT_TRUE(ss_in.str().compare(ss_out2.str())==0);
 }
 
-TEST(LZ77CompressorTests, CompressText) {
-    LZ77Compressor compressor;
+TEST(ApproxLZ77CompressorTests, CompressText) {
+    ApproxLZ77Compressor compressor;
     std::stringstream ss_in, ss_out, ss_out2;
     ss_in << "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut "
              "labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores "

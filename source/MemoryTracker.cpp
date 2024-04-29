@@ -1,5 +1,4 @@
 #include "MemoryTracker.hpp"
-#include <iostream>
 #include <unordered_map>
 #include <new>
 
@@ -15,6 +14,7 @@ void MemoryTracker::start_mem_record() {
 
 void MemoryTracker::stop_mem_record() {
     recording = false;
+    alloc_size_table.clear();
 }
 
 void log_mem_alloc(void* p_alloc_ptr, size_t p_size) {

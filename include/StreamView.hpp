@@ -134,7 +134,7 @@ public:
             exit(EXIT_FAILURE);
         }
 
-        std::vector<char8_t> result(p_size);
+        std::vector<char8_t> result(std::min(p_size, m_size-p_offset));
         if(!m_buffered) {
             m_in->seekg(p_offset, std::ios::beg);
             if(!m_in->read(reinterpret_cast<char*>(result.data()), std::min(p_size, m_size-p_offset))) {
@@ -262,7 +262,7 @@ public:
             std::cerr << "Output-Stream: Out of Bounds" << std::endl;
             exit(EXIT_FAILURE);
         }
-        std::vector<char8_t> result(p_size);
+        std::vector<char8_t> result(std::min(p_size, m_size-p_offset));
         m_io->seekg(p_offset, std::ios::beg);
         if(!m_io->read(reinterpret_cast<char*>(result.data()), std::min(p_size, m_size-p_offset))) {
             std::cerr << "Cannot read from Output-Stream" << std::endl;

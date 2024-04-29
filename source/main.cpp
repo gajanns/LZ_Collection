@@ -11,6 +11,7 @@
 #include "DebugCoder.hpp"
 #include "Definition.hpp"
 #include "StreamView.hpp"
+#include "ApproxLZ77Compressor.hpp"
 
 
 
@@ -106,6 +107,13 @@ void execute_algorithms(ExecutionSetup &exec_setup, std::vector<std::unique_ptr<
                 case lz77: {
                     LZ77Encoder encoder(*output_stream, view.size());
                     LZ77Compressor comp;
+                    comp.compress(view, encoder);
+                    stats = comp.m_stats;
+                    break;
+                }
+                case appr77seq: {
+                    ApproxLZ77Compressor comp;
+                    LZ77Encoder encoder(*output_stream, view.size());
                     comp.compress(view, encoder);
                     stats = comp.m_stats;
                     break;

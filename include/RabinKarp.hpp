@@ -4,6 +4,7 @@
 #include <iterator>
 #include <cstdlib>
 #include <utility>
+#include <algorithm>
 #include "StreamView.hpp"
 #include "Definition.hpp"
 
@@ -22,14 +23,20 @@ public:
      * @brief Hashvalue
      * 
      */
-    const size_t val;
+    size_t val;
     static const size_t base = 256;
     static const size_t base_inverse = 74;
     static const size_t prime = 997;
 
     
-    RabinKarpFingerprint(NumRange auto& p_data): val(calc_hash_value(p_data, &m_acc_base)){}
+    RabinKarpFingerprint(NumRange auto& p_data, size_t filler_count = 0): val(calc_hash_value(p_data, &m_acc_base)){
+        for(size_t i = 0; i < filler_count; i++){
+            m_acc_base = (m_acc_base * base) % prime;
+            val = (val * base) % prime;
+        }
+    }
     RabinKarpFingerprint(const size_t p_acc_base, const size_t p_hash_value):m_acc_base(p_acc_base),val(p_hash_value){}
+    RabinKarpFingerprint(const RabinKarpFingerprint& p_value):m_acc_base(p_value.m_acc_base),val(p_value.val){}
 
     /**
      * @brief Calculate Hashvalue from data
@@ -41,11 +48,13 @@ public:
     static size_t calc_hash_value(NumRange auto& p_data, size_t *p_acc_base=nullptr){
         size_t acc_base = 1;
         size_t val = 0;
-        for(auto it = p_data.crbegin(); it!=p_data.crend();++it) {
-            val += (*it)*acc_base;
+
+        for(auto p: p_data | std::views::reverse){
+            val += p*acc_base;
             acc_base = (acc_base*base) % prime;
             val %= prime;
         }
+
         if(p_acc_base != nullptr){
             (*p_acc_base) = acc_base;
         }
@@ -96,4 +105,16 @@ public:
     bool operator==(const RabinKarpFingerprint& p_value) const{
         return m_acc_base == p_value.m_acc_base && val == p_value.val;
     }
+
+    struct HashOp {
+        size_t operator()(const RabinKarpFingerprint& p_value) const {
+            return p_value.val;
+        }
+    };
+
+    struct EqualOp {
+        bool operator()(const RabinKarpFingerprint& p_lhs, const RabinKarpFingerprint& p_rhs) const {
+            return p_lhs == p_rhs;
+        }
+    };
 };
