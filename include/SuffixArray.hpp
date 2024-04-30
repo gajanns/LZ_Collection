@@ -90,7 +90,7 @@ namespace SuffixArray
     void induce_sort_S(const NumRange auto &p_value, std::vector<size_t> p_bucket_sizes, std::vector<int> &p_sa) {
         size_t id = p_value.size()-1;
         for(auto p : p_sa | std::ranges::views::reverse) {
-            if(p > 0 && p < static_cast<int>(p_value.size()) && ( p_value[p-1] < p_value[p] || (p_value[p-1] == p_value[p] && p_bucket_sizes[p_value[p-1]-1] < id))) {
+            if(p > 0 && p < static_cast<int>(p_value.size()) && ( p_value[p-1] < p_value[p] || (p_value[p-1] == p_value[p] && p_bucket_sizes[p_value[p-1]-1] <= id))) {
                 p_sa[(--p_bucket_sizes[p_value[p-1]])] = p-1;
             }
             id--;
