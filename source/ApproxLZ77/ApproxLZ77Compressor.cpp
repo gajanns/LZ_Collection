@@ -3,7 +3,7 @@
 #include <numeric>
 #include <bit>
 
-void ApproxLZ77Compressor::fill_block_table(std::span<const char8_t> &p_input, std::vector<size_t> &p_blocks, size_t p_round){
+void ApproxLZ77Compressor::fill_block_table(std::span<const char8_t> &p_input, std::unordered_set<size_t> &p_blocks, size_t p_round){
     size_t sentinel_count = std::bit_ceil(p_input.size())-p_input.size();
     size_t block_size = (p_input.size() + sentinel_count) >> p_round;
 
@@ -11,16 +11,11 @@ void ApproxLZ77Compressor::fill_block_table(std::span<const char8_t> &p_input, s
     block_table.reserve(p_blocks.size());
 
     for(auto p: p_blocks){
+        if(p*block_size + block_size >= p_input.size()){
+            continue;
+        }
         std::span<const char8_t> block;
-        if(p*block_size >= p_input.size()){
-            block = std::span<const char8_t>();
-        }
-        else if(p*block_size + block_size > p_input.size()){
-            block = p_input.subspan(p*block_size, p_input.size()-p*block_size);
-        }
-        else {
-            block = p_input.subspan(p*block_size, block_size);
-        }
+        block = p_input.subspan(p*block_size, block_size);
         RKF block_hash(block, block_size - block.size());
         block_table[block_hash].push_back(p);
     }
@@ -28,18 +23,19 @@ void ApproxLZ77Compressor::fill_block_table(std::span<const char8_t> &p_input, s
 
 void ApproxLZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<LZ77::factor_id> &p_out) {
     std::span<const char8_t> input_span(p_in.slice_ref(0, p_in.size()));
-    // ToDo: Implement Approx. LZ77 compression
+    if(input_span.size() == 0) return;
+
     size_t sentinel_count = input_span.size() ? std::bit_ceil(input_span.size())-input_span.size(): 0;
     size_t block_size = input_span.size() + sentinel_count;
-    std::vector<size_t> unmarked_blocks = {0};
+    std::unordered_set<size_t> unmarked_blocks = {0};
 
     for(size_t round = 1; block_size > 1; ++round){
         block_size >>= 1;
-        std::vector<size_t> new_unmarked_blocks;
+        std::unordered_set<size_t> new_unmarked_blocks;
         new_unmarked_blocks.reserve(unmarked_blocks.size()*2);
         for(auto p: unmarked_blocks){
-            new_unmarked_blocks.push_back(2*p);
-            new_unmarked_blocks.push_back(2*p+1);
+            new_unmarked_blocks.insert(2*p);
+            new_unmarked_blocks.insert(2*p+1);
         }
         unmarked_blocks = new_unmarked_blocks;
 
@@ -52,16 +48,17 @@ void ApproxLZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<LZ77
             auto candidates = block_table.find(block_hash);
             if(candidates != block_table.end()){
                 for(auto p: candidates->second){
-                    if(p*block_size <= i || std::find(unmarked_blocks.begin(), unmarked_blocks.end(), p) == unmarked_blocks.end()){
+                    if(p*block_size <= i || !unmarked_blocks.contains(p)){
                         continue;
                     }
 
                     bool is_match = std::equal(input_span.begin()+i, input_span.begin() + i + block_size, input_span.begin()+p*block_size);
                     if(is_match){
                         factor_chain.insert({p*block_size, LZ77::factor_id{.value = i, .length = block_size}});
-                        auto it = std::find(unmarked_blocks.begin(), unmarked_blocks.end(), p);
-                        if(it != unmarked_blocks.end()){
-                            unmarked_blocks.erase(it);
+                        unmarked_blocks.erase(p);
+                        auto it = std::find(candidates->second.begin(), candidates->second.end(), p);
+                        if(it != candidates->second.end()){
+                            candidates->second.erase(it);
                         }
                     }
                 }
@@ -71,7 +68,7 @@ void ApproxLZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<LZ77
     }
 
     for(auto p: unmarked_blocks) {
-        if(input_span.size() == 0 || input_span[p*block_size] == 0) break;
+        if(p*block_size >= input_span.size()) continue;
         factor_chain.insert({p*block_size, LZ77::factor_id{.value = input_span[p*block_size], .length = 0}});
     }
 
