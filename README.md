@@ -21,7 +21,7 @@ Simple Collection of Prototypes of LZ-Algorithms:LZW, LZ77, Approx. LZ77 (seq+ p
 ### Phase 2:
 |Task               |Deadline   |Status  |Tested     |Last Update|
 |-------------------|:---------:|:------:|:---------:|:---------:|
-|Approx. LZ77(seq)  |-          |⟳       |⛔          |29/04      |
+|Approx. LZ77(seq)  |-          |⟳       |✅          |30/04      |
 | -Rabin-Karp       |-          |✔       |✅          |25/03      |
 | -Custom Hashmap   |-          |❌       |⛔          |-          |
 
