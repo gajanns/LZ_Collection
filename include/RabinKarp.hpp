@@ -17,6 +17,7 @@
 class RabinKarpFingerprint {
 private:
     size_t m_acc_base = 1;
+    size_t m_acc_inv_base = 1;
 
 public:
     /**
@@ -25,16 +26,11 @@ public:
      */
     size_t val;
     static const size_t base = 256;
-    static const size_t base_inverse = 74;
-    static const size_t prime = 997;
+    static const size_t base_inverse = 7455;
+    static const size_t prime = 7919;
 
     
-    RabinKarpFingerprint(NumRange auto& p_data, size_t filler_count = 0): val(calc_hash_value(p_data, &m_acc_base)){
-        for(size_t i = 0; i < filler_count; i++){
-            m_acc_base = (m_acc_base * base) % prime;
-            val = (val * base) % prime;
-        }
-    }
+    RabinKarpFingerprint(NumRange auto& p_data): val(calc_hash_value(p_data, &m_acc_base)){}
     RabinKarpFingerprint(const size_t p_acc_base, const size_t p_hash_value):m_acc_base(p_acc_base),val(p_hash_value){}
     RabinKarpFingerprint(const RabinKarpFingerprint& p_value):m_acc_base(p_value.m_acc_base),val(p_value.val){}
 
@@ -71,6 +67,28 @@ public:
         size_t res_acc_base = (m_acc_base * p_value.m_acc_base) % prime;
         size_t res_hash = ((val * p_value.m_acc_base)+ p_value.val)% prime;
         return RabinKarpFingerprint(res_acc_base, res_hash);
+    }
+
+    /**
+     * @brief Generate two Fingerprints by splitting underlying Dataphrase (a little mor efficient)
+     * 
+     * @param p_data Underlying Dataphrase (No Coherence-Check possible)
+     * @return std::pair<RabinKarpFingerprint, RabinKarpFingerprint> Fingerprint after splitting
+     */
+    std::pair<RabinKarpFingerprint, RabinKarpFingerprint> split(const NumRange auto& p_data, size_t p_pos){
+        if(p_pos == 0) return {RabinKarpFingerprint(1, 0), *this};
+        if(p_pos == p_data.size()) return {*this, RabinKarpFingerprint(1, 0)};
+        if(p_pos > p_data.size()) throw std::invalid_argument("Split position out of range");
+
+        auto right_data = p_data | std::views::drop(p_pos);
+        RabinKarpFingerprint right_fp(right_data);
+        size_t inv_acc_base = 1;
+        for(size_t i = 0; i < right_data.size(); ++i){
+            inv_acc_base = (inv_acc_base * base_inverse) % prime;
+        }
+        size_t left_hash = ((val + prime - right_fp.val) * inv_acc_base) % prime;
+        size_t left_acc_base = (m_acc_base * inv_acc_base) % prime;
+        return {RabinKarpFingerprint(left_acc_base, left_hash), right_fp};
     }
 
     /**
