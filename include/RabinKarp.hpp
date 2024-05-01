@@ -82,9 +82,13 @@ public:
 
         auto right_data = p_data | std::views::drop(p_pos);
         RabinKarpFingerprint right_fp(right_data);
-        size_t inv_acc_base = 1;
-        for(size_t i = 0; i < right_data.size(); ++i){
-            inv_acc_base = (inv_acc_base * base_inverse) % prime;
+        size_t inv_acc_base = 1, inv_base = base_inverse, exp = right_data.size();
+        while(exp > 0) {
+            if(exp%2) {
+                inv_acc_base = (inv_acc_base * inv_base) % prime;
+            }
+            exp >>= 1;
+            inv_base = (inv_base * inv_base) % prime;
         }
         size_t left_hash = ((val + prime - right_fp.val) * inv_acc_base) % prime;
         size_t left_acc_base = (m_acc_base * inv_acc_base) % prime;
