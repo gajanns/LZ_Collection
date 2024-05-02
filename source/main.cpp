@@ -7,6 +7,7 @@
 #include "LZWCompressor.hpp"
 #include "LZWBinCoder.hpp"
 #include "LZ77BinCoder.hpp"
+#include "ApproxLZ77BinCoder.hpp"
 #include "LZ77Compressor.hpp"
 #include "DebugCoder.hpp"
 #include "Definition.hpp"
@@ -113,7 +114,7 @@ void execute_algorithms(ExecutionSetup &exec_setup, std::vector<std::unique_ptr<
                 }
                 case appr77seq: {
                     ApproxLZ77Compressor comp;
-                    LZ77Encoder encoder(*output_stream, view.size());
+                    ApproxLZ77Encoder encoder(*output_stream, view.size());
                     comp.compress(view, encoder);
                     stats = comp.m_stats;
                     break;

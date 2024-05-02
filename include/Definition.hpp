@@ -2,6 +2,7 @@
 
 #include <stddef.h>
 #include <map>
+#include <bit>
 #include <sstream>
 #include <stdexcept>
 #include <variant>
@@ -89,6 +90,59 @@ namespace LZ77
             length = std::stoul(std::string{p_in.begin(), p_in.begin()+pos});
             
             if(length == 0) {
+                value = p_in[pos+1];
+            }
+            else {
+                try {
+                    value = std::stoul(std::string{p_in.begin()+pos+1, p_in.end()});
+                }
+                catch(std::invalid_argument &e) {
+                    return false;
+                }
+            }
+            return true;
+        }
+    };
+}
+
+namespace ApproxLZ77 {
+
+    /**
+     * @brief Representation of Factor in Approximate LZ77-Algorithm
+     * 
+     */
+    struct factor_id{
+        std::variant<char8_t, size_t> value;
+        size_t log_length; // if(0) => length = 0, else => 2^(log_length-1)
+
+        bool operator>>(std::u8string &p_out) {
+
+            size_t length = log_length ? 1<<(log_length-1) : 0;    
+            std::stringstream ss;
+            ss << length << ",";
+        
+            if(length == 0) {
+                ss << reinterpret_cast<char&>(std::get<char8_t>(value));
+            }
+            else {
+                ss << std::get<size_t>(value);
+            }
+            std::string tmp = ss.str();
+            p_out += std::u8string{tmp.begin(), tmp.end()};
+            return true;
+        }
+
+        bool operator<<(std::u8string &p_in) {
+            
+            auto pos = p_in.find(',');
+            if(pos == std::u8string::npos) {
+                return false;
+            }
+
+            size_t length = std::stoul(std::string{p_in.begin(), p_in.begin()+pos});
+            log_length = length ? std::bit_width(length) : 0;
+            
+            if(log_length == 0) {
                 value = p_in[pos+1];
             }
             else {

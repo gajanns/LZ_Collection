@@ -17,19 +17,19 @@ private:
     std::unordered_map<size_t, RabinKarpFingerprint> unmarked_blocks;
 
     struct pair_cmp {
-        bool operator()(const std::pair<size_t, LZ77::factor_id> &a, const std::pair<size_t, LZ77::factor_id> &b) const {
+        bool operator()(const std::pair<size_t, ApproxLZ77::factor_id> &a, const std::pair<size_t, ApproxLZ77::factor_id> &b) const {
             return a.first < b.first;
         }
     };
-    std::set<std::pair<size_t, LZ77::factor_id>, pair_cmp> factor_phrases;
+    std::set<std::pair<size_t, ApproxLZ77::factor_id>, pair_cmp> factor_phrases;
 
     std::unordered_map<RabinKarpFingerprint, std::set<size_t> , RabinKarpFingerprint::HashOp, RabinKarpFingerprint::EqualOp> fp_block_table;
 
 public:
-    BlockTableSTD(Sequence &p_input): input_data(p_input), round(0), block_size(std::bit_ceil(input_data.size())) {};
-    ~BlockTableSTD() = default;
+    size_t round, block_size, log_block_size;
 
-    size_t round, block_size;
+    BlockTableSTD(Sequence &p_input): input_data(p_input), round(0), block_size(std::bit_ceil(input_data.size())), log_block_size(std::bit_width(block_size)) {};
+    ~BlockTableSTD() = default;
 
     auto zero_fp() {
         if(unmarked_blocks.empty()) {
@@ -42,6 +42,7 @@ public:
     void next_block_table(){
         round++;
         block_size >>= 1;
+        log_block_size--;
         fp_block_table.clear();
         
         if(round == 1) {
@@ -81,11 +82,11 @@ public:
 
     void add_factor_phrase(size_t p_pos, size_t p_block){
 
-        factor_phrases.insert({p_block*block_size, LZ77::factor_id{.value = p_pos, .length = block_size}});
+        factor_phrases.insert({p_block*block_size, ApproxLZ77::factor_id{.value = p_pos, .log_length = log_block_size}});
     }
 
     void add_factor_singular(size_t p_block){
-        factor_phrases.insert({p_block*block_size, LZ77::factor_id{.value = input_data[p_block*block_size], .length = 0}});
+        factor_phrases.insert({p_block*block_size, ApproxLZ77::factor_id{.value = input_data[p_block*block_size], .log_length = 0}});
     }
 
     void match_block(size_t p_pos, RabinKarpFingerprint p_pattern_fp){
