@@ -31,21 +31,22 @@ private:
 
 public:
 
-    InStreamView(std::istream &p_in, bool buffered = true): m_in(&p_in), m_buffered(buffered), m_source(STREAM) {
+    InStreamView(std::istream &p_in, size_t max_size = 0, bool buffered = true): m_in(&p_in), m_buffered(buffered), m_source(STREAM) {
         m_in->seekg(0, std::ios::end);
         m_size = m_in->tellg();
         m_in->seekg(0, std::ios::beg);
-
+        m_size = max_size? std::min(m_size, max_size): m_size;
         if(buffered) {
             m_buffer = new char8_t[m_size];
             if(!m_in->read(reinterpret_cast<char*>(m_buffer), m_size)) {
                 std::cerr << "Cannot read from Input-Stream" << std::endl;
                 exit(EXIT_FAILURE);
             }
+            m_in->seekg(0, std::ios::beg);
         }
     }
 
-    InStreamView(const char* p_filename, bool buffered = true): m_buffered(buffered), m_source(FILE) {
+    InStreamView(const char* p_filename, size_t max_size = 0, bool buffered = true): m_buffered(buffered), m_source(FILE) {
         
         if(buffered) {
             int fd = open(p_filename, O_RDONLY);
@@ -59,6 +60,7 @@ public:
                 exit(EXIT_FAILURE);
             }
             m_size = sb.st_size;
+            m_size = max_size? std::min(m_size, max_size): m_size;
             m_buffer = static_cast<char8_t*>(mmap(NULL, m_size, PROT_READ, MAP_PRIVATE, fd, 0));
             if(m_buffer == MAP_FAILED) {
                 std::cerr << "Cannot map file to memory" << std::endl;
@@ -75,11 +77,13 @@ public:
             }
             m_in->seekg(0, std::ios::end);
             m_size = m_in->tellg();
+            m_size = max_size? std::min(m_size, max_size): m_size;
             m_in->seekg(0, std::ios::beg);
         }
     }
 
     ~InStreamView() {
+        reset();
         if(m_source == FILE) {
             if(m_buffered) {
                 munmap(m_buffer, m_size);
@@ -92,7 +96,6 @@ public:
             if(m_buffered) {
                 delete[] m_buffer;
             }
-            m_in->seekg(0, std::ios::beg);
         }
     }
 
@@ -182,6 +185,12 @@ public:
         return false;
     }
 
+    void reset(){
+        m_offset = 0;
+        if(!m_buffered) {
+            m_in->seekg(0, std::ios::beg);
+        }
+    }
 };
 
 /**
@@ -198,9 +207,7 @@ public:
     OutStreamView(std::iostream &p_io): m_io(&p_io) {}
     ~OutStreamView() {
         m_io->flush();
-        m_io->seekp(0, std::ios::beg);
-        m_io->seekg(0, std::ios::beg);
-        m_io->clear();
+        reset();
     }
 
     /**
@@ -270,5 +277,12 @@ public:
         }
         m_io->seekg(m_offset, std::ios::beg);
         return result;
+    }
+
+    void reset(){
+        m_offset = 0;
+        m_size = 0;
+        m_io->seekp(0, std::ios::beg);
+        m_io->seekg(0, std::ios::beg);
     }
 };

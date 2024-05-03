@@ -4,15 +4,16 @@
 #include <map>
 #include <bit>
 #include <sstream>
+#include "Compressor.hpp"
 #include <stdexcept>
 #include <variant>
 #include <cstdint>
 
 
-enum Algorithm {lzw, lz77, appr77seq, appr77par, all};
-const std::map<std::string, Algorithm> algorithm_from_name{{"LZW", lzw}, {"LZ77", lz77}, {"Approx.LZ77", appr77seq}, {"Approx.LZ77Par", appr77par}};
-const std::map<Algorithm, std::string> algorithm_to_name{{lzw, "LZW"}, {lz77, "LZ77"}, {appr77seq, "Approx.LZ77"}, {appr77par, "Approx.LZ77Par"}}; 
-
+/**
+ * @brief Concept for Integral-Range
+ * 
+ */
 template<typename T>
 concept NumRange = std::ranges::range<T> && std::is_integral_v<std::ranges::range_value_t<T>>;
 

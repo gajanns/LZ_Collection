@@ -53,16 +53,21 @@ namespace Compression {
                 MemoryTracker::start_mem_record();
                 auto start = std::chrono::high_resolution_clock::now();
                 #endif
+
                 compress_impl(p_in, p_out);
+
                 p_out.flush();
-                #ifdef PERF
-                auto end = std::chrono::high_resolution_clock::now();
-                MemoryTracker::stop_mem_record();
-                m_stats.m_mem_usage = MemoryTracker::max_mem_usage;
-                m_stats.m_run_time_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
                 m_stats.m_input_size = p_in.size();
                 m_stats.m_output_size = p_out.bytes_written();
                 m_stats.m_factor_count = p_out.factors_written();
+                p_in.reset();
+                
+
+                #ifdef PERF
+                MemoryTracker::stop_mem_record();
+                m_stats.m_mem_usage = MemoryTracker::max_mem_usage;
+                auto end = std::chrono::high_resolution_clock::now();
+                m_stats.m_run_time_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
                 #endif
             }
             
@@ -77,14 +82,18 @@ namespace Compression {
                 MemoryTracker::start_mem_record();
                 auto start = std::chrono::high_resolution_clock::now();
                 #endif
+
                 decompress_impl(p_in, p_out);
-                #ifdef PERF
-                auto end = std::chrono::high_resolution_clock::now();
-                MemoryTracker::stop_mem_record();
-                m_stats.m_mem_usage = MemoryTracker::max_mem_usage;
-                m_stats.m_run_time_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+                
                 m_stats.m_input_size = p_in.bytes_read();
                 m_stats.m_output_size = p_out.size();
+                p_out.reset();
+
+                #ifdef PERF
+                MemoryTracker::stop_mem_record();
+                m_stats.m_mem_usage = MemoryTracker::max_mem_usage;
+                auto end = std::chrono::high_resolution_clock::now();
+                m_stats.m_run_time_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
                 #endif
             }
     };

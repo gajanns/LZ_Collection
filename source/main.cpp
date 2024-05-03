@@ -4,6 +4,7 @@
 #include <vector>
 #include <map>
 #include <filesystem>
+#include "Compressor.hpp"
 #include "LZWCompressor.hpp"
 #include "LZWBinCoder.hpp"
 #include "LZ77BinCoder.hpp"
@@ -15,12 +16,15 @@
 #include "ApproxLZ77Compressor.hpp"
 
 
-
+enum Algorithm {lzw, lz77, appr77seq, appr77par, all};
+const std::vector<Algorithm> algo_ids = {lzw, lz77, appr77seq};
+const std::vector<std::string> algo_names = {"LZW", "LZ77", "Approx.LZ77", "Approx.LZ77Par"};
+ 
 std::filesystem::path data_path("data");
-std::string report_path("report/report.csv");
+const std::string report_path = "report/report.csv";
 
-std::string report_header = "input,in_size,algorithm,out_size,n_factors,comp_time,mem_usage";
-std::string report_format = "%s,%zu,%s,%zu,%zu,%zu,%zu";
+const std::string report_header = "input,in_size,algorithm,out_size,n_factors,comp_time,mem_usage";
+const std::string report_format = "%s,%zu,%s,%zu,%zu,%zu,%zu";
 
 struct ExecutionSetup {
     std::vector<std::string> fin_names; 
@@ -58,20 +62,21 @@ void extract_userinput(ExecutionSetup &exec_setup, int argc, char *argv[]){
 
     std::string algo_str(argv[3]);
     if(algo_str == "all") {
-        for( auto algo : algorithm_to_name ){
-            exec_setup.algorithms.push_back(algo.first);
+        for(auto algo: algo_ids){
+            exec_setup.algorithms.push_back(algo);
         }
     }
-    else if(algorithm_from_name.contains(algo_str)) {
-        exec_setup.algorithms.push_back(algorithm_from_name.at(algo_str));
+    else if(auto it = std::find(algo_names.begin(), algo_names.end(), algo_str);it != algo_names.end()){
+        exec_setup.algorithms.push_back(algo_ids[it - algo_names.begin()]);
     }
     else {
         std::cerr << "Unknown Algorithm" << std::endl;
         print_usage();
-        exit(-1);
+        exit(EXIT_FAILURE);
     }
 
     for(auto i = 5; i < argc; i++) {
+
         std::string tmp{argv[i]};
 
         if(tmp == "-c") {
@@ -86,55 +91,48 @@ void extract_userinput(ExecutionSetup &exec_setup, int argc, char *argv[]){
     }
 }
 
-void execute_algorithms(ExecutionSetup &exec_setup, std::vector<std::unique_ptr<std::fstream>> &input_streams, 
-                        std::unique_ptr<std::fstream> &output_stream, std::unique_ptr<std::fstream> &report_stream) {
+void execute_algorithms(ExecutionSetup &exec_setup, std::unique_ptr<std::fstream> &output_stream, std::unique_ptr<std::fstream> &report_stream) {
     if(report_stream) {
-        (*report_stream)<< report_header;
+        (*report_stream) << report_header;
     }
 
-    for(size_t idx = 0; auto& in_stream: input_streams) {
-        InStreamView view(*in_stream);
+    for(size_t idx = 0; auto in_file_name: exec_setup.fin_names) {
+        InStreamView in_stream(in_file_name.c_str(), 100000UL);
+
         for(auto& algo: exec_setup.algorithms) {
-            std::cout << "Starting " << exec_setup.fin_names[idx] << " with " << algorithm_to_name.at(algo) << std::endl;
+            std::cout << "Starting " << exec_setup.fin_names[idx] << " with " << algo_names[algo] << std::endl;
             Compression::CompressionStatistics stats;
             switch(algo) {
                 case lzw: {
                     LZWEncoder encoder(*output_stream);
-                    LZWCompressor comp;
-                    comp.compress(view, encoder);
-                    stats = comp.m_stats;
+                    LZWCompressor::Instance().compress(in_stream, encoder);
+                    stats = LZWCompressor::Instance().m_stats;
                     break;
                 }
                 case lz77: {
-                    LZ77Encoder encoder(*output_stream, view.size());
-                    LZ77Compressor comp;
-                    comp.compress(view, encoder);
-                    stats = comp.m_stats;
+                    LZ77Encoder encoder(*output_stream, in_stream.size());
+                    LZ77Compressor::Instance().compress(in_stream, encoder);
+                    stats = LZ77Compressor::Instance().m_stats;
                     break;
                 }
                 case appr77seq: {
-                    ApproxLZ77Compressor comp;
-                    ApproxLZ77Encoder encoder(*output_stream, view.size());
-                    comp.compress(view, encoder);
-                    stats = comp.m_stats;
+                    ApproxLZ77Encoder encoder(*output_stream, in_stream.size());
+                    ApproxLZ77Compressor::Instance().compress(in_stream, encoder);
+                    stats = ApproxLZ77Compressor::Instance().m_stats;
                     break;
                 }
                 default:
-                    continue;
                     break;
             }
-            in_stream->clear();
-            in_stream->seekg(0);
-            output_stream->clear();
-            output_stream->seekp(0);
+
             if(report_stream != nullptr) {
                 char tmp[500];
                 report_stream->write("\n", 1);
-                auto size = sprintf(tmp, report_format.c_str(), exec_setup.fin_names[idx].c_str(), stats.m_input_size, algorithm_to_name.at(algo).c_str(), stats.m_output_size,
+                auto size = sprintf(tmp, report_format.c_str(), exec_setup.fin_names[idx].c_str(), stats.m_input_size, algo_names[algo].c_str(), stats.m_output_size,
                                     stats.m_factor_count, stats.m_run_time_milliseconds, stats.m_mem_usage);
                 report_stream->write(tmp, size);
             }
-            std::cout << "Finished " << exec_setup.fin_names[idx] << " with " << algorithm_to_name.at(algo) << std::endl;
+            std::cout << "Finished " << exec_setup.fin_names[idx] << " with " << algo_names[algo] << std::endl;
         }
         idx++;
     }
@@ -144,7 +142,7 @@ void execute_algorithms(ExecutionSetup &exec_setup, std::vector<std::unique_ptr<
 int main(int argc, char** argv){
 
     ExecutionSetup setup;
-    std::vector<std::unique_ptr<std::fstream>> input_streams;
+    std::vector<InStreamView> input_streams;
 
     if(argc == 1) {
         setup.fin_names.push_back("data/dummy.txt");
@@ -154,15 +152,6 @@ int main(int argc, char** argv){
     }
     else{
         extract_userinput(setup, argc, argv);
-    }
-
-    for( auto in_name: setup.fin_names) {
-        std::unique_ptr<std::fstream> in_stream(new std::fstream(in_name));
-        if(!in_stream->is_open()){
-            std::cerr << "Could not open input-file" <<std::endl;
-            exit(EXIT_FAILURE);
-        }
-        input_streams.push_back(std::move(in_stream));
     }
 
     std::unique_ptr<std::fstream> output_stream(new std::fstream(setup.fout_name, std::ios::in | std::ios::out | std::ios::binary | std::ios::trunc));
@@ -176,5 +165,5 @@ int main(int argc, char** argv){
         report_stream = std::unique_ptr<std::fstream>(new std::fstream("report/report.csv",  std::ios::in | std::ios::out | std::ios::trunc));
     } 
     
-    execute_algorithms(setup, input_streams, output_stream, report_stream);
+    execute_algorithms(setup, output_stream, report_stream);
 }
