@@ -115,11 +115,14 @@ namespace SuffixArray
      * @return false LM Substrings are equal
      */
     bool lms_substrings_unequal(const NumRange auto &p_value, std::vector<LS_Type> const &p_types, size_t p_pos1, size_t p_pos2) {
-        
+        if(p_pos1 == p_pos2) {
+            return false;
+        }
+
         bool is_lms1 = false, is_lms2 = false;
         size_t i = 0;
         while(true) {
-            if (p_value[p_pos1+i] != p_value[p_pos2+i] || p_types[p_pos1+i] != p_types[p_pos2+i]) {
+            if (std::max(p_pos1+i, p_pos2+i) == p_value.size() || p_value[p_pos1+i] != p_value[p_pos2+i] || p_types[p_pos1+i] != p_types[p_pos2+i]) {
                 return true;
             }
             if(is_lms1 && is_lms2) {
