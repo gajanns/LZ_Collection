@@ -46,16 +46,13 @@ public:
         fp_block_table.clear();
         
         if(round == 1) {
-            auto left_half = std::span(input_data.data(), block_size);
-            auto right_half = std::span(input_data.data()+block_size, block_size);
-            auto left_fp = RabinKarpFingerprint(left_half);
-            auto right_fp = RabinKarpFingerprint(right_half);
+            auto left_fp = RabinKarpFingerprint(std::span(input_data.data(), block_size));
+            auto right_fp = RabinKarpFingerprint(std::span(input_data.begin() + block_size, input_data.end()));
             unmarked_blocks.insert({0, left_fp});
             unmarked_blocks.insert({1, right_fp});
-            if(block_size <= input_data.size()){
-                fp_block_table[left_fp].insert(0);
-            }
-            if(2*block_size <= input_data.size()){
+            
+            fp_block_table[left_fp].insert(0);
+            if(2*block_size <= input_data.size()) {
                 fp_block_table[right_fp].insert(1);
             }
             return;
@@ -65,16 +62,27 @@ public:
         new_unmarked_blocks.reserve(unmarked_blocks.size()*2);
 
         for(auto p: unmarked_blocks){
-            auto tmp_fp = p.second;
-            auto [tmp_fp1, tmp_fp2] = tmp_fp.split(std::span(input_data.data()+p.first*2*block_size, 2*block_size), block_size);
-            new_unmarked_blocks.insert({p.first*2, tmp_fp1});
-            new_unmarked_blocks.insert({p.first*2+1, tmp_fp2});
 
-            if(p.first*2*block_size + block_size <= input_data.size()){
+            if(2*p.first*block_size + 2*block_size <= input_data.size()) {
+                auto [tmp_fp1, tmp_fp2] = p.second.split(std::span(input_data.data() + p.first*2*block_size, 2*block_size), block_size);
+
                 fp_block_table[tmp_fp1].insert(p.first*2);
-            }
-            if(p.first*2*block_size + 2*block_size <= input_data.size()){
                 fp_block_table[tmp_fp2].insert(p.first*2+1);
+                new_unmarked_blocks.insert({p.first*2, tmp_fp1});
+                new_unmarked_blocks.insert({p.first*2+1, tmp_fp2});
+            }
+            else if(2*p.first*block_size + block_size <= input_data.size()) {
+                auto tmp_fp1 = RabinKarpFingerprint(std::span(input_data.data() + p.first*2*block_size, block_size));
+                auto tmp_fp2 = RabinKarpFingerprint(std::span(input_data.begin() + p.first*2*block_size + block_size, input_data.end()));
+
+                fp_block_table[tmp_fp1].insert(p.first*2);
+                new_unmarked_blocks.insert({p.first*2, tmp_fp1});
+                new_unmarked_blocks.insert({p.first*2+1, tmp_fp2});
+            }
+            else if(p.first*2*block_size <= input_data.size()) {
+                auto tmp_fp1 = RabinKarpFingerprint(std::span(input_data.begin() + p.first*2*block_size, input_data.end()));
+
+                new_unmarked_blocks.insert({p.first*2, tmp_fp1});
             }
         }
         std::swap(unmarked_blocks, new_unmarked_blocks);
