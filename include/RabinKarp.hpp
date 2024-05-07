@@ -17,7 +17,6 @@
 class RabinKarpFingerprint {
 private:
     size_t m_acc_base = 1;
-    size_t m_acc_inv_base = 1;
 
 public:
     /**

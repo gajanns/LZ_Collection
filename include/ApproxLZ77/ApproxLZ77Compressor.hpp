@@ -3,13 +3,7 @@
 #include "Definition.hpp"
 #include "Compressor.hpp"
 #include "RabinKarp.hpp"
-#include <unordered_map>
-#include <unordered_set>
-#include "BlockTableSTD.hpp"
-#include <set>
-#include <span>
-
-
+#include "BlockTableBasic.hpp"
 
 
 class ApproxLZ77Compressor : public Compression::Compressor<ApproxLZ77::factor_id> {
