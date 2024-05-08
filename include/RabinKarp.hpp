@@ -25,8 +25,8 @@ public:
      */
     size_t val;
     static const size_t base = 256;
-    static const size_t base_inverse = 7455;
-    static const size_t prime = 7919;
+    static const size_t base_inverse = 36673973;
+    static const size_t prime = 83084399;
 
     
     RabinKarpFingerprint(const NumRange auto& p_data): val(calc_hash_value(p_data, &m_acc_base)){}

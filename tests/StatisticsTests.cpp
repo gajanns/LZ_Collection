@@ -51,9 +51,11 @@ TEST(StatisticsTests, OutputSizeText) {
     EXPECT_TRUE(LZ77Compressor::Instance().m_stats.m_output_size == ss_out.str().size());
 }
 
+#ifdef PERF
 TEST(StatisticsTests, VectorMemory) {
     MemoryTracker::start_mem_record();
     std::vector<u_char> v(256);
     MemoryTracker::stop_mem_record();
-    EXPECT_EQ(MemoryTracker::max_mem_usage, 256);
+    EXPECT_EQ(MemoryTracker::peak_mem_usage, 256);
 }
+#endif
