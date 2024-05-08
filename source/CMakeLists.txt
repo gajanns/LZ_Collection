@@ -7,6 +7,7 @@ add_executable(${BINARY} ${SOURCES})
 
 if(PERFORMANCE_MEASUREMENT)
     add_compile_definitions(PERF)
+    target_link_libraries(${BINARY} malloc_count_lib ${CMAKE_DL_LIBS})
 endif()
 
 add_library(${BINARY}_lib STATIC ${SOURCES})

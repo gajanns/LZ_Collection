@@ -65,7 +65,7 @@ namespace Compression {
 
                 #ifdef PERF
                 MemoryTracker::stop_mem_record();
-                m_stats.m_mem_usage = MemoryTracker::max_mem_usage;
+                m_stats.m_mem_usage = MemoryTracker::peak_mem_usage;
                 auto end = std::chrono::high_resolution_clock::now();
                 m_stats.m_run_time_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
                 #endif
@@ -91,7 +91,7 @@ namespace Compression {
 
                 #ifdef PERF
                 MemoryTracker::stop_mem_record();
-                m_stats.m_mem_usage = MemoryTracker::max_mem_usage;
+                m_stats.m_mem_usage = MemoryTracker::peak_mem_usage;
                 auto end = std::chrono::high_resolution_clock::now();
                 m_stats.m_run_time_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
                 #endif

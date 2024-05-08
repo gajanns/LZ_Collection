@@ -17,7 +17,11 @@ include_directories(include/LZ77)
 include_directories(include/LZW)
 include_directories(include/ApproxLZ77)
 
+add_subdirectory(externals)
+include_directories(externals/malloc_count)
+
 add_subdirectory(source)
+
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})

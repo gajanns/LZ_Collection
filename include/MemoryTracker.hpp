@@ -1,15 +1,14 @@
 #pragma once
 #include <cstdlib>
-#include <unordered_map>
 
 
 namespace MemoryTracker
 {
     /**
-     * @brief Allocated Memory on Heap since call to start_mem_record.
+     * @brief Peak Memory Allocation on Heap since call to start_mem_record.
      * 
      */
-    extern size_t max_mem_usage;
+    extern size_t peak_mem_usage;
 
     /**
      * @brief (Re-)Start tracking memory allocations on Heap
