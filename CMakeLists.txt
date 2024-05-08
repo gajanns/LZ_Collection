@@ -9,6 +9,7 @@ set(TESTING OFF)
 set(LOAD_PIZZA OFF)
 
 include(GoogleTest)
+include(CTest)
 enable_testing()
 
 include_directories(include)

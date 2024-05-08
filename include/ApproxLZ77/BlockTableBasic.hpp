@@ -37,30 +37,29 @@ namespace ApproxLZ77 {
 template<typename Sequence> requires NumRange<Sequence>
 class BlockTableBasic {
     using Item = typename Sequence::value_type;
-
 private:
     Sequence input_data;
 
-    std::pair<std::shared_ptr<BlockNode>, std::shared_ptr<BlockNode>> split_block_node(BlockNode *p_block_node, size_t block_size) {
+    auto split_block_node(BlockNode *p_block_node, size_t block_size) {
         std::shared_ptr<BlockNode> left_node = nullptr, right_node = nullptr;
         if(p_block_node->block_id * 2 * block_size + 2 * block_size <= input_data.size()) {
             auto [left_fp, right_fp] = p_block_node->fp.split(
-                std::span<const char8_t>(input_data.data() + p_block_node->block_id * 2 * block_size, 2 * block_size), 
+                std::span<const Item>(input_data.data() + p_block_node->block_id * 2 * block_size, 2 * block_size), 
                 block_size);
             left_node = std::make_shared<BlockNode>(p_block_node->block_id*2, 0, left_fp);
             right_node = std::make_shared<BlockNode>(p_block_node->block_id*2+1, 0, right_fp);
         }
         else if(p_block_node->block_id * 2 * block_size + block_size < input_data.size()) {
-            auto left_fp = RabinKarpFingerprint(std::span<const char8_t>(input_data.data() + p_block_node->block_id * 2 * block_size, block_size));
-            auto right_fp = RabinKarpFingerprint(std::span<const char8_t>(input_data.begin() + p_block_node->block_id * 2 * block_size + block_size, input_data.end()));
+            auto left_fp = RabinKarpFingerprint(std::span<const Item>(input_data.data() + p_block_node->block_id * 2 * block_size, block_size));
+            auto right_fp = RabinKarpFingerprint(std::span<const Item>(input_data.begin() + p_block_node->block_id * 2 * block_size + block_size, input_data.end()));
             left_node = std::make_shared<BlockNode>(p_block_node->block_id*2, 0, left_fp);
             right_node = std::make_shared<BlockNode>(p_block_node->block_id*2+1, 0, right_fp);
         }
         else {
-            auto left_fp = RabinKarpFingerprint(std::span<const char8_t>(input_data.begin() + p_block_node->block_id * 2 * block_size, input_data.end()));
+            auto left_fp = RabinKarpFingerprint(std::span<const Item>(input_data.begin() + p_block_node->block_id * 2 * block_size, input_data.end()));
             left_node = std::make_shared<BlockNode>(p_block_node->block_id*2, 0, left_fp);
         }
-        return {left_node, right_node};
+        return std::pair<std::shared_ptr<BlockNode>, std::shared_ptr<BlockNode>>{left_node, right_node};
     }
 
 public:
@@ -152,7 +151,7 @@ public:
         return next_unmarked_nodes;
     }
 
-    void match_blocks(size_t p_pos, size_t p_fp, std::unordered_map<size_t, std::set<std::shared_ptr<BlockNode>>> &p_fp_table, std::map<size_t, size_t> &p_marked_refs, size_t p_cur_round) {
+    void match_blocks(size_t p_pos, size_t p_fp, std::unordered_map<size_t, std::set<std::shared_ptr<BlockNode>>> &p_fp_table, std::set<BlockRef> &p_marked_refs, size_t p_cur_round) {
         size_t block_size = std::bit_ceil(input_data.size()) >> p_cur_round;
         if(!p_fp_table.contains(p_fp)) return;
 
@@ -163,7 +162,7 @@ public:
 
             if(std::equal(input_data.begin() + p_pos, input_data.begin() + p_pos + block_size, input_data.begin() + block->block_id * block_size)) {
                 block->chain_info |= block_size;
-                p_marked_refs[block->block_id*block_size] = p_pos;
+                p_marked_refs.emplace(block->block_id*block_size, p_pos);
             }
         }
     }

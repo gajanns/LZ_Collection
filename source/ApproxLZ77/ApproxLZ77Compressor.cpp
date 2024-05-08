@@ -6,13 +6,13 @@
 
 
 void ApproxLZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<ApproxLZ77::factor_id> &p_out) {
-    std::span<const char8_t> input_span(p_in.slice_ref(0, p_in.size()));
+    std::span<const char8_t> input_span = p_in.slice_ref(0, p_in.size());
     if(input_span.size() == 0) return;
 
-    size_t round = ApproxLZ77::min_round + 1, block_size = std::bit_ceil(input_span.size()) >> round, log_block_size = std::bit_width(block_size)-1;
+    size_t round = ApproxLZ77::min_round, block_size = std::bit_ceil(input_span.size()) >> round, log_block_size = std::bit_width(block_size)-1;
     BlockTableBasic block_table(input_span);
     std::map<size_t, size_t> chain_ids;
-    std::map<size_t, size_t> marked_refs;
+    std::set<BlockRef> marked_refs;
 
     auto unmarked_nodes = block_table.init_nodes(round);
 
@@ -53,8 +53,8 @@ void ApproxLZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<Appr
 
             size_t next_length = 1 << bit_pos;
 
-            if(it_ref != marked_refs.end() && it_ref -> first == cur_pos) {
-                p_out.encode(ApproxLZ77::factor_id{.value = it_ref->second, .log_length = static_cast<size_t>(bit_pos+1)});
+            if(it_ref != marked_refs.end() && it_ref->block_position == cur_pos) {
+                p_out.encode(ApproxLZ77::factor_id{.value = it_ref->ref_position, .log_length = static_cast<size_t>(bit_pos+1)});
                 cur_pos += next_length;
                 it_ref++;
             }
