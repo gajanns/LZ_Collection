@@ -18,7 +18,7 @@ void ApproxLZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<Appr
 
     while(block_size >= ApproxLZ77::min_block_size) {
         auto fp_table = block_table.create_fp_table(unmarked_nodes, round);
-        RabinKarpFingerprint test_fp = unmarked_nodes[0]->fp;
+        RabinKarpFingerprint test_fp = unmarked_nodes[0].fp;
 
         for(size_t pos = 0; pos < input_span.size() - block_size; pos++) {
             block_table.match_blocks(pos, test_fp.val, fp_table, marked_refs, round);

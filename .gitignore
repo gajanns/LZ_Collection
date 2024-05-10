@@ -34,5 +34,7 @@
 build/
 .vscode/
 
+data/
+
 report/plots/
 report/report.csv

@@ -30,7 +30,7 @@ public:
 
     
     RabinKarpFingerprint(const NumRange auto& p_data): val(calc_hash_value(p_data, &m_acc_base)){}
-    RabinKarpFingerprint(const size_t p_acc_base, const size_t p_hash_value):m_acc_base(p_acc_base),val(p_hash_value){}
+    RabinKarpFingerprint(const size_t p_acc_base = 0, const size_t p_hash_value = 0):m_acc_base(p_acc_base),val(p_hash_value){}
     RabinKarpFingerprint(const RabinKarpFingerprint& p_value):m_acc_base(p_value.m_acc_base),val(p_value.val){}
 
     /**
