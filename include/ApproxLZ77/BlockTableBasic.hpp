@@ -12,10 +12,12 @@ using namespace ApproxLZ77;
 
 namespace ApproxLZ77 {
     struct BlockNode {
-        int64_t block_id;
-        size_t chain_info;
+        int64_t block_id = -1;
+        size_t chain_info = 0;
         RabinKarpFingerprint fp;
-        BlockNode(int64_t p_block_id = -1, size_t p_chain_info = 0, RabinKarpFingerprint p_fp = RabinKarpFingerprint()): block_id(p_block_id), chain_info(p_chain_info), fp(p_fp){}
+        
+        BlockNode() = default;
+        BlockNode(int64_t p_block_id, size_t p_chain_info, RabinKarpFingerprint p_fp): block_id(p_block_id), chain_info(p_chain_info), fp(p_fp){}
     };
 
     struct BlockRef {
@@ -76,72 +78,53 @@ public:
         return unmarked_nodes;
     }
 
-    auto create_fp_table(std::vector<BlockNode> &p_unmarked_nodes, size_t p_cur_round) {
-        std::unordered_map<size_t, std::vector<BlockNode*>> fp_table;
-        fp_table.reserve(p_unmarked_nodes.size());
+    void create_fp_table(std::unordered_map<size_t, std::vector<BlockNode*>> &p_fp_table, std::vector<BlockNode> &p_unmarked_nodes, size_t p_cur_round) {
+        p_fp_table.clear();
         size_t block_size = std::bit_ceil(input_data.size()) >> p_cur_round;
         for(auto &node : p_unmarked_nodes) {
             if(node.block_id * block_size + block_size > input_data.size()) break;
-            if(!fp_table.contains(node.block_id)) fp_table[node.block_id] = std::vector<BlockNode*>();
-            fp_table[node.fp.val].push_back(&node);
+            p_fp_table[node.fp.val].push_back(&node);
         }
-        return fp_table;
     }
 
     auto next_nodes(std::vector<BlockNode> &p_prev_nodes, std::map<size_t, size_t> &p_chain_ids, size_t p_prev_round) {
         size_t prev_block_size = std::bit_ceil(input_data.size()) >> p_prev_round;
         size_t cur_block_size = prev_block_size >> 1;
         std::vector<BlockNode> next_unmarked_nodes;
-        next_unmarked_nodes.reserve(p_prev_nodes.size());
 
-        for(auto it = p_prev_nodes.begin(); it != p_prev_nodes.end(); it++) {
-            BlockNode* block_node = &(*it);
-
-            BlockNode* sibling_node = nullptr;
-            if(block_node->block_id % 2 == 0) {
-                if((++it) != p_prev_nodes.end()) sibling_node = &(*it);
-                it--;
-            }
-            else {
-                sibling_node = &(*(--it));
-                it++;
-            }
+        for(size_t i = 0; i < p_prev_nodes.size(); i += 2) {
+            BlockNode* block_node = &p_prev_nodes[i], *sibling_node = (i < p_prev_nodes.size()-1) ? &p_prev_nodes[i+1] : nullptr;
 
             bool is_marked = block_node->chain_info & prev_block_size;
             bool is_sibling_marked = sibling_node && sibling_node->chain_info & prev_block_size;
             
             if(is_marked && (!sibling_node || is_sibling_marked)) {
-                if(block_node->block_id % 2 == 0) {
-                    p_chain_ids[block_node->block_id * prev_block_size + prev_block_size - 1] = block_node->chain_info;
+                p_chain_ids[block_node->block_id * prev_block_size + prev_block_size - 1] = block_node->chain_info;
+                if(sibling_node) {
+                    p_chain_ids[sibling_node->block_id * prev_block_size] = sibling_node->chain_info;
                 }
-                else {
-                    p_chain_ids[block_node->block_id * prev_block_size] = block_node->chain_info;
-                }    
+                continue;
             }
-            
+
             if(!is_marked) {
                 auto [left_node, right_node] = split_block_node(block_node, cur_block_size);
-
-                if(block_node->block_id % 2 == 1) {
-                    if(is_sibling_marked) {
-                        left_node.chain_info = sibling_node->chain_info;
-                    }
-                    if(right_node.block_id != -1) {
-                        right_node.chain_info = block_node->chain_info;
-                    }
-                }
-                else {
-                    if(is_sibling_marked) {
-                        right_node.chain_info = sibling_node->chain_info;
-                    }
-                    left_node.chain_info = block_node->chain_info;
-                }
-                
-                if(left_node.block_id != -1) next_unmarked_nodes.push_back(left_node);
+                left_node.chain_info = block_node->chain_info;
+                if(sibling_node && is_sibling_marked) right_node.chain_info = sibling_node->chain_info;
+                next_unmarked_nodes.push_back(left_node);
                 if(right_node.block_id != -1) next_unmarked_nodes.push_back(right_node);
-            }   
+            }
+
+            if(sibling_node && !is_sibling_marked) {
+                auto [left_node, right_node] = split_block_node(sibling_node, cur_block_size);
+                if(is_marked) left_node.chain_info = block_node->chain_info;
+                next_unmarked_nodes.push_back(left_node);
+                if(right_node.block_id != -1) {
+                    right_node.chain_info = sibling_node->chain_info;
+                    next_unmarked_nodes.push_back(right_node);
+                }
+            }
         }
-        return next_unmarked_nodes;
+        return next_unmarked_nodes;        
     }
 
     void match_blocks(size_t p_pos, size_t p_fp, std::unordered_map<size_t, std::vector<BlockNode*>> &p_fp_table, std::set<BlockRef> &p_marked_refs, size_t p_cur_round) {
