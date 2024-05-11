@@ -6,7 +6,7 @@
 #include <set>
 #include "Definition.hpp"
 #include "RabinKarp.hpp"
-#include "ApproxLZ77Compressor.hpp"
+#include <list>
 
 using namespace ApproxLZ77;
 
@@ -130,7 +130,7 @@ public:
      * @param p_unmarked_nodes The current unmarked nodes
      * @param p_cur_round The current round of the algorithm
     */
-    void create_fp_table(std::unordered_map<size_t, std::vector<BlockNode*>> &p_fp_table, std::vector<BlockNode> &p_unmarked_nodes, size_t p_cur_round) {
+    void create_fp_table(std::unordered_map<size_t, std::list<BlockNode*>> &p_fp_table, std::vector<BlockNode> &p_unmarked_nodes, size_t p_cur_round) {
         p_fp_table.clear();
         size_t block_size = std::bit_ceil(input_data.size()) >> p_cur_round;
         for(auto &node : p_unmarked_nodes) {
@@ -195,18 +195,20 @@ public:
      * @param p_marked_refs The set of marked references to be expanded in case of exact matches
      * @param p_cur_round The current round of the algorithm
     */
-    void match_blocks(size_t p_pos, size_t p_fp, std::unordered_map<size_t, std::vector<BlockNode*>> &p_fp_table, std::set<BlockRef> &p_marked_refs, size_t p_cur_round) {
+    void match_blocks(size_t p_pos, size_t p_fp, std::unordered_map<size_t, std::list<BlockNode*>> &p_fp_table, std::set<BlockRef> &p_marked_refs, size_t p_cur_round) {
         size_t block_size = std::bit_ceil(input_data.size()) >> p_cur_round;
         auto candidate_blocks = p_fp_table.find(p_fp);
         if(candidate_blocks == p_fp_table.end()) return;
 
-        for(auto block : candidate_blocks->second | std::views::reverse) {
-            if(block->block_id * block_size <= p_pos) break;
-            if(block->chain_info & block_size) continue;
+        for(auto it = candidate_blocks->second.begin(); it != candidate_blocks->second.end(); it++) {
+            auto block = *it;
+            if(block->block_id * block_size <= p_pos) continue;
 
             if(std::equal(input_data.begin() + block->block_id * block_size, input_data.begin() + block->block_id * block_size + block_size, input_data.begin() + p_pos)) {
                 block->chain_info |= block_size;
                 p_marked_refs.emplace(block->block_id*block_size, p_pos);
+                candidate_blocks->second.erase(it);
+                break;
             }
         }
     }
