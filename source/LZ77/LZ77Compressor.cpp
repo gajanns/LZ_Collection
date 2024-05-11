@@ -4,7 +4,8 @@
 
 void LZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<LZ77::factor_id> &p_out) {
     std::span<const char8_t> input_span(p_in.slice_ref(0, p_in.size()));
-    auto sa = SuffixArray::generate_suffix_array(input_span, 255);
+    //auto sa = SuffixArray::generate_suffix_array(input_span, 255);
+    auto sa = SuffixArray::generate_suffix_array_libsais(input_span);
     std::vector<int32_t> psv(sa.size()-1, -1), nsv(sa.size()-1, -1);
     sa[0] = -1;
     sa.push_back(-1);

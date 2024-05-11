@@ -17,6 +17,9 @@
 template<typename T>
 concept NumRange = std::ranges::range<T> && std::is_integral_v<std::ranges::range_value_t<T>>;
 
+template<typename T>
+concept ByteRange = std::ranges::range<T> && std::is_unsigned_v<std::ranges::range_value_t<T>> && sizeof(std::ranges::range_value_t<T>) == 1;
+
 namespace LZW
 {
     /**

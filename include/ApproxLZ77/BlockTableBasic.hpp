@@ -12,17 +12,17 @@ using namespace ApproxLZ77;
 
 namespace ApproxLZ77 {
     struct BlockNode {
-        int64_t block_id = -1;
-        size_t chain_info = 0;
+        int32_t block_id = -1;
+        u_int32_t chain_info = 0;
         RabinKarpFingerprint fp;
         
         BlockNode() = default;
-        BlockNode(int64_t p_block_id, size_t p_chain_info, RabinKarpFingerprint p_fp): block_id(p_block_id), chain_info(p_chain_info), fp(p_fp){}
+        BlockNode(int32_t p_block_id, u_int32_t p_chain_info, RabinKarpFingerprint p_fp): block_id(p_block_id), chain_info(p_chain_info), fp(p_fp){}
     };
 
     struct BlockRef {
-        size_t block_position;
-        size_t ref_position;
+        u_int32_t block_position;
+        u_int32_t ref_position;
 
         bool operator==(const BlockRef &p_rhs) const {
             return block_position == p_rhs.block_position && ref_position == p_rhs.ref_position;
@@ -32,7 +32,22 @@ namespace ApproxLZ77 {
             return block_position < p_rhs.block_position;
         }
 
-        BlockRef(size_t p_block_position, size_t p_ref_position): block_position(p_block_position), ref_position(p_ref_position){}
+        BlockRef(u_int32_t p_block_position, u_int32_t p_ref_position): block_position(p_block_position), ref_position(p_ref_position){}
+    };
+
+    struct CherryNode {
+        u_int32_t block_position = 0;
+        u_int32_t chain_info = 0;
+
+        bool operator==(const CherryNode &p_rhs) const {
+            return block_position == p_rhs.block_position && chain_info == p_rhs.chain_info;
+        }
+
+        bool operator<(const CherryNode &p_rhs) const {
+            return block_position < p_rhs.block_position;
+        }
+
+        CherryNode(u_int32_t p_block_position, u_int32_t p_chain_info): block_position(p_block_position), chain_info(p_chain_info){}
     };
 }
 
@@ -87,7 +102,7 @@ public:
         }
     }
 
-    auto next_nodes(std::vector<BlockNode> &p_prev_nodes, std::map<size_t, size_t> &p_chain_ids, size_t p_prev_round) {
+    auto next_nodes(std::vector<BlockNode> &p_prev_nodes, std::set<CherryNode> &p_chain_ids, size_t p_prev_round) {
         size_t prev_block_size = std::bit_ceil(input_data.size()) >> p_prev_round;
         size_t cur_block_size = prev_block_size >> 1;
         std::vector<BlockNode> next_unmarked_nodes;
@@ -99,9 +114,9 @@ public:
             bool is_sibling_marked = sibling_node && sibling_node->chain_info & prev_block_size;
             
             if(is_marked && (!sibling_node || is_sibling_marked)) {
-                p_chain_ids[block_node->block_id * prev_block_size + prev_block_size - 1] = block_node->chain_info;
+                p_chain_ids.emplace(block_node->block_id * prev_block_size + prev_block_size - 1, block_node->chain_info);
                 if(sibling_node) {
-                    p_chain_ids[sibling_node->block_id * prev_block_size] = sibling_node->chain_info;
+                    p_chain_ids.emplace(sibling_node->block_id * prev_block_size, sibling_node->chain_info);
                 }
                 continue;
             }
@@ -143,10 +158,11 @@ public:
         }
     }
 
-    void populate_unmarked_chain(std::vector<BlockNode> &p_unmarked_nodes, std::map<size_t, size_t> &p_chain_ids, size_t p_round) {
+    void populate_unmarked_chain(std::vector<BlockNode> &p_unmarked_nodes, std::set<CherryNode> &p_chain_ids, size_t p_round) {
         size_t block_size = std::bit_ceil(input_data.size()) >> p_round;
         for(auto &node : p_unmarked_nodes) {
-            p_chain_ids[node.block_id * block_size] = node.chain_info | block_size;
+            size_t tmp_block_size = std::min(block_size, input_data.size() - node.block_id * block_size + 1);
+            p_chain_ids.emplace(node.block_id * block_size, node.chain_info | tmp_block_size);
         }
     }
 };

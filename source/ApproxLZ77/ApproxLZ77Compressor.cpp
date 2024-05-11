@@ -11,7 +11,7 @@ void ApproxLZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<Appr
 
     size_t round = ApproxLZ77::min_round, block_size = std::bit_ceil(input_span.size()) >> round, log_block_size = std::bit_width(block_size)-1;
     BlockTableBasic block_table(input_span);
-    std::map<size_t, size_t> chain_ids;
+    std::set<CherryNode> chain_ids;
     std::set<BlockRef> marked_refs;
 
     auto unmarked_nodes = block_table.init_nodes(round);
@@ -41,7 +41,7 @@ void ApproxLZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<Appr
     bool is_chain_up = false;
 
     for(auto it_chain = chain_ids.begin(); it_chain != chain_ids.end(); it_chain++) {
-        size_t chain = it_chain -> second;
+        size_t chain = it_chain -> chain_info;
         int bit_pos = is_chain_up ? 0 : log_block_size;
         int bit_dir = is_chain_up ? 1 : -1;
         int bit_end = is_chain_up ? log_block_size + 1 : -1;
@@ -61,7 +61,7 @@ void ApproxLZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<Appr
             }
             else {
                 for(size_t i = 0; i < next_length; i++) {
-                    p_out.encode(ApproxLZ77::factor_id{.value = input_span[(cur_pos++)+i], .log_length = 0});
+                    p_out.encode(ApproxLZ77::factor_id{.value = input_span[cur_pos++], .log_length = 0});
                 }
             }
             bit_pos += bit_dir;

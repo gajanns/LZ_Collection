@@ -6,11 +6,11 @@
 #include <ranges>
 #include <numeric>
 #include "Definition.hpp"
+#include "libsais.h"
 
 /**
  * Suffix Array by Induced Sorting
  * Modified from Source: https://www.rahmannlab.de/lehre/alsa21/02-3-sais.pdf
- * ToDo: Waste less space => Optimal Time and Space Construction of Suffix Arrays and LCP Arrays for Integer Alphabets[https://arxiv.org/pdf/1703.01009.pdf]
 */
 namespace SuffixArray
 {
@@ -243,6 +243,19 @@ namespace SuffixArray
 
         phase1(p_value, bucket_sizes, types, lms_positions, result);
         phase2(p_value, bucket_sizes, lms_positions, result);
+        return result;
+    }
+
+    /**
+     * @brief Generate Suffix Array using LibSAIS
+     * 
+     * @param p_value Data-Sequence to generate Suffix Array from(without Sentinel)
+     * @return std::vector<int> Suffix Array
+    */
+    std::vector<int> generate_suffix_array_libsais(const ByteRange auto &p_value){
+        std::vector<int> result(p_value.size()+1, -1);
+        libsais(reinterpret_cast<const unsigned char*>(p_value.data()), result.data()+1, p_value.size(), 0, NULL);
+        result[0] = p_value.size();
         return result;
     }
 

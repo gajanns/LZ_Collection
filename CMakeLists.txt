@@ -19,9 +19,9 @@ include_directories(include/ApproxLZ77)
 
 add_subdirectory(externals)
 include_directories(externals/malloc_count)
+include_directories(externals/libsais/include)
 
 add_subdirectory(source)
-
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})

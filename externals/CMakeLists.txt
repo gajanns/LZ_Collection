@@ -1,4 +1,4 @@
-
+# Memory-Tracking Library written by Timo Bingmann and Lorenz Hübschle
 include(FetchContent)
 FetchContent_Declare(
   malloc_count
@@ -6,6 +6,17 @@ FetchContent_Declare(
   SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/malloc_count
 )
 FetchContent_MakeAvailable(malloc_count)
-
-# Add the library
 add_library(malloc_count_lib STATIC malloc_count/malloc_count.c malloc_count/malloc_count.h)
+
+
+# Suffixarray Library written by Ilya Grebnov : Apache-2.0 License
+FetchContent_Declare(
+  libsais
+  GIT_REPOSITORY https://github.com/IlyaGrebnov/libsais.git
+  SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libsais
+)
+FetchContent_MakeAvailable(libsais)
+
+
+
+

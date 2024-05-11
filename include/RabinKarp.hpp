@@ -16,21 +16,21 @@
  */
 class RabinKarpFingerprint {
 private:
-    size_t m_acc_base = 1;
+    u_int32_t m_acc_base = 1;
 
 public:
     /**
      * @brief Hashvalue
      * 
      */
-    size_t val;
+    u_int32_t val;
     static const size_t base = 256;
-    static const size_t base_inverse = 36673973;
-    static const size_t prime = 83084399;
+    static const size_t base_inverse = 2048;
+    static const size_t prime = 524287; // 2^19-1
 
-    
+    RabinKarpFingerprint() = default;
     RabinKarpFingerprint(const NumRange auto& p_data): val(calc_hash_value(p_data, &m_acc_base)){}
-    RabinKarpFingerprint(const size_t p_acc_base = 0, const size_t p_hash_value = 0):m_acc_base(p_acc_base),val(p_hash_value){}
+    RabinKarpFingerprint(const u_int32_t p_acc_base, const u_int32_t p_hash_value):m_acc_base(p_acc_base),val(p_hash_value){}
     RabinKarpFingerprint(const RabinKarpFingerprint& p_value):m_acc_base(p_value.m_acc_base),val(p_value.val){}
 
     /**
@@ -40,7 +40,7 @@ public:
      * @param p_acc_base Export auxiliary number
      * @return size_t Hashvalue
      */
-    static size_t calc_hash_value(NumRange auto& p_data, size_t *p_acc_base=nullptr){
+    static u_int32_t calc_hash_value(NumRange auto& p_data, u_int32_t *p_acc_base=nullptr){
         size_t acc_base = 1;
         size_t val = 0;
 
@@ -53,7 +53,7 @@ public:
         if(p_acc_base != nullptr){
             (*p_acc_base) = acc_base;
         }
-        return val;
+        return static_cast<u_int32_t>(val);
     }
 
     /**
@@ -63,8 +63,8 @@ public:
      * @return RabinKarpFingerprint Hashvalue of concatenation
      */
     RabinKarpFingerprint operator+(RabinKarpFingerprint const& p_value){
-        size_t res_acc_base = (m_acc_base * p_value.m_acc_base) % prime;
-        size_t res_hash = ((val * p_value.m_acc_base)+ p_value.val)% prime;
+        u_int32_t res_acc_base = (m_acc_base * p_value.m_acc_base) % prime;
+        u_int32_t res_hash = ((val * p_value.m_acc_base)+ p_value.val)% prime;
         return RabinKarpFingerprint(res_acc_base, res_hash);
     }
 
@@ -89,8 +89,8 @@ public:
             exp >>= 1;
             inv_base = (inv_base * inv_base) % prime;
         }
-        size_t left_hash = ((val + prime - right_fp.val) * inv_acc_base) % prime;
-        size_t left_acc_base = (m_acc_base * inv_acc_base) % prime;
+        u_int32_t left_hash = static_cast<u_int32_t>(((val + prime - right_fp.val) * inv_acc_base) % prime);
+        u_int32_t left_acc_base = static_cast<u_int32_t>((m_acc_base * inv_acc_base) % prime);
         return {RabinKarpFingerprint(left_acc_base, left_hash), right_fp};
     }
 
@@ -103,8 +103,8 @@ public:
      * @return RabinKarpFingerprint 
      */
     friend RabinKarpFingerprint operator<<(const std::integral auto& p_left, const RabinKarpFingerprint& p_value) {
-        size_t acc_base = (p_value.m_acc_base*RabinKarpFingerprint::base_inverse)%RabinKarpFingerprint::prime;
-        size_t hash = p_value.val + RabinKarpFingerprint::prime - (p_left * acc_base) % RabinKarpFingerprint::prime;
+        u_int32_t acc_base = (p_value.m_acc_base*RabinKarpFingerprint::base_inverse)%RabinKarpFingerprint::prime;
+        u_int32_t hash = p_value.val + RabinKarpFingerprint::prime - (p_left * acc_base) % RabinKarpFingerprint::prime;
 
         return RabinKarpFingerprint(acc_base, hash % prime);
     }
@@ -117,8 +117,8 @@ public:
      * @return RabinKarpFingerprint 
      */
     friend RabinKarpFingerprint operator<<(const RabinKarpFingerprint& p_value, const std::integral auto& p_right) {
-        size_t acc_base = (p_value.m_acc_base*RabinKarpFingerprint::base)%RabinKarpFingerprint::prime;
-        size_t hash = (p_value.val * RabinKarpFingerprint::base + p_right) % RabinKarpFingerprint::prime;
+        u_int32_t acc_base = (p_value.m_acc_base*RabinKarpFingerprint::base)%RabinKarpFingerprint::prime;
+        u_int32_t hash = (p_value.val * RabinKarpFingerprint::base + p_right) % RabinKarpFingerprint::prime;
 
         return RabinKarpFingerprint(acc_base, hash);
     }

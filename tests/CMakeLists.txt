@@ -7,9 +7,7 @@ add_executable(${BINARY} ${TEST_SOURCES})
 
 if(PERFORMANCE_MEASUREMENT)
     add_compile_definitions(PERF)
-    target_link_libraries(${BINARY} PUBLIC GTest::gtest GTest::gtest_main ${CMAKE_PROJECT_NAME}_lib malloc_count_lib ${CMAKE_DL_LIBS})
-else()
-    target_link_libraries(${BINARY} PUBLIC GTest::gtest GTest::gtest_main ${CMAKE_PROJECT_NAME}_lib)
 endif()
 
+target_link_libraries(${BINARY} PUBLIC GTest::gtest GTest::gtest_main ${CMAKE_PROJECT_NAME}_lib)
 gtest_discover_tests(${BINARY})
