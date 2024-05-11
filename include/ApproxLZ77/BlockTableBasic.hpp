@@ -11,6 +11,13 @@
 using namespace ApproxLZ77;
 
 namespace ApproxLZ77 {
+    /**
+     * @brief Encapsulates a block of data
+     * 
+     * @param block_id The id of the block at current level of implicit tree (-1 => invalid block)
+     * @param chain_info Stores the structure of marked nodes in previous levels
+     * @param fp The fingerprint of the block
+    */
     struct BlockNode {
         int32_t block_id = -1;
         u_int32_t chain_info = 0;
@@ -20,6 +27,12 @@ namespace ApproxLZ77 {
         BlockNode(int32_t p_block_id, u_int32_t p_chain_info, RabinKarpFingerprint p_fp): block_id(p_block_id), chain_info(p_chain_info), fp(p_fp){}
     };
 
+    /**
+     * @brief Encapsulates a reference to a block (=> LZ77-Factor)
+     * 
+     * @param block_position The position of the block in the input data
+     * @param ref_position The position of the reference in the input data (ref_position < block_position)
+    */
     struct BlockRef {
         u_int32_t block_position;
         u_int32_t ref_position;
@@ -35,6 +48,12 @@ namespace ApproxLZ77 {
         BlockRef(u_int32_t p_block_position, u_int32_t p_ref_position): block_position(p_block_position), ref_position(p_ref_position){}
     };
 
+    /**
+     * @brief Encapsulates a cherry node (Parentnode has been completely marked by its descendants)
+     * 
+     * @param block_position Position within Block ("only" used for ordering)
+     * @param chain_info The structure of marked nodes in previous levels
+    */
     struct CherryNode {
         u_int32_t block_position = 0;
         u_int32_t chain_info = 0;
@@ -51,6 +70,12 @@ namespace ApproxLZ77 {
     };
 }
 
+/**
+ * @brief Class controls Data-Storage and Manipulation for ApproxLZ77-Algorithm
+ * 
+ * @tparam Sequence The range-type of the input data
+
+*/
 template<typename Sequence> requires NumRange<Sequence>
 class BlockTableBasic {
     using Item = typename Sequence::value_type;
@@ -76,6 +101,11 @@ public:
 
     BlockTableBasic(const Sequence &p_input_data) : input_data(p_input_data) {}
 
+    /**
+     * @brief Initializes Sequence of unmarked Blocknodes for the initial round
+     * 
+     * @param p_init_round The initial round of the algorithm
+    */
     auto init_nodes(size_t p_init_round) {
         size_t block_size = std::bit_ceil(input_data.size()) >> p_init_round;
         size_t num_blocks = 1 << p_init_round;
@@ -93,6 +123,13 @@ public:
         return unmarked_nodes;
     }
 
+    /**
+     * @brief Fill Fingerprint-Table from current unmarked nodes
+     * 
+     * @param p_fp_table The Fingerprint-Table to populate
+     * @param p_unmarked_nodes The current unmarked nodes
+     * @param p_cur_round The current round of the algorithm
+    */
     void create_fp_table(std::unordered_map<size_t, std::vector<BlockNode*>> &p_fp_table, std::vector<BlockNode> &p_unmarked_nodes, size_t p_cur_round) {
         p_fp_table.clear();
         size_t block_size = std::bit_ceil(input_data.size()) >> p_cur_round;
@@ -102,6 +139,13 @@ public:
         }
     }
 
+    /**
+     * @brief Create next round of unmarked nodes from current marked and unmarked nodes
+     * 
+     * @param p_prev_nodes The marked nodes from previous round
+     * @param p_chain_ids Sequence of CherryNodes to be expanded in case of new fully marked blocks
+     * @param p_prev_round The previous round of the algorithm
+    */
     auto next_nodes(std::vector<BlockNode> &p_prev_nodes, std::set<CherryNode> &p_chain_ids, size_t p_prev_round) {
         size_t prev_block_size = std::bit_ceil(input_data.size()) >> p_prev_round;
         size_t cur_block_size = prev_block_size >> 1;
@@ -142,6 +186,15 @@ public:
         return next_unmarked_nodes;        
     }
 
+    /**
+     * @brief Match blocks in current round using Fingerprint-Table
+     * 
+     * @param p_pos The current position in the input data
+     * @param p_fp The fingerprint of the sliding block
+     * @param p_fp_table The Fingerprint-Table to use
+     * @param p_marked_refs The set of marked references to be expanded in case of exact matches
+     * @param p_cur_round The current round of the algorithm
+    */
     void match_blocks(size_t p_pos, size_t p_fp, std::unordered_map<size_t, std::vector<BlockNode*>> &p_fp_table, std::set<BlockRef> &p_marked_refs, size_t p_cur_round) {
         size_t block_size = std::bit_ceil(input_data.size()) >> p_cur_round;
         auto candidate_blocks = p_fp_table.find(p_fp);
@@ -158,6 +211,13 @@ public:
         }
     }
 
+    /**
+     * @brief Populate CherryNodes from unmarked nodes at the end of the algorithm regardless of matches
+     * 
+     * @param p_unmarked_nodes The unmarked nodes at the end of the algorithm
+     * @param p_chain_ids The set of CherryNodes to populate
+     * @param p_round The current/last round of the algorithm
+    */
     void populate_unmarked_chain(std::vector<BlockNode> &p_unmarked_nodes, std::set<CherryNode> &p_chain_ids, size_t p_round) {
         size_t block_size = std::bit_ceil(input_data.size()) >> p_round;
         for(auto &node : p_unmarked_nodes) {
