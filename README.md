@@ -12,18 +12,17 @@ Simple Collection of Prototypes of LZ-Algorithms:LZW, LZ77, Approx. LZ77 (seq+ p
 |-------------------|:---------:|:------:|:---------:|:---------:|
 |Framework          |-          |✔       |✅          |12/03      |
 | -IO               |-          |✔       |✅          |12/03      |
-| -Perf-Measurement |-          |✔       |✅          |13/04      |
+| -Perf-Measurement |-          |✔       |✅          |09/05      |
 | -Plot             |-          |⟳       |⛔          |13/04      |
 |LZ78/LZW           |-          |✔       |✅          |17/04      |
-|exact LZ77         |-          |⟳       |✅          |29/04      |
+|exact LZ77         |-          |✔       |✅          |11/05      |
 
 ---
 ### Phase 2:
 |Task               |Deadline   |Status  |Tested     |Last Update|
 |-------------------|:---------:|:------:|:---------:|:---------:|
-|Approx. LZ77(seq)  |-          |⟳       |✅          |08/05      |
+|Approx. LZ77(seq)  |-          |⟳       |✅          |11/05      |
 | -Rabin-Karp       |-          |✔       |✅          |25/03      |
-| -Custom Container |-          |⟳       |⛔          |08/05      |
 
 ---
 ### Phase 3:
