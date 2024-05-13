@@ -16,7 +16,7 @@ void ApproxLZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<Appr
     std::set<BlockRef> marked_refs;
 
     auto unmarked_nodes = block_table.init_nodes(round);
-    std::unordered_map<size_t, std::list<BlockNode*>> fp_table;
+    std::unordered_map<u_int32_t, std::list<BlockNode*>> fp_table;
 
     while(block_size >= ApproxLZ77::min_block_size) {
         block_table.create_fp_table(fp_table, unmarked_nodes, round);
