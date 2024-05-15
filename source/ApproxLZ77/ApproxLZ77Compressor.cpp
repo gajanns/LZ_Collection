@@ -6,7 +6,7 @@
 
 
 void ApproxLZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<ApproxLZ77::factor_id> &p_out) {
-    
+
     std::span<const char8_t> input_span = p_in.slice_ref(0, p_in.size());
     if(input_span.size() == 0) return;
 
@@ -53,9 +53,16 @@ void ApproxLZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<Appr
             }
         }
         max_consecutive = std::max(max_consecutive, cur_consecutive);
-        size_t diff_round = std::bit_width(max_consecutive) - 1;
-        block_table.previous_nodes(unmarked_nodes, diff_round);
-        round = probe_round - diff_round;
+        int diff_round = std::bit_width(max_consecutive) - 1;
+        if(diff_round >= 0) {
+            block_table.previous_nodes(unmarked_nodes, diff_round);
+            round = probe_round - diff_round;
+        }
+        else {
+            init = true;
+            round = probe_round + 1;
+        }
+        
     }
 
     while(round <= max_round) {
