@@ -5,33 +5,66 @@
 #include <list>
 
 
-
 void ApproxLZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<ApproxLZ77::factor_id> &p_out) {
+    
     std::span<const char8_t> input_span = p_in.slice_ref(0, p_in.size());
     if(input_span.size() == 0) return;
 
-    size_t round = ApproxLZ77::min_round, block_size = std::bit_ceil(input_span.size()) >> round, log_block_size = std::bit_width(block_size)-1;
     BlockTableBasic block_table(input_span);
     std::set<CherryNode> chain_ids;
     std::set<BlockRef> marked_refs;
-
-    auto unmarked_nodes = block_table.init_nodes(round);
+    std::vector<BlockNode> unmarked_nodes;
     std::unordered_map<u_int32_t, std::list<BlockNode*>> fp_table;
 
-    while(block_size >= ApproxLZ77::min_block_size) {
-        block_table.create_fp_table(fp_table, unmarked_nodes, round);
+    size_t in_size = std::bit_ceil(input_span.size()), in_log_size = std::bit_width(in_size) - 1;
+    size_t min_round = std::min(in_log_size, ApproxLZ77::min_round), max_round = in_log_size - std::bit_width(ApproxLZ77::min_block_size) + 1;
+
+    bool init = true;
+    auto process_nodes = [&](size_t p_round, bool p_capture_refs = true) {
+        size_t block_size = in_size >> p_round;
+        if(init) {
+            init = false;
+            unmarked_nodes = block_table.init_nodes(p_round);
+        }
+
+        block_table.create_fp_table(fp_table, unmarked_nodes, p_round);
         RabinKarpFingerprint test_fp = unmarked_nodes[0].fp;
 
         for(size_t pos = 0; pos < input_span.size() - block_size; pos++) {
-            block_table.match_blocks(pos, test_fp.val, fp_table, marked_refs, round);
+            block_table.match_blocks(pos, test_fp.val, fp_table, p_round, p_capture_refs ? &marked_refs : nullptr);
             test_fp = input_span[pos] << test_fp << input_span[pos+block_size];
         }
+    };
 
-        if(block_size == ApproxLZ77::min_block_size) break;
+    size_t round = min_round;
+    if(ApproxLZ77::dynamic_init) {
+        size_t probe_round = (min_round + max_round) / 2;
+        size_t probe_block_size = in_size >> probe_round;
+        process_nodes(probe_round, false);
+
+        size_t max_consecutive = 0, cur_consecutive = 0;
+        for(auto it = unmarked_nodes.begin(); it != unmarked_nodes.end(); it++) {
+            if(it->chain_info & probe_block_size) {
+                cur_consecutive++;
+            }
+            else {
+                max_consecutive = std::max(max_consecutive, cur_consecutive);
+                cur_consecutive = 0;
+            }
+        }
+        max_consecutive = std::max(max_consecutive, cur_consecutive);
+        size_t diff_round = std::bit_width(max_consecutive) - 1;
+        block_table.previous_nodes(unmarked_nodes, diff_round);
+        round = probe_round - diff_round;
+    }
+
+    while(round <= max_round) {
+        process_nodes(round);
+
+        if(round == max_round) break;
 
         unmarked_nodes = block_table.next_nodes(unmarked_nodes, chain_ids, round);
         round++;
-        block_size >>= 1;
     }
 
     block_table.populate_unmarked_chain(unmarked_nodes, chain_ids, round);
@@ -43,9 +76,9 @@ void ApproxLZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<Appr
 
     for(auto it_chain = chain_ids.begin(); it_chain != chain_ids.end(); it_chain++) {
         size_t chain = it_chain -> chain_info;
-        int bit_pos = is_chain_up ? 0 : log_block_size;
+        int bit_pos = is_chain_up ? 0 : in_log_size;
         int bit_dir = is_chain_up ? 1 : -1;
-        int bit_end = is_chain_up ? log_block_size + 1 : -1;
+        int bit_end = is_chain_up ? in_log_size + 1 : -1;
 
         while(bit_pos != bit_end) {
             while(!(chain & (1 << bit_pos)) && bit_pos != bit_end) {

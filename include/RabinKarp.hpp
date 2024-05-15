@@ -23,11 +23,10 @@ public:
      * @brief Hashvalue
      * 
      */
-    u_int32_t val;
+    u_int32_t val = 0;
     static const size_t base = 256;
     static const size_t base_inverse = 8388608;
-    static const size_t prime = 2147483647; // 2^19-1
-    static const size_t unique_size_limit = 3;
+    static const size_t prime = 2147483647; // 2^31-1
 
     RabinKarpFingerprint() = default;
     RabinKarpFingerprint(const NumRange auto& p_data): val(calc_hash_value(p_data, &m_acc_base)){}
@@ -63,9 +62,9 @@ public:
      * @param p_value Hashvalue(Dataphrase) to append
      * @return RabinKarpFingerprint Hashvalue of concatenation
      */
-    RabinKarpFingerprint operator+(RabinKarpFingerprint const& p_value){
-        u_int32_t res_acc_base = (static_cast<size_t>(m_acc_base) * p_value.m_acc_base) % prime;
-        u_int32_t res_hash = ((static_cast<size_t>(val) * p_value.m_acc_base)+ p_value.val)% prime;
+    friend RabinKarpFingerprint operator+(const RabinKarpFingerprint& p_left, const RabinKarpFingerprint& p_right){
+        u_int32_t res_acc_base = (static_cast<size_t>(p_left.m_acc_base) * p_right.m_acc_base) % prime;
+        u_int32_t res_hash = ((static_cast<size_t>(p_left.val) * p_right.m_acc_base)+ p_right.val)% prime;
         return RabinKarpFingerprint(res_acc_base, res_hash);
     }
 
@@ -127,16 +126,4 @@ public:
     bool operator==(const RabinKarpFingerprint& p_value) const{
         return m_acc_base == p_value.m_acc_base && val == p_value.val;
     }
-
-    struct HashOp {
-        size_t operator()(const RabinKarpFingerprint& p_value) const {
-            return p_value.val;
-        }
-    };
-
-    struct EqualOp {
-        bool operator()(const RabinKarpFingerprint& p_lhs, const RabinKarpFingerprint& p_rhs) const {
-            return p_lhs == p_rhs;
-        }
-    };
 };

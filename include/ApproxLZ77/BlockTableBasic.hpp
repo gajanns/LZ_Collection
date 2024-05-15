@@ -2,6 +2,7 @@
 
 #include <span>
 #include <unordered_map>
+#include <numeric>
 #include <bit>
 #include <set>
 #include "Definition.hpp"
@@ -141,6 +142,28 @@ public:
     }
 
     /**
+     * @brief Create previous instance of unmarked nodes from current unmarked nodes
+     * 
+     * @param p_cur_nodes The current unmarked nodes(Out)
+     * @param p_diff_round Numer of rounds to move back
+    */
+    void previous_nodes(std::vector<BlockNode> &p_cur_nodes, size_t p_diff_round) {
+        size_t num_nodes_pack = 1 << p_diff_round;
+        size_t new_nodes_size = 0;
+        for(size_t i = 0; i < p_cur_nodes.size(); i += num_nodes_pack) {
+            auto fp = std::accumulate(p_cur_nodes.begin() + i, p_cur_nodes.begin() + std::min(i + num_nodes_pack, p_cur_nodes.size()), RabinKarpFingerprint(), 
+            [](RabinKarpFingerprint p_fp, const BlockNode &p_node_right) {
+                return p_fp + p_node_right.fp;
+            });
+            p_cur_nodes[new_nodes_size].block_id = new_nodes_size;
+            p_cur_nodes[new_nodes_size].chain_info = 0;
+            p_cur_nodes[new_nodes_size].fp = fp;
+            new_nodes_size++;
+        }
+        p_cur_nodes.resize(new_nodes_size);
+    }
+
+    /**
      * @brief Create next round of unmarked nodes from current marked and unmarked nodes
      * 
      * @param p_prev_nodes The marked nodes from previous round
@@ -196,7 +219,7 @@ public:
      * @param p_marked_refs The set of marked references to be expanded in case of exact matches
      * @param p_cur_round The current round of the algorithm
     */
-    void match_blocks(size_t p_pos, u_int32_t p_fp, std::unordered_map<u_int32_t, std::list<BlockNode*>> &p_fp_table, std::set<BlockRef> &p_marked_refs, size_t p_cur_round) {
+    void match_blocks(size_t p_pos, u_int32_t p_fp, std::unordered_map<u_int32_t, std::list<BlockNode*>> &p_fp_table, size_t p_cur_round, std::set<BlockRef> *p_marked_refs=nullptr) {
         size_t block_size = std::bit_ceil(input_data.size()) >> p_cur_round;
         auto candidate_blocks = p_fp_table.find(p_fp);
         if(candidate_blocks == p_fp_table.end()) return;
@@ -207,7 +230,7 @@ public:
 
             if(std::equal(input_data.begin() + block->block_id * block_size, input_data.begin() + block->block_id * block_size + block_size, input_data.begin() + p_pos)) {
                 block->chain_info |= block_size;
-                p_marked_refs.emplace(block->block_id*block_size, p_pos);
+                if(p_marked_refs)p_marked_refs->emplace(block->block_id*block_size, p_pos);
                 candidate_blocks->second.erase(it);
                 break;
             }

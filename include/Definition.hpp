@@ -113,6 +113,7 @@ namespace ApproxLZ77 {
 
     const size_t min_round = 1;
     const size_t min_block_size = 1;
+    const bool dynamic_init = true;
 
     /**
      * @brief Representation of Factor in Approximate LZ77-Algorithm
