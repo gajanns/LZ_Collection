@@ -18,6 +18,10 @@ public:
             throw std::runtime_error("Error while writing to output stream");
         }
         m_bytes_written++;
+
+        #if DYNAMIC_GRANULARITY == true
+            LZ77::min_ref_size = (2 * factor_bit_size + 1) / 9;
+        #endif
     };
 
     int encode_impl(LZ77::factor_id p_value) {

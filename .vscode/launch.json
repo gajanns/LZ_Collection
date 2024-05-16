@@ -13,6 +13,14 @@
             "console": "integratedTerminal"
         },
         {
+            "name": "Report-Converter",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/report/reportToMarkdown.py",
+            "cwd": "${fileDirname}",
+            "console": "integratedTerminal"
+        },
+        {
             "name": "Test",
             "type": "cppdbg",
             "request": "launch",

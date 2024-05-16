@@ -6,7 +6,7 @@ def main():
         print("No report.csv found.")
         return
     
-    print("|File.Size", "Algorithm", "Out-Size/In-Size", "Runtime[s]", "nFactor/In-Size", "Memory/In-Size|", sep='|')
+    print("|File.Size", "Algorithm", "Compression(Out/In)", "Runtime[s]", "Factors(#/In)", "Memory(Mem[Byte]/In)|", sep='|')
     print("|---------------|---------------|:---------------:|:---------------:|:---------------:|:---------------:|")
     
     
@@ -14,7 +14,7 @@ def main():
     
     for row in report_csv:
         print('|', end='')
-        print(row["input"].split('/')[1], row["algorithm"], f'{float(row["out_size"])*100/float(row["in_size"]):.2f}%',f'{int(row["comp_time"])/1000:.2f}', f'{int(row["n_factors"])/int(row["in_size"]):.2f}', f'{int(row["mem_usage"])/int(row["in_size"]):.2f}', sep="|", end='')
+        print(row["input"].split('/')[1], row["algorithm"], f'{float(row["out_size"])*100/float(row["in_size"]):.2f}%',f'{int(row["comp_time"])/1000:.2f}', f'{int(row["n_factors"])*100/int(row["in_size"]):.2f}%', f'{int(row["mem_usage"])/int(row["in_size"]):.2f}', sep="|", end='')
         print('|', end='\n')
 
 

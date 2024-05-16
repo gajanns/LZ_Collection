@@ -10,6 +10,9 @@
 #include <cstdint>
 
 
+
+#define DYNAMIC_GRANULARITY true
+
 /**
  * @brief Concept for Integral-Range
  * 
@@ -60,7 +63,11 @@ namespace LZW
 
 namespace LZ77
 {
-    const size_t min_ref_size = 1;
+    #if DYNAMIC_GRANULARITY == true
+        inline size_t min_ref_size = 1;
+    #else
+        const size_t min_ref_size = 1;
+    #endif
     /**
      * @brief Representation of Factor in LZ77-Algorithm(LZSS-Style)
      * 
@@ -111,10 +118,14 @@ namespace LZ77
 }
 
 namespace ApproxLZ77 {
-
-    const size_t min_round = 1;
-    const size_t min_block_size = 1;
     const bool dynamic_init = true;
+    const size_t min_round = 1;
+
+    #if DYNAMIC_GRANULARITY == true
+       inline size_t min_block_size = 1;
+    #else
+        const size_t min_block_size = 1;
+    #endif
 
     /**
      * @brief Representation of Factor in Approximate LZ77-Algorithm
