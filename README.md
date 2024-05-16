@@ -2,7 +2,7 @@
 
 Simple Collection of Prototypes of LZ-Algorithms:LZW, LZ77, Approx. LZ77 (seq+ par)
 
-## Experiment
+## Experiment(Last Update: 16/05)
 
 ### System = Codespace-P2 : Dynamic Granularity = Off : Dynamic Init = Off
 
@@ -56,13 +56,13 @@ Simple Collection of Prototypes of LZ-Algorithms:LZW, LZ77, Approx. LZ77 (seq+ p
 | -Perf-Measurement |-          |✔       |✅          |09/05      |
 | -Plot             |-          |⟳       |⛔          |13/04      |
 |LZ78/LZW           |-          |✔       |✅          |17/04      |
-|exact LZ77         |-          |✔       |✅          |11/05      |
+|exact LZ77         |-          |✔       |✅          |16/05      |
 
 ---
 ### Phase 2:
 |Task               |Deadline   |Status  |Tested     |Last Update|
 |-------------------|:---------:|:------:|:---------:|:---------:|
-|Approx. LZ77(seq)  |-          |⟳       |✅          |11/05      |
+|Approx. LZ77(seq)  |-          |✔       |✅          |16/05      |
 | -Rabin-Karp       |-          |✔       |✅          |25/03      |
 
 ---
