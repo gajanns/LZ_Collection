@@ -145,7 +145,7 @@ int main(int argc, char** argv){
     std::vector<InStreamView> input_streams;
 
     if(argc == 1) {
-        setup.fin_names.push_back("data/dummy.txt");
+        setup.fin_names.push_back("data/dummy.6018B");
         setup.fout_name = "dummy_res";
         setup.algorithms.push_back(lzw);
         setup.benchmark = true;
