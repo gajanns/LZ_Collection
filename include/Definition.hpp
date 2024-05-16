@@ -60,6 +60,7 @@ namespace LZW
 
 namespace LZ77
 {
+    const size_t min_ref_size = 1;
     /**
      * @brief Representation of Factor in LZ77-Algorithm(LZSS-Style)
      * 

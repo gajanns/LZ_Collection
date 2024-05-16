@@ -32,19 +32,14 @@ void LZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<LZ77::fact
             while(k+lcp_nsv < input_span.size() && input_span[k+lcp_nsv] == input_span[nsv[k]+lcp_nsv]) lcp_nsv++;
         }
 
-        if(lcp_psv < lcp_nsv) {
-            p_out.encode(LZ77::factor_id{.value = static_cast<size_t>(nsv[k]), .length = lcp_nsv});
-            k = k+lcp_nsv;
+        size_t lcp = std::max(lcp_psv, lcp_nsv);
+        if(lcp < LZ77::min_ref_size) {
+            p_out.encode(LZ77::factor_id{.value = input_span[k++], .length = 0});
         }
         else {
-            if(lcp_psv == 0) {
-                p_out.encode(LZ77::factor_id{.value = input_span[k], .length = lcp_psv});
-                k++;
-            }
-            else {
-                p_out.encode(LZ77::factor_id{.value = static_cast<size_t>(psv[k]), .length = lcp_psv});
-                k = k+lcp_psv;
-            }
+            size_t pos = lcp_psv >= lcp_nsv ? psv[k] : nsv[k];
+            p_out.encode(LZ77::factor_id{.value = pos, .length = lcp});
+            k += lcp;
         }
     }
 }
