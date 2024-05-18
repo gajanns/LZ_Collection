@@ -69,6 +69,6 @@ Simple Collection of Prototypes of LZ-Algorithms:LZW, LZ77, Approx. LZ77 (seq+ p
 ### Phase 3:
 |Task               |Deadline   |Status  |Tested     |Last Update|
 |-------------------|:---------:|:------:|:---------:|:---------:|
-|Approx. LZ77(par)  |-          |❌       |⛔          |-          |
+|Approx. LZ77(par)  |-          |⟳       |⛔          |18/05      |
 
 
