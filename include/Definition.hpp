@@ -8,10 +8,13 @@
 #include <stdexcept>
 #include <variant>
 #include <cstdint>
+#include <omp.h>
 
 
 
 #define DYNAMIC_GRANULARITY true
+
+const size_t num_threads = omp_get_max_threads();
 
 /**
  * @brief Concept for Integral-Range

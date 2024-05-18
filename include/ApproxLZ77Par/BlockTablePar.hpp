@@ -7,81 +7,12 @@
 #include <set>
 #include "Definition.hpp"
 #include "RabinKarp.hpp"
+#include "BlockTableBasic.hpp"
+#include <omp.h>
 #include <list>
 
 using namespace ApproxLZ77;
 
-namespace ApproxLZ77 {
-    /**
-     * @brief Encapsulates a block of data
-     * 
-     * @param block_id The id of the block at current level of implicit tree (-1 => invalid block)
-     * @param chain_info Stores the structure of marked nodes in previous levels
-     * @param fp The fingerprint of the block
-    */
-    struct BlockNode {
-        u_int32_t block_id = std::numeric_limits<u_int32_t>::max();
-        u_int32_t chain_info = 0;
-        RabinKarpFingerprint fp;
-        
-        BlockNode() = default;
-        BlockNode(int32_t p_block_id, u_int32_t p_chain_info, RabinKarpFingerprint p_fp): block_id(p_block_id), chain_info(p_chain_info), fp(p_fp){}
-
-        bool operator==(const BlockNode &p_rhs) const {
-            return block_id == p_rhs.block_id && chain_info == p_rhs.chain_info && fp == p_rhs.fp;
-        }
-
-        bool operator<(const BlockNode &p_rhs) const {
-            return block_id < p_rhs.block_id;
-        }
-
-        bool is_valid() const {
-            return block_id != std::numeric_limits<u_int32_t>::max();
-        }
-    };
-
-    /**
-     * @brief Encapsulates a reference to a block (=> LZ77-Factor)
-     * 
-     * @param block_position The position of the block in the input data
-     * @param ref_position The position of the reference in the input data (ref_position < block_position)
-    */
-    struct BlockRef {
-        u_int32_t block_position;
-        u_int32_t ref_position;
-
-        bool operator==(const BlockRef &p_rhs) const {
-            return block_position == p_rhs.block_position && ref_position == p_rhs.ref_position;
-        }
-
-        bool operator<(const BlockRef &p_rhs) const {
-            return block_position < p_rhs.block_position;
-        }
-
-        BlockRef(u_int32_t p_block_position, u_int32_t p_ref_position): block_position(p_block_position), ref_position(p_ref_position){}
-    };
-
-    /**
-     * @brief Encapsulates a cherry node (Parentnode has been completely marked by its descendants)
-     * 
-     * @param block_position Position within Block ("only" used for ordering)
-     * @param chain_info The structure of marked nodes in previous levels
-    */
-    struct CherryNode {
-        u_int32_t block_position = 0;
-        u_int32_t chain_info = 0;
-
-        bool operator==(const CherryNode &p_rhs) const {
-            return block_position == p_rhs.block_position && chain_info == p_rhs.chain_info;
-        }
-
-        bool operator<(const CherryNode &p_rhs) const {
-            return block_position < p_rhs.block_position;
-        }
-
-        CherryNode(u_int32_t p_block_position, u_int32_t p_chain_info): block_position(p_block_position), chain_info(p_chain_info){}
-    };
-}
 
 /**
  * @brief Class controls Data-Storage and Manipulation for ApproxLZ77-Algorithm
@@ -90,7 +21,7 @@ namespace ApproxLZ77 {
 
 */
 template<typename Sequence> requires NumRange<Sequence>
-class BlockTableBasic {
+class BlockTablePar {
     using Item = typename Sequence::value_type;
 private:
     Sequence input_data;
@@ -112,7 +43,7 @@ private:
 
 public:
 
-    BlockTableBasic(const Sequence &p_input_data) : input_data(p_input_data) {}
+    BlockTablePar(const Sequence &p_input_data) : input_data(p_input_data) {}
 
     /**
      * @brief Initializes Sequence of unmarked Blocknodes for the initial round
@@ -121,18 +52,19 @@ public:
     */
     auto init_nodes(size_t p_init_round) {
         size_t block_size = std::bit_ceil(input_data.size()) >> p_init_round;
-        size_t num_blocks = 1 << p_init_round;
-        auto unmarked_nodes = std::vector<BlockNode>();
-        
+        size_t num_blocks = (input_data.size() + block_size - 1) / block_size;
+        auto unmarked_nodes = std::vector<BlockNode>(num_blocks);
+
+        #pragma omp parallel for
         for(size_t i = 0; i < num_blocks; i++) {
-            if(i*block_size >= input_data.size()) break;
             if((i+1)*block_size > input_data.size()) {
-                unmarked_nodes.emplace_back(i, 0, RabinKarpFingerprint(std::span<const char8_t>(input_data.begin() + i*block_size, input_data.end())));
+                unmarked_nodes[i] = BlockNode(i, 0, RabinKarpFingerprint(std::span<const char8_t>(input_data.begin() + i*block_size, input_data.end())));
             }
             else {
-                unmarked_nodes.emplace_back(i, 0, RabinKarpFingerprint(std::span<const char8_t>(input_data.data() + i*block_size, block_size)));
+                unmarked_nodes[i] = BlockNode(i, 0, RabinKarpFingerprint(std::span<const char8_t>(input_data.data() + i*block_size, block_size)));
             }
         }
+
         return unmarked_nodes;
     }
 

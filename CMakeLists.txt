@@ -16,6 +16,7 @@ include_directories(include)
 include_directories(include/LZ77)
 include_directories(include/LZW)
 include_directories(include/ApproxLZ77)
+include_directories(include/ApproxLZ77Par)
 
 add_subdirectory(externals)
 include_directories(externals/malloc_count)

@@ -12,5 +12,7 @@ if(PERFORMANCE_MEASUREMENT)
     target_link_libraries(${BINARY}_lib malloc_count_lib ${CMAKE_DL_LIBS})
 endif()
 
-target_link_libraries(${BINARY} libsais)
-target_link_libraries(${BINARY}_lib libsais)
+find_package(OpenMP)
+
+target_link_libraries(${BINARY} libsais OpenMP::OpenMP_CXX)
+target_link_libraries(${BINARY}_lib libsais OpenMP::OpenMP_CXX)

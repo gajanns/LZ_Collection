@@ -14,10 +14,12 @@
 #include "Definition.hpp"
 #include "StreamView.hpp"
 #include "ApproxLZ77Compressor.hpp"
+#include "ApproxLZ77ParCompressor.hpp"
+#include <omp.h>
 
 
 enum Algorithm {lzw, lz77, appr77seq, appr77par, all};
-const std::vector<Algorithm> algo_ids = {lzw, lz77, appr77seq};
+const std::vector<Algorithm> algo_ids = {lzw, lz77, appr77seq ,appr77par};
 const std::vector<std::string> algo_names = {"LZW", "LZ77", "Approx.LZ77", "Approx.LZ77Par"};
  
 std::filesystem::path data_path("data");
@@ -121,6 +123,12 @@ void execute_algorithms(ExecutionSetup &exec_setup, std::unique_ptr<std::fstream
                     stats = ApproxLZ77Compressor::Instance().m_stats;
                     break;
                 }
+                case appr77par: {
+                    ApproxLZ77Encoder encoder(*output_stream, in_stream.size());
+                    ApproxLZ77ParCompressor::Instance().compress(in_stream, encoder);
+                    stats = ApproxLZ77ParCompressor::Instance().m_stats;
+                    break;
+                }
                 default:
                     break;
             }
@@ -140,6 +148,8 @@ void execute_algorithms(ExecutionSetup &exec_setup, std::unique_ptr<std::fstream
 }
 
 int main(int argc, char** argv){
+
+    omp_set_num_threads(num_threads);
 
     ExecutionSetup setup;
     std::vector<InStreamView> input_streams;
