@@ -56,12 +56,14 @@ public:
         auto unmarked_nodes = std::vector<BlockNode>(num_blocks);
 
         #pragma omp parallel for
-        for(size_t i = 0; i < num_blocks; i++) {
-            if((i+1)*block_size > input_data.size()) {
-                unmarked_nodes[i] = BlockNode(i, 0, RabinKarpFingerprint(std::span<const char8_t>(input_data.begin() + i*block_size, input_data.end())));
+        for(size_t i = 0; i < num_blocks; i++) {            
+            unmarked_nodes[i].block_id = i;
+            unmarked_nodes[i].chain_info = 0;
+            if(i == num_blocks - 1) [[unlikely]] {
+                unmarked_nodes[i].fp = RabinKarpFingerprint(std::span<const Item>(input_data.begin() + i*block_size, input_data.end()));
             }
-            else {
-                unmarked_nodes[i] = BlockNode(i, 0, RabinKarpFingerprint(std::span<const char8_t>(input_data.data() + i*block_size, block_size)));
+            else [[likely]] {
+                unmarked_nodes[i].fp = RabinKarpFingerprint(std::span<const Item>(input_data.data() + i*block_size, block_size));
             }
         }
 
