@@ -3,7 +3,6 @@
 #include <numeric>
 #include <bit>
 #include <list>
-#include <chrono>
 
 
 void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<ApproxLZ77::factor_id> &p_out) {
@@ -25,10 +24,7 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
         size_t block_size = in_size >> p_round;
         if(init) {
             init = false;
-            auto start = std::chrono::high_resolution_clock::now();
             unmarked_nodes = block_table.init_nodes(p_round);
-            auto end = std::chrono::high_resolution_clock::now();
-            std::cout << "Parallel - Init time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
         }
 
         block_table.create_fp_table(fp_table, unmarked_nodes, p_round);
