@@ -66,7 +66,6 @@ public:
                 unmarked_nodes[i].fp = RabinKarpFingerprint(std::span<const Item>(input_data.data() + i*block_size, block_size));
             }
         }
-
         return unmarked_nodes;
     }
 

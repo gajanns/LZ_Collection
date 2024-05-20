@@ -73,7 +73,7 @@ namespace MemoryTracker
     */
     template<typename Func, typename... Args>
     requires std::invocable<Func, Args...>
-    auto log_mem_tracked_execute(Func *p_func, Args... p_args, const std::string &p_name) {
+    auto log_mem_tracked_execute(const std::string &p_name, Func *p_func, Args... p_args) {
         auto [result, mem] = mem_tracked_execute(p_func, p_args...);
         std::cout << p_name << " memory: " << mem << " Bytes" << std::endl;
         return result;
@@ -93,7 +93,7 @@ namespace MemoryTracker
     */
     template<typename Func, typename Class, typename... Args>
     requires std::is_member_function_pointer_v<Func Class::*> && std::is_class_v<Class>
-    auto log_mem_tracked_execute(Func Class::*p_func, Class &p_class, Args... p_args, const std::string &p_name) {
+    auto log_mem_tracked_execute(const std::string &p_name, Func Class::*p_func, Class &p_class, Args... p_args) {
         auto [result, mem] = mem_tracked_execute(p_func, p_class, p_args...);
         std::cout << p_name << " memory: " << mem << " Bytes" << std::endl;
         return result;
