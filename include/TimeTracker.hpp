@@ -35,6 +35,6 @@ template<typename Func, typename... Args>
 requires std::invocable<Func, Args...>
 auto log_timed_execute_ms(const std::string &p_name, Func *p_func, Args... p_args) {
     auto [result, time] = timed_execute_ms(p_func, p_args...);
-    std::cout << p_name << " time: " << time << "ms" << std::endl;
+    std::cout << p_name << "=> Time: " << time << "ms" << std::endl;
     return result;
 }
