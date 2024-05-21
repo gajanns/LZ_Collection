@@ -76,13 +76,31 @@ public:
      * @param p_unmarked_nodes The current unmarked nodes
      * @param p_cur_round The current round of the algorithm
     */
-    void create_fp_table(std::unordered_map<u_int32_t, std::list<BlockNode*>> &p_fp_table, std::vector<BlockNode> &p_unmarked_nodes, size_t p_cur_round) {
+    void create_fp_table(std::unordered_map<u_int32_t, std::list<UniqueBlockGroup>> &p_fp_table, std::vector<BlockNode> &p_unmarked_nodes, size_t p_cur_round) {
         p_fp_table.clear();
         p_fp_table.reserve(p_unmarked_nodes.size());
         size_t block_size = std::bit_ceil(input_data.size()) >> p_cur_round;
+
         for(auto &node : p_unmarked_nodes) {
             if(node.block_id * block_size + block_size > input_data.size()) break;
-            p_fp_table[node.fp.val].push_back(&node);
+
+            auto block_group_iter = p_fp_table.find(node.fp.val);
+            if(block_group_iter == p_fp_table.end()) {
+                p_fp_table[node.fp.val].emplace_back(&node);
+            }
+            else {
+                auto it_match = std::find_if(block_group_iter->second.begin(), block_group_iter->second.end(), [&](UniqueBlockGroup &p_group) {
+                    return std::equal(input_data.begin() + p_group.head()->block_id * block_size, input_data.begin() + p_group.head()->block_id * block_size + block_size,
+                                        input_data.begin() + node.block_id * block_size);
+                });
+
+                if(it_match == block_group_iter->second.end()) {
+                    block_group_iter->second.emplace_back(&node);
+                }
+                else {
+                    it_match->blocks.push_back(&node);
+                }
+            }
         }
     }
 
@@ -164,21 +182,47 @@ public:
      * @param p_marked_refs The set of marked references to be expanded in case of exact matches
      * @param p_cur_round The current round of the algorithm
     */
-    void match_blocks(size_t p_pos, u_int32_t p_fp, std::unordered_map<u_int32_t, std::list<BlockNode*>> &p_fp_table, size_t p_cur_round, std::set<BlockRef> *p_marked_refs=nullptr) {
+    void preprocess_matches(size_t p_pos, u_int32_t p_fp, std::unordered_map<u_int32_t, std::list<UniqueBlockGroup>> &p_fp_table, size_t p_cur_round) {
         size_t block_size = std::bit_ceil(input_data.size()) >> p_cur_round;
         auto candidate_blocks = p_fp_table.find(p_fp);
         if(candidate_blocks == p_fp_table.end()) return;
 
-        #pragma omp critical
         for(auto it = candidate_blocks->second.begin(); it != candidate_blocks->second.end(); it++) {
-            auto block = *it;
-            if(block->block_id * block_size <= p_pos || block->chain_info & block_size) continue;
+            auto block = it->head();
 
             if(std::equal(input_data.begin() + block->block_id * block_size, input_data.begin() + block->block_id * block_size + block_size, input_data.begin() + p_pos)) {
-                block->chain_info |= block_size;
-                if(p_marked_refs)p_marked_refs->emplace(block->block_id*block_size, p_pos);
-                candidate_blocks->second.erase(it);
+                it->leftmost_ref = std::min(it->leftmost_ref, p_pos);
                 break;
+            }
+        }
+    }
+
+    void postprocess_matches(std::unordered_map<u_int32_t, std::list<UniqueBlockGroup>> &p_fp_table, size_t p_cur_round, std::set<BlockRef> *p_marked_refs = nullptr) {
+        size_t block_size = std::bit_ceil(input_data.size()) >> p_cur_round;
+        
+        for(auto &block_container : p_fp_table) { 
+            for(auto &block_group : block_container.second | std::views::filter([](UniqueBlockGroup &p_group) { return p_group.leftmost_ref != SIZE_MAX; })) {
+
+                if(block_group.blocks.size() < num_threads) {
+                    for(size_t i = 0; i < block_group.blocks.size(); i++) {
+                        auto block = block_group.blocks[i];
+                        if(block->block_id * block_size > block_group.leftmost_ref) {
+                            block->chain_info |= block_size;
+                            if(p_marked_refs) p_marked_refs->emplace(block->block_id * block_size, block_group.leftmost_ref);
+                        }
+                    }
+                }
+                else {
+                    #pragma omp parallel for
+                    for(size_t i = 0; i < block_group.blocks.size(); i++) {
+                        auto block = block_group.blocks[i];
+                        if(block->block_id * block_size > block_group.leftmost_ref) {
+                            block->chain_info |= block_size;
+                            #pragma omp critical
+                            if(p_marked_refs) p_marked_refs->emplace(block->block_id * block_size, block_group.leftmost_ref);
+                        }
+                    }
+                }
             }
         }
     }

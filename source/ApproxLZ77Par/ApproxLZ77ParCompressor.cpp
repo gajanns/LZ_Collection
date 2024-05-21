@@ -16,7 +16,7 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
     std::set<CherryNode> chain_ids;
     std::set<BlockRef> marked_refs;
     std::vector<BlockNode> unmarked_nodes;
-    std::unordered_map<u_int32_t, std::list<BlockNode*>> fp_table;
+    std::unordered_map<u_int32_t, std::list<UniqueBlockGroup>> fp_table;
 
     size_t in_size = std::bit_ceil(input_span.size()), in_log_size = std::bit_width(in_size) - 1;
     size_t min_round = std::min(in_log_size, ApproxLZ77::min_round), max_round = in_log_size - std::bit_width(ApproxLZ77::min_block_size) + 1;
@@ -28,23 +28,24 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
         size_t data_per_thread = (input_span.size() - block_size + num_threads -1) / num_threads;
         block_table.create_fp_table(fp_table, unmarked_nodes, p_round);
 
-
         #pragma omp parallel
         {
             size_t thread_id = omp_get_thread_num();
             size_t start_pos = thread_id * data_per_thread;
-            size_t end_pos = (thread_id + 1) * data_per_thread;
-            if(thread_id == num_threads - 1) end_pos = input_span.size() - block_size;
+            size_t end_pos = std::min(start_pos + data_per_thread, input_span.size() - block_size);
             
             RabinKarpFingerprint test_fp;
             if(start_pos < end_pos) {
                 test_fp = RabinKarpFingerprint(std::span<const char8_t>(input_span.data() + start_pos, block_size));
             }
+
             for(size_t pos = start_pos; pos < end_pos; pos++) {
-                block_table.match_blocks(pos, test_fp.val, fp_table, p_round, p_capture_refs ? &marked_refs : nullptr);
+                block_table.preprocess_matches(pos, test_fp.val, fp_table, p_round);
                 test_fp = input_span[pos] << test_fp << input_span[pos+block_size];
-            }
+            }           
         }
+        block_table.postprocess_matches(fp_table, round, p_capture_refs ? &marked_refs : nullptr);
+        
         return 1;
     };
 
