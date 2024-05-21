@@ -1,8 +1,10 @@
 #include "ApproxLZ77ParCompressor.hpp"
 #include "RabinKarp.hpp"
+#include "Definition.hpp"
 #include <numeric>
 #include <bit>
 #include <list>
+#include <omp.h>
 
 
 void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<ApproxLZ77::factor_id> &p_out) {
@@ -23,13 +25,27 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
 
     auto match_nodes = [&](size_t p_round, bool p_capture_refs = true) {
         size_t block_size = in_size >> p_round;
+        size_t data_per_thread = (input_span.size() - block_size + num_threads -1) / num_threads;
         block_table.create_fp_table(fp_table, unmarked_nodes, p_round);
-        RabinKarpFingerprint test_fp = unmarked_nodes[0].fp;
 
-        for(size_t pos = 0; pos < input_span.size() - block_size; pos++) {
-            block_table.match_blocks(pos, test_fp.val, fp_table, p_round, p_capture_refs ? &marked_refs : nullptr);
-            test_fp = input_span[pos] << test_fp << input_span[pos+block_size];
+
+        #pragma omp parallel
+        {
+            size_t thread_id = omp_get_thread_num();
+            size_t start_pos = thread_id * data_per_thread;
+            size_t end_pos = (thread_id + 1) * data_per_thread;
+            if(thread_id == num_threads - 1) end_pos = input_span.size() - block_size;
+            
+            RabinKarpFingerprint test_fp;
+            if(start_pos < end_pos) {
+                test_fp = RabinKarpFingerprint(std::span<const char8_t>(input_span.data() + start_pos, block_size));
+            }
+            for(size_t pos = start_pos; pos < end_pos; pos++) {
+                block_table.match_blocks(pos, test_fp.val, fp_table, p_round, p_capture_refs ? &marked_refs : nullptr);
+                test_fp = input_span[pos] << test_fp << input_span[pos+block_size];
+            }
         }
+        return 1;
     };
 
     auto init_nodes = [&](bool dynamic_init) {

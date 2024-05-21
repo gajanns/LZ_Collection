@@ -30,6 +30,7 @@ void ApproxLZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<Appr
             block_table.match_blocks(pos, test_fp.val, fp_table, p_round, p_capture_refs ? &marked_refs : nullptr);
             test_fp = input_span[pos] << test_fp << input_span[pos+block_size];
         }
+        return 1;
     };
 
     auto init_nodes = [&](bool dynamic_init) {

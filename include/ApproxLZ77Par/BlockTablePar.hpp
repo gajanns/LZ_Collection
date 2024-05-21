@@ -169,9 +169,10 @@ public:
         auto candidate_blocks = p_fp_table.find(p_fp);
         if(candidate_blocks == p_fp_table.end()) return;
 
+        #pragma omp critical
         for(auto it = candidate_blocks->second.begin(); it != candidate_blocks->second.end(); it++) {
             auto block = *it;
-            if(block->block_id * block_size <= p_pos) continue;
+            if(block->block_id * block_size <= p_pos || block->chain_info & block_size) continue;
 
             if(std::equal(input_data.begin() + block->block_id * block_size, input_data.begin() + block->block_id * block_size + block_size, input_data.begin() + p_pos)) {
                 block->chain_info |= block_size;
