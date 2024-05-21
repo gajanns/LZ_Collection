@@ -2,31 +2,31 @@
 
 Simple Collection of Prototypes of LZ-Algorithms:LZW, LZ77, Approx. LZ77 (seq+ par)
 
-## Experiment(Last Update: 16/05)
+## Experiment(Last Update: 22/05)
 
-### System = Codespace-P2 : Dynamic Granularity = Off : Dynamic Init = Off
+### System = Codespace-P8(?) : Dynamic Granularity = On : Dynamic Init = On
 
-|File.Size|Algorithm|Compression(Out/In)|Runtime[s]|Factors(#/In)|Memory(Mem[Byte]/In)|
+|File.Size|Algorithm|Compression(Out/In)|Runtime[s]|Factors(#/In)|Memory([Byte]/In)|
 |---------------|---------------|:---------------:|:---------------:|:---------------:|:---------------:|
-|dna.50MB|LZ77|48.68%|13.84|7.35%|20.00|
-|dna.50MB|Approx.LZ77|45.29%|93.50|11.32%|12.27|
-|pitches.50MB|LZ77|73.06%|15.49|11.03%|20.00|
-|pitches.50MB|Approx.LZ77|63.87%|94.43|15.97%|14.65|
-|english.50MB|LZ77|45.06%|14.85|6.80%|20.00|
-|english.50MB|Approx.LZ77|41.92%|92.09|10.48%|8.97|
-|sources.50MB|LZ77|41.77%|13.60|6.31%|20.00|
-|sources.50MB|Approx.LZ77|44.28%|88.99|11.07%|9.47|
-|dummy.6018B|LZ77|24.83%|0.91|7.76%|20.00|
-|dummy.6018B|Approx.LZ77|24.19%|0.00|11.05%|8.88|
-|dblp.xml.50MB|LZ77|25.15%|12.24|3.80%|20.00|
-|dblp.xml.50MB|Approx.LZ77|29.03%|73.52|7.26%|5.54|
-|proteins.50MB|LZ77|85.77%|15.26|12.95%|20.00|
-|proteins.50MB|Approx.LZ77|72.64%|105.14|18.16%|20.60|
+|dna.50MB|Approx.LZ77|45.29%|70.48|11.32%|12.27|
+|dna.50MB|Approx.LZ77Par|45.29%|27.01|11.32%|13.53|
+|pitches.50MB|Approx.LZ77|63.81%|70.78|15.97%|14.65|
+|pitches.50MB|Approx.LZ77Par|63.81%|34.27|15.97%|17.07|
+|english.50MB|Approx.LZ77|41.89%|71.19|10.48%|8.97|
+|english.50MB|Approx.LZ77Par|41.89%|27.49|10.48%|10.99|
+|sources.50MB|Approx.LZ77|44.23%|65.26|11.07%|9.47|
+|sources.50MB|Approx.LZ77Par|44.23%|25.93|11.07%|11.38|
+|dummy.6018B|Approx.LZ77|22.05%|0.34|11.78%|10.10|
+|dummy.6018B|Approx.LZ77Par|22.05%|0.00|11.78%|11.82|
+|dblp.xml.50MB|Approx.LZ77|29.00%|52.19|7.26%|5.54|
+|dblp.xml.50MB|Approx.LZ77Par|29.00%|19.30|7.26%|6.39|
+|proteins.50MB|Approx.LZ77|72.64%|86.37|18.16%|20.60|
+|proteins.50MB|Approx.LZ77Par|72.64%|42.04|18.16%|22.67|
 
 
 ### System = Codespace-P2 : Dynamic Granularity = On : Dynamic Init = On
 
-|File.Size|Algorithm|Compression(Out/In)|Runtime[s]|Factors(#/In)|Memory(Mem[Byte]/In)|
+|File.Size|Algorithm|Compression(Out/In)|Runtime[s]|Factors(#/In)|Memory([Byte]/In)|
 |---------------|---------------|:---------------:|:---------------:|:---------------:|:---------------:|
 |dna.50MB|LZ77|48.67%|6.21|7.35%|20.00|
 |dna.50MB|Approx.LZ77|45.29%|78.68|11.32%|12.27|
