@@ -11,8 +11,8 @@ void ApproxLZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<Appr
     if(input_span.size() == 0) return;
 
     BlockTableBasic block_table(input_span);
-    std::set<CherryNode> chain_ids;
-    std::set<BlockRef> marked_refs;
+    std::vector<CherryNode> chain_ids;
+    std::vector<BlockRef> marked_refs;
     std::vector<BlockNode> unmarked_nodes;
     std::unordered_map<u_int32_t, std::list<BlockNode*>> fp_table;
 
@@ -34,10 +34,12 @@ void ApproxLZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<Appr
     };
 
     auto init_nodes = [&](bool dynamic_init) {
-        unmarked_nodes = block_table.init_nodes(round);
+       
         if(ApproxLZ77::dynamic_init) {
             size_t probe_round = (min_round + max_round) / 2;
             size_t probe_block_size = in_size >> probe_round;
+
+            unmarked_nodes = block_table.init_nodes(round);
             match_nodes(probe_round, false);
 
             size_t max_consecutive = 0, cur_consecutive = 0;
@@ -61,6 +63,9 @@ void ApproxLZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<Appr
                 unmarked_nodes = block_table.init_nodes(round);
             } 
         }
+        else {
+            unmarked_nodes = block_table.init_nodes(round);
+        }
         return 0;
     };
     
@@ -72,6 +77,10 @@ void ApproxLZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<Appr
     };   
 
     auto push_factors = [&]() {
+
+        std::sort(marked_refs.begin(), marked_refs.end());
+        std::sort(chain_ids.begin(), chain_ids.end());
+
         auto it_ref = marked_refs.begin();
         size_t cur_pos = 0;
         bool is_chain_up = false;
