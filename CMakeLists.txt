@@ -21,6 +21,7 @@ include_directories(include/ApproxLZ77Par)
 add_subdirectory(externals)
 include_directories(externals/malloc_count)
 include_directories(externals/libsais/include)
+include_directories(externals/unordered_dense/include/ankerl)
 
 add_subdirectory(source)
 

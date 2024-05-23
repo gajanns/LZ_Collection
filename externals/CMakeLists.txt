@@ -17,6 +17,16 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(libsais)
 
+# Unordered Dense Hash Map Library written by Martin Ankerl : MIT License
+FetchContent_Declare(
+  unordered_dense
+  GIT_REPOSITORY https://github.com/martinus/unordered_dense.git
+  GIT_TAG v4.4.0
+  SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/unordered_dense
+)
+FetchContent_MakeAvailable(unordered_dense)
+
+
 
 
 

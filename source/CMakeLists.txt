@@ -14,5 +14,5 @@ endif()
 
 find_package(OpenMP)
 
-target_link_libraries(${BINARY} libsais OpenMP::OpenMP_CXX)
-target_link_libraries(${BINARY}_lib libsais OpenMP::OpenMP_CXX)
+target_link_libraries(${BINARY} libsais OpenMP::OpenMP_CXX unordered_dense::unordered_dense)
+target_link_libraries(${BINARY}_lib libsais OpenMP::OpenMP_CXX unordered_dense::unordered_dense)

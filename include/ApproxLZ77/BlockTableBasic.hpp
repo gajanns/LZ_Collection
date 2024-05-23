@@ -8,6 +8,7 @@
 #include "Definition.hpp"
 #include "RabinKarp.hpp"
 #include <list>
+#include "unordered_dense.h"
 
 using namespace ApproxLZ77;
 
@@ -157,7 +158,7 @@ public:
      * @param p_unmarked_nodes The current unmarked nodes
      * @param p_cur_round The current round of the algorithm
     */
-    void create_fp_table(std::unordered_map<u_int32_t, u_int32_t> &p_fp_table, std::vector<BlockNode> &p_unmarked_nodes, size_t p_cur_round) {
+    void create_fp_table(ankerl::unordered_dense::map<u_int32_t, u_int32_t> &p_fp_table, std::vector<BlockNode> &p_unmarked_nodes, size_t p_cur_round) {
         p_fp_table.clear();
         p_fp_table.reserve(p_unmarked_nodes.size());
         size_t block_size = std::bit_ceil(input_data.size()) >> p_cur_round;
@@ -249,7 +250,7 @@ public:
      * @param p_marked_refs The set of marked references to be expanded in case of exact matches
      * @param p_cur_round The current round of the algorithm
     */
-    void match_blocks(size_t p_pos, u_int32_t p_fp, std::unordered_map<u_int32_t, std::list<BlockNode*>> &p_fp_table, size_t p_cur_round, std::vector<BlockRef> *p_marked_refs=nullptr) {
+    void match_blocks(size_t p_pos, u_int32_t p_fp, ankerl::unordered_dense::map<u_int32_t, std::list<BlockNode*>> &p_fp_table, size_t p_cur_round, std::vector<BlockRef> *p_marked_refs=nullptr) {
         size_t block_size = std::bit_ceil(input_data.size()) >> p_cur_round;
         auto candidate_blocks = p_fp_table.find(p_fp);
         if(candidate_blocks == p_fp_table.end()) return;
@@ -265,14 +266,14 @@ public:
         }
     }
 
-    void preprocess_matches(u_int32_t p_pos, u_int32_t p_fp, std::unordered_map<u_int32_t, u_int32_t> &p_fp_table) {
+    void preprocess_matches(u_int32_t p_pos, u_int32_t p_fp, ankerl::unordered_dense::map<u_int32_t, u_int32_t> &p_fp_table) {
         auto match = p_fp_table.find(p_fp);
         if(match == p_fp_table.end()) return;
 
         if(match->second > p_pos) match->second = p_pos;
     }
 
-    void postprocess_matches(std::vector<BlockNode> &p_unmarked_nodes, std::unordered_map<u_int32_t, u_int32_t> &p_fp_table, size_t p_round, std::vector<BlockRef> *p_marked_refs=nullptr) {
+    void postprocess_matches(std::vector<BlockNode> &p_unmarked_nodes, ankerl::unordered_dense::map<u_int32_t, u_int32_t> &p_fp_table, size_t p_round, std::vector<BlockRef> *p_marked_refs=nullptr) {
         size_t block_size = std::bit_ceil(input_data.size()) >> p_round;
 
         for(auto &node : p_unmarked_nodes) {
