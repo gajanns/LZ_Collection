@@ -157,14 +157,18 @@ public:
      * @param p_unmarked_nodes The current unmarked nodes
      * @param p_cur_round The current round of the algorithm
     */
-    void create_fp_table(std::unordered_map<u_int32_t, std::list<BlockNode*>> &p_fp_table, std::vector<BlockNode> &p_unmarked_nodes, size_t p_cur_round) {
+    void create_fp_table(std::unordered_map<u_int32_t, u_int32_t> &p_fp_table, std::vector<BlockNode> &p_unmarked_nodes, size_t p_cur_round) {
         p_fp_table.clear();
         p_fp_table.reserve(p_unmarked_nodes.size());
         size_t block_size = std::bit_ceil(input_data.size()) >> p_cur_round;
+        
         for(auto &node : p_unmarked_nodes) {
-            if(node.block_id * block_size + block_size > input_data.size()) break;
-            p_fp_table[node.fp.val].push_back(&node);
+            if(node.block_id * block_size + block_size > input_data.size()) [[unlikely]] {
+                break;
+            }
+            p_fp_table[node.fp.val] = std::numeric_limits<u_int32_t>::max();
         }
+        p_fp_table.rehash(p_fp_table.size());
     }
 
     /**
@@ -258,6 +262,27 @@ public:
             if(p_marked_refs)p_marked_refs->emplace_back(block->block_id*block_size, p_pos);
             candidate_blocks->second.erase(it);
             break;
+        }
+    }
+
+    void preprocess_matches(u_int32_t p_pos, u_int32_t p_fp, std::unordered_map<u_int32_t, u_int32_t> &p_fp_table) {
+        auto match = p_fp_table.find(p_fp);
+        if(match == p_fp_table.end()) return;
+
+        if(match->second > p_pos) match->second = p_pos;
+    }
+
+    void postprocess_matches(std::vector<BlockNode> &p_unmarked_nodes, std::unordered_map<u_int32_t, u_int32_t> &p_fp_table, size_t p_round, std::vector<BlockRef> *p_marked_refs=nullptr) {
+        size_t block_size = std::bit_ceil(input_data.size()) >> p_round;
+
+        for(auto &node : p_unmarked_nodes) {
+            if(node.block_id * block_size + block_size < input_data.size()) [[likely]] {
+                auto ref_pos = p_fp_table[node.fp.val];
+                if(ref_pos < node.block_id * block_size) {
+                    node.chain_info |= block_size;
+                    if(p_marked_refs) p_marked_refs->emplace_back(node.block_id*block_size, ref_pos);
+                }
+            }
         }
     }
 

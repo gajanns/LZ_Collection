@@ -14,22 +14,24 @@ void ApproxLZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<Appr
     std::vector<CherryNode> chain_ids;
     std::vector<BlockRef> marked_refs;
     std::vector<BlockNode> unmarked_nodes;
-    std::unordered_map<u_int32_t, std::list<BlockNode*>> fp_table;
+
+    std::unordered_map<u_int32_t, u_int32_t> fp_table;
 
     size_t in_size = std::bit_ceil(input_span.size()), in_log_size = std::bit_width(in_size) - 1;
     size_t min_round = std::min(in_log_size, ApproxLZ77::min_round), max_round = in_log_size - std::bit_width(ApproxLZ77::min_block_size) + 1;
 
     size_t round = min_round;
-
+    size_t time = 0;
     auto match_nodes = [&](size_t p_round, bool p_capture_refs = true) {
         size_t block_size = in_size >> p_round;
         block_table.create_fp_table(fp_table, unmarked_nodes, p_round);
         RabinKarpFingerprint test_fp = unmarked_nodes[0].fp;
 
-        for(size_t pos = 0; pos < input_span.size() - block_size; pos++) {
-            block_table.match_blocks(pos, test_fp.val, fp_table, p_round, p_capture_refs ? &marked_refs : nullptr);
+        for(u_int32_t pos = 0; pos < input_span.size() - block_size; pos++) {
+            block_table.preprocess_matches(pos, test_fp.val, fp_table);
             test_fp = input_span[pos] << test_fp << input_span[pos+block_size];
         }
+        block_table.postprocess_matches(unmarked_nodes, fp_table, round, p_capture_refs ? &marked_refs : nullptr);
         return 1;
     };
 
