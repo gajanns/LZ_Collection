@@ -41,7 +41,7 @@ void ApproxLZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<Appr
             size_t probe_round = (min_round + max_round) / 2;
             size_t probe_block_size = in_size >> probe_round;
 
-            unmarked_nodes = block_table.init_nodes(round);
+            unmarked_nodes = block_table.init_nodes(probe_round);
             match_nodes(probe_round, false);
 
             size_t max_consecutive = 0, cur_consecutive = 0;
