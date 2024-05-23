@@ -53,8 +53,8 @@ public:
 
         for(auto p: p_data | std::views::reverse){
             val += p*acc_base;
-            acc_base = (acc_base*base) % prime;
-            val %= prime;
+            acc_base = mod(acc_base*base, prime);
+            val = mod(val, prime);
         }
 
         if(p_acc_base != nullptr){
@@ -70,8 +70,8 @@ public:
      * @return RabinKarpFingerprint Hashvalue of concatenation
      */
     friend RabinKarpFingerprint operator+(const RabinKarpFingerprint& p_left, const RabinKarpFingerprint& p_right){
-        size_t res_acc_base = (static_cast<__uint128_t>(p_left.m_acc_base) * p_right.m_acc_base) % prime;
-        size_t res_hash = ((static_cast<__uint128_t>(p_left.val) * p_right.m_acc_base)+ p_right.val)% prime;
+        size_t res_acc_base = mod(static_cast<__uint128_t>(p_left.m_acc_base) * p_right.m_acc_base, prime);
+        size_t res_hash = mod((static_cast<__uint128_t>(p_left.val) * p_right.m_acc_base)+ p_right.val, prime);
         return RabinKarpFingerprint(res_acc_base, res_hash);
     }
 
@@ -91,13 +91,13 @@ public:
         __uint128_t inv_acc_base = 1, inv_base = base_inverse, exp = right_data.size();
         while(exp > 0) {
             if(exp%2) {
-                inv_acc_base = (inv_acc_base * inv_base) % prime;
+                inv_acc_base = mod(inv_acc_base * inv_base, prime);
             }
             exp >>= 1;
-            inv_base = (inv_base * inv_base) % prime;
+            inv_base = mod(inv_base * inv_base, prime);
         }
-        size_t left_hash = ((static_cast<__uint128_t>(val) + prime - right_fp.val) * inv_acc_base) % prime;
-        size_t left_acc_base = (static_cast<__uint128_t>(m_acc_base) * inv_acc_base) % prime;
+        size_t left_hash = mod((static_cast<__uint128_t>(val) + prime - right_fp.val) * inv_acc_base, prime);
+        size_t left_acc_base = mod(static_cast<__uint128_t>(m_acc_base) * inv_acc_base, prime);
         return {RabinKarpFingerprint(left_acc_base, left_hash), right_fp};
     }
 
@@ -111,9 +111,9 @@ public:
      */
     friend RabinKarpFingerprint operator<<(const std::integral auto p_left, const RabinKarpFingerprint& p_value) {
         size_t acc_base = mod(static_cast<__uint128_t>(p_value.m_acc_base)*RabinKarpFingerprint::base_inverse, RabinKarpFingerprint::prime);
-        size_t hash = mod(static_cast<__uint128_t>(p_value.val) + RabinKarpFingerprint::prime - (p_left * acc_base), RabinKarpFingerprint::prime);
+        size_t hash = static_cast<__uint128_t>(p_value.val) + RabinKarpFingerprint::prime - mod(static_cast<__uint128_t>(acc_base) * p_left, RabinKarpFingerprint::prime);
 
-        return RabinKarpFingerprint(acc_base, hash % prime);
+        return RabinKarpFingerprint(acc_base, mod(hash, RabinKarpFingerprint::prime));
     }
 
     /**
