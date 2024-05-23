@@ -4,7 +4,7 @@
 TEST(RabinKarpTest, SimpleString) {
     std::string s{"One"};
     RabinKarpFingerprint fp(s);
-    EXPECT_EQ(fp.val, 5205605);
+    EXPECT_EQ(fp.val, 339112912802);
 }
 
 TEST(RabinKarpTest, ConcatString) {
@@ -13,9 +13,9 @@ TEST(RabinKarpTest, ConcatString) {
     std::string s = s1+s2;
 
     RabinKarpFingerprint fp1(s1), fp2(s2), fp(s), fp_concat = fp1+fp2;
-    EXPECT_EQ(fp1.val, 5205605);
-    EXPECT_EQ(fp2.val, 5535599);
-    EXPECT_EQ(fp.val, 1700075083);
+    EXPECT_EQ(fp1.val, 339112912802);
+    EXPECT_EQ(fp2.val, 360575888910);
+    EXPECT_EQ(fp.val, 1834056854850233761);
     EXPECT_EQ(fp.val, fp_concat.val);
 }
 

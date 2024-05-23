@@ -16,7 +16,7 @@ void ApproxLZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<Appr
     std::vector<BlockRef> marked_refs;
     std::vector<BlockNode> unmarked_nodes;
 
-    ankerl::unordered_dense::map<u_int32_t, u_int32_t> fp_table;
+    ankerl::unordered_dense::map<size_t, u_int32_t> fp_table;
 
     size_t in_size = std::bit_ceil(input_span.size()), in_log_size = std::bit_width(in_size) - 1;
     size_t min_round = std::min(in_log_size, ApproxLZ77::min_round), max_round = in_log_size - std::bit_width(ApproxLZ77::min_block_size) + 1;
