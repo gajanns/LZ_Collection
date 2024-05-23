@@ -24,14 +24,21 @@ public:
      * 
      */
     size_t val = 0;
-    static const __uint128_t base = 65517;
-    static const __uint128_t base_inverse = 1717389705276502644;
-    static const __uint128_t prime = 2305843009213693951; // 2^61-1
+    static const size_t base = 65517;
+    static const size_t base_inverse = 1717389705276502644;
+    static const size_t prime_exp = 61;
+    static const size_t prime = 2305843009213693951; // 2^61-1
 
     RabinKarpFingerprint() = default;
     RabinKarpFingerprint(const NumRange auto& p_data): val(calc_hash_value(p_data, &m_acc_base)){}
     RabinKarpFingerprint(const size_t p_acc_base, const size_t p_hash_value):m_acc_base(p_acc_base),val(p_hash_value){}
     RabinKarpFingerprint(const RabinKarpFingerprint& p_value):m_acc_base(p_value.m_acc_base),val(p_value.val){}
+
+    static size_t mod(__uint128_t const value, size_t prime) {
+        __uint128_t const v = value + 1;
+        size_t const z = ((v >> prime_exp) + v) >> prime_exp;
+        return (value + z) & prime;
+    }
 
     /**
      * @brief Calculate Hashvalue from data
@@ -102,11 +109,11 @@ public:
      * @param p_value Hashvalue of concatenation
      * @return RabinKarpFingerprint 
      */
-    friend RabinKarpFingerprint operator<<(const std::integral auto& p_left, const RabinKarpFingerprint& p_value) {
-        __uint128_t acc_base = (static_cast<__uint128_t>(p_value.m_acc_base)*RabinKarpFingerprint::base_inverse)%RabinKarpFingerprint::prime;
-        __uint128_t hash = static_cast<__uint128_t>(p_value.val) + RabinKarpFingerprint::prime - (p_left * acc_base) % RabinKarpFingerprint::prime;
+    friend RabinKarpFingerprint operator<<(const std::integral auto p_left, const RabinKarpFingerprint& p_value) {
+        size_t acc_base = mod(static_cast<__uint128_t>(p_value.m_acc_base)*RabinKarpFingerprint::base_inverse, RabinKarpFingerprint::prime);
+        size_t hash = mod(static_cast<__uint128_t>(p_value.val) + RabinKarpFingerprint::prime - (p_left * acc_base), RabinKarpFingerprint::prime);
 
-        return RabinKarpFingerprint(static_cast<size_t>(acc_base), static_cast<size_t>(hash % prime));
+        return RabinKarpFingerprint(acc_base, hash % prime);
     }
 
     /**
@@ -116,9 +123,9 @@ public:
      * @param p_value Hashvalue of concatenation
      * @return RabinKarpFingerprint 
      */
-    friend RabinKarpFingerprint operator<<(const RabinKarpFingerprint& p_value, const std::integral auto& p_right) {
-        size_t acc_base = (static_cast<__uint128_t>(p_value.m_acc_base)*RabinKarpFingerprint::base)%RabinKarpFingerprint::prime;
-        size_t hash = (static_cast<__uint128_t>(p_value.val) * RabinKarpFingerprint::base + p_right) % RabinKarpFingerprint::prime;
+    friend RabinKarpFingerprint operator<<(const RabinKarpFingerprint& p_value, const std::integral auto p_right) {
+        size_t acc_base = mod(static_cast<__uint128_t>(p_value.m_acc_base)*RabinKarpFingerprint::base, RabinKarpFingerprint::prime);
+        size_t hash = mod(static_cast<__uint128_t>(p_value.val) * RabinKarpFingerprint::base + p_right, RabinKarpFingerprint::prime);
 
         return RabinKarpFingerprint(acc_base, hash);
     }
