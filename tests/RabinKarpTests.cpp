@@ -25,6 +25,13 @@ TEST(RabinKarpTest, ShiftRight) {
     EXPECT_EQ(fp_ref.val, fp_shift.val);
 }
 
+TEST(RabinKarpTest, ShiftRightAlt) {
+    std::string s{"OneTwo"}, s_ref{"neTwoO"};
+    RabinKarpFingerprint fp(s), fp_ref(s_ref), fp_shift = fp_ref;
+    fp_shift.roll('O', 'O');
+    EXPECT_EQ(fp_ref.val, fp_shift.val);
+}
+
 TEST(RabinKarpTest, SplitString) {
     std::string s1{"One"};
     std::string s2{"Two"};
