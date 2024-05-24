@@ -116,7 +116,7 @@ public:
         __uint128_t val_ = val;
 
         val_ = mod(val_ * base + p_right, prime);
-        val_ = mod(val_ + prime - mod(static_cast<__uint128_t>(m_acc_base) * p_left, prime), prime);        
+        val = mod(val_ + prime - mod(static_cast<__uint128_t>(m_acc_base) * p_left, prime), prime);        
     }
     
     bool operator==(const RabinKarpFingerprint& p_value) const{
