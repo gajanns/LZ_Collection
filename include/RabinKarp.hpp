@@ -101,6 +101,13 @@ public:
         return {RabinKarpFingerprint(left_acc_base, left_hash), right_fp};
     }
 
+    void roll(const std::integral auto p_left, const std::integral auto p_right){
+        __uint128_t val_ = val;
+
+        val_ = mod(val_ * base + p_right, prime);
+        val_ = mod(val_ + prime - mod(static_cast<__uint128_t>(m_acc_base) * p_left, prime), prime);        
+    }
+
     /**
      * @brief Generate Hashvalue as result of erasing single Dataelement from left end of underlying Dataphrase
      * No coherence check of p_left possible.
