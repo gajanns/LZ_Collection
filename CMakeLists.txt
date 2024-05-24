@@ -22,6 +22,7 @@ add_subdirectory(externals)
 include_directories(externals/malloc_count)
 include_directories(externals/libsais/include)
 include_directories(externals/unordered_dense/include/ankerl)
+include_directories(externals/rabinkarp/include)
 
 add_subdirectory(source)
 

@@ -41,7 +41,7 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
 
             for(size_t pos = start_pos; pos < end_pos; pos++) {
                 block_table.preprocess_matches(pos, test_fp.val, fp_table, p_round);
-                test_fp = input_span[pos] << test_fp << input_span[pos+block_size];
+                test_fp.shift_right(input_span[pos], input_span[pos + block_size]);
             }           
         }
         block_table.postprocess_matches(fp_table, round, p_capture_refs ? &marked_refs : nullptr);

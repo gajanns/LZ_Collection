@@ -26,6 +26,15 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(unordered_dense)
 
+# Rabin-Karp Library written by Peter Dinklage : MIT License
+FetchContent_Declare(
+  rabinkarp
+  GIT_REPOSITORY https://github.com/pdinklag/fp.git
+  GIT_TAG main
+  SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/rabinkarp
+)
+FetchContent_MakeAvailable(rabinkarp)
+
 
 
 

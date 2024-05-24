@@ -1,3 +1,8 @@
+/*##############################################################################*/
+// Reference to Externals:                                                      //
+// - Modulo-Operation taken from https://github.com/pdinklag/fp ( MIT License ) //
+/*##############################################################################*/
+
 #pragma once
 
 #include <concepts>
@@ -101,40 +106,17 @@ public:
         return {RabinKarpFingerprint(left_acc_base, left_hash), right_fp};
     }
 
-    void roll(const std::integral auto p_left, const std::integral auto p_right){
+    /**
+     * @brief Slide Dataphrase to the right
+     * 
+     * @param p_left Character to drop from left side
+     * @param p_right Character to append to right side
+    */
+    void shift_right(const std::integral auto p_left, const std::integral auto p_right){
         __uint128_t val_ = val;
 
         val_ = mod(val_ * base + p_right, prime);
         val_ = mod(val_ + prime - mod(static_cast<__uint128_t>(m_acc_base) * p_left, prime), prime);        
-    }
-
-    /**
-     * @brief Generate Hashvalue as result of erasing single Dataelement from left end of underlying Dataphrase
-     * No coherence check of p_left possible.
-     * 
-     * @param p_left Single Dataelement to erase
-     * @param p_value Hashvalue of concatenation
-     * @return RabinKarpFingerprint 
-     */
-    friend RabinKarpFingerprint operator<<(const std::integral auto p_left, const RabinKarpFingerprint& p_value) {
-        size_t acc_base = mod(static_cast<__uint128_t>(p_value.m_acc_base)*RabinKarpFingerprint::base_inverse, RabinKarpFingerprint::prime);
-        size_t hash = static_cast<__uint128_t>(p_value.val) + RabinKarpFingerprint::prime - mod(static_cast<__uint128_t>(acc_base) * p_left, RabinKarpFingerprint::prime);
-
-        return RabinKarpFingerprint(acc_base, mod(hash, RabinKarpFingerprint::prime));
-    }
-
-    /**
-     * @brief Generate Hashvalue as result of appending single Dataelement to right end of underlying Dataphrase
-     * 
-     * @param p_left Single Dataelement to append
-     * @param p_value Hashvalue of concatenation
-     * @return RabinKarpFingerprint 
-     */
-    friend RabinKarpFingerprint operator<<(const RabinKarpFingerprint& p_value, const std::integral auto p_right) {
-        size_t acc_base = mod(static_cast<__uint128_t>(p_value.m_acc_base)*RabinKarpFingerprint::base, RabinKarpFingerprint::prime);
-        size_t hash = mod(static_cast<__uint128_t>(p_value.val) * RabinKarpFingerprint::base + p_right, RabinKarpFingerprint::prime);
-
-        return RabinKarpFingerprint(acc_base, hash);
     }
     
     bool operator==(const RabinKarpFingerprint& p_value) const{
