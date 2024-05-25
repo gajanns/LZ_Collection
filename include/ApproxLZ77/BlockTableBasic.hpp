@@ -249,30 +249,12 @@ public:
     }
 
     /**
-     * @brief Match blocks in current round using Fingerprint-Table
+     * @brief Match current data-window to any unmarked block by updated the leftmost reference-position
      * 
-     * @param p_pos The current position in the input data
-     * @param p_fp The fingerprint of the sliding block
-     * @param p_fp_table The Fingerprint-Table to use
-     * @param p_marked_refs The set of marked references to be expanded in case of exact matches
-     * @param p_cur_round The current round of the algorithm
-    */
-    void match_blocks(size_t p_pos, u_int32_t p_fp, ankerl::unordered_dense::map<size_t, std::list<BlockNode*>> &p_fp_table, size_t p_cur_round, std::vector<BlockRef> *p_marked_refs=nullptr) {
-        size_t block_size = std::bit_ceil(input_data.size()) >> p_cur_round;
-        auto candidate_blocks = p_fp_table.find(p_fp);
-        if(candidate_blocks == p_fp_table.end()) return;
-        if(candidate_blocks->second.empty()) return;
-
-        for(auto it = candidate_blocks->second.begin(); it != candidate_blocks->second.end(); it++) {
-            auto block = *it;
-            if(block->block_id * block_size <= p_pos) continue;
-            block->chain_info |= block_size;
-            if(p_marked_refs)p_marked_refs->emplace_back(block->block_id*block_size, p_pos);
-            candidate_blocks->second.erase(it);
-            break;
-        }
-    }
-
+     * @param p_pos Startposition of sliding window
+     * @param p_fp Fingerprint of Sliding Window to check against
+     * @param p_fp_table Fingerprint Table of unmarked blocks
+     */
     void preprocess_matches(u_int32_t p_pos, size_t p_fp, ankerl::unordered_dense::map<size_t, u_int32_t> &p_fp_table) {
         auto match = p_fp_table.find(p_fp);
         if(match == p_fp_table.end()) return;
@@ -280,6 +262,14 @@ public:
         if(match->second > p_pos) match->second = p_pos;
     }
 
+    /**
+     * @brief Translate previuosly matched references into marked BlockNodes
+     * 
+     * @param p_unmarked_nodes Sequence of BlockNodes(partly marked)
+     * @param p_fp_table Fingerprint Table of unmarked blocks
+     * @param p_round Current Round
+     * @param p_marked_refs Sequence of raw reference factors
+     */
     void postprocess_matches(std::vector<BlockNode> &p_unmarked_nodes, ankerl::unordered_dense::map<size_t, u_int32_t> &p_fp_table, size_t p_round, std::vector<BlockRef> *p_marked_refs=nullptr) {
         size_t block_size = std::bit_ceil(input_data.size()) >> p_round;
 
