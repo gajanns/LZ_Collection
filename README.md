@@ -4,7 +4,7 @@ Simple Collection of Prototypes of LZ-Algorithms:LZW, LZ77, Approx. LZ77 (seq+ p
 
 ## Experiment(Last Update: 25/05)
 
-### System = Codespace-P2 : Dynamic Granularity = On : Dynamic Init = On
+### System = Codespace-P8 : Dynamic Granularity = On : Dynamic Init = On
 
 |File.Size|Algorithm|Compression(Out/In)|Runtime[s]|Factors(#/In)|Memory([Byte]/In)|
 |---------------|---------------|:---------------:|:---------------:|:---------------:|:------------:|
