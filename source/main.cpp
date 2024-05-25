@@ -19,7 +19,7 @@
 
 
 enum Algorithm {lzw, lz77, appr77seq, appr77par, all};
-const std::vector<Algorithm> algo_ids = {appr77seq ,appr77par};
+const std::vector<Algorithm> algo_ids = {lzw, lz77, appr77seq ,appr77par};
 const std::vector<std::string> algo_names = {"LZW", "LZ77", "Approx.LZ77", "Approx.LZ77Par"};
  
 std::filesystem::path data_path("data");
