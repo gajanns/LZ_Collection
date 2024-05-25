@@ -19,7 +19,7 @@
 
 
 enum Algorithm {lzw, lz77, appr77seq, appr77par, all};
-const std::vector<Algorithm> algo_ids = {lzw, lz77, appr77seq ,appr77par};
+const std::vector<Algorithm> algo_ids = {appr77seq ,appr77par};
 const std::vector<std::string> algo_names = {"LZW", "LZ77", "Approx.LZ77", "Approx.LZ77Par"};
  
 std::filesystem::path data_path("data");
@@ -99,7 +99,7 @@ void execute_algorithms(ExecutionSetup &exec_setup, std::unique_ptr<std::fstream
     }
 
     for(size_t idx = 0; auto in_file_name: exec_setup.fin_names) {
-        InStreamView in_stream(in_file_name.c_str(), 100000UL);
+        InStreamView in_stream(in_file_name.c_str());
 
         for(auto& algo: exec_setup.algorithms) {
             std::cout << "Starting " << exec_setup.fin_names[idx] << " with " << algo_names[algo] << std::endl;
@@ -149,7 +149,7 @@ void execute_algorithms(ExecutionSetup &exec_setup, std::unique_ptr<std::fstream
 
 int main(int argc, char** argv){
 
-    omp_set_num_threads(num_threads);
+    omp_set_num_threads(ApproxLZ77Par::num_threads);
 
     ExecutionSetup setup;
     std::vector<InStreamView> input_streams;
