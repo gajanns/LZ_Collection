@@ -1,9 +1,9 @@
 #include "ApproxLZ77ParCompressor.hpp"
 #include "RabinKarp.hpp"
-#include "Definition.hpp"
 #include <numeric>
 #include <bit>
 #include <list>
+#include "unordered_dense.h"
 #include <omp.h>
 
 
@@ -13,20 +13,23 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
     if(input_span.size() == 0) return;
 
     BlockTablePar block_table(input_span);
-    std::set<CherryNode> chain_ids;
-    std::set<BlockRef> marked_refs;
+    std::vector<CherryNode> chain_ids;
+    std::vector<BlockRef> marked_refs;
     std::vector<BlockNode> unmarked_nodes;
-    std::unordered_map<u_int32_t, std::list<UniqueBlockGroup>> fp_table;
+
+    ankerl::unordered_dense::map<size_t, u_int32_t> fp_table;
 
     size_t in_size = std::bit_ceil(input_span.size()), in_log_size = std::bit_width(in_size) - 1;
     size_t min_round = std::min(in_log_size, ApproxLZ77::min_round), max_round = in_log_size - std::bit_width(ApproxLZ77::min_block_size) + 1;
-
+    size_t max_block_log_size;
     size_t round = min_round;
 
     auto match_nodes = [&](size_t p_round, bool p_capture_refs = true) {
+        
         size_t block_size = in_size >> p_round;
-        size_t data_per_thread = (input_span.size() - block_size + num_threads -1) / num_threads;
-        block_table.create_fp_table(fp_table, unmarked_nodes, p_round);
+        size_t data_per_thread = (input_span.size() - block_size + ApproxLZ77Par::num_threads -1) / ApproxLZ77Par::num_threads;
+        block_table.create_fp_table(fp_table, unmarked_nodes, p_round, p_capture_refs ? &marked_refs : nullptr);
+
 
         #pragma omp parallel
         {
@@ -40,20 +43,22 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
             }
 
             for(size_t pos = start_pos; pos < end_pos; pos++) {
-                block_table.preprocess_matches(pos, test_fp.val, fp_table, p_round);
+                block_table.preprocess_matches(pos, test_fp.val, fp_table);
                 test_fp.shift_right(input_span[pos], input_span[pos + block_size]);
             }           
         }
-        block_table.postprocess_matches(fp_table, round, p_capture_refs ? &marked_refs : nullptr);
-        
+
+        block_table.postprocess_matches(unmarked_nodes, fp_table, p_round, p_capture_refs ? &marked_refs : nullptr);
         return 1;
     };
 
     auto init_nodes = [&](bool dynamic_init) {
-        unmarked_nodes = block_table.init_nodes(round);
+       
         if(ApproxLZ77::dynamic_init) {
             size_t probe_round = (min_round + max_round) / 2;
             size_t probe_block_size = in_size >> probe_round;
+
+            unmarked_nodes = block_table.init_nodes(probe_round);
             match_nodes(probe_round, false);
 
             size_t max_consecutive = 0, cur_consecutive = 0;
@@ -77,6 +82,10 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
                 unmarked_nodes = block_table.init_nodes(round);
             } 
         }
+        else {
+            unmarked_nodes = block_table.init_nodes(round);
+        }
+        max_block_log_size = in_log_size - round;
         return 0;
     };
     
@@ -88,15 +97,18 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
     };   
 
     auto push_factors = [&]() {
+        std::sort(marked_refs.begin(), marked_refs.end());
+        std::sort(chain_ids.begin(), chain_ids.end());
+
         auto it_ref = marked_refs.begin();
         size_t cur_pos = 0;
         bool is_chain_up = false;
 
         for(auto it_chain = chain_ids.begin(); it_chain != chain_ids.end(); it_chain++) {
             size_t chain = it_chain -> chain_info;
-            int bit_pos = is_chain_up ? 0 : in_log_size;
+            int bit_pos = is_chain_up ? 0 : max_block_log_size;
             int bit_dir = is_chain_up ? 1 : -1;
-            int bit_end = is_chain_up ? in_log_size + 1 : -1;
+            int bit_end = is_chain_up ? max_block_log_size + 1 : -1;
 
             while(bit_pos != bit_end) {
                 while(!(chain & (1 << bit_pos)) && bit_pos != bit_end) {
@@ -123,7 +135,7 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
         return 0;
     };    
 
-
+    
     // Execute Algorithm
     init_nodes(ApproxLZ77::dynamic_init);
     while(round <= max_round) {

@@ -1,13 +1,10 @@
 #pragma once
 
 #include <span>
-#include <unordered_map>
 #include <numeric>
 #include <bit>
-#include <set>
 #include "Definition.hpp"
 #include "RabinKarp.hpp"
-#include <list>
 #include "unordered_dense.h"
 
 using namespace ApproxLZ77;

@@ -14,7 +14,6 @@
 
 #define DYNAMIC_GRANULARITY true
 
-const size_t num_threads = omp_get_max_threads();
 
 /**
  * @brief Concept for Integral-Range
@@ -179,4 +178,8 @@ namespace ApproxLZ77 {
             return true;
         }
     };
+}
+
+namespace ApproxLZ77Par {
+    const size_t num_threads = omp_get_max_threads();
 }

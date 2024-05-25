@@ -1,18 +1,15 @@
 #pragma once
 
 #include <span>
-#include <unordered_map>
 #include <numeric>
 #include <bit>
-#include <set>
 #include "Definition.hpp"
 #include "RabinKarp.hpp"
+#include "unordered_dense.h"
 #include "BlockTableBasic.hpp"
 #include <omp.h>
-#include <list>
 
 using namespace ApproxLZ77;
-
 
 /**
  * @brief Class controls Data-Storage and Manipulation for ApproxLZ77-Algorithm
@@ -55,7 +52,7 @@ public:
         size_t num_blocks = (input_data.size() + block_size - 1) / block_size;
         auto unmarked_nodes = std::vector<BlockNode>(num_blocks);
 
-        #pragma omp parallel for
+        #pragma omp parallel for default(none) shared(unmarked_nodes, block_size, num_blocks, input_data) schedule(static) num_threads(ApproxLZ77Par::num_threads)
         for(size_t i = 0; i < num_blocks; i++) {            
             unmarked_nodes[i].block_id = i;
             unmarked_nodes[i].chain_info = 0;
@@ -76,30 +73,23 @@ public:
      * @param p_unmarked_nodes The current unmarked nodes
      * @param p_cur_round The current round of the algorithm
     */
-    void create_fp_table(std::unordered_map<u_int32_t, std::list<UniqueBlockGroup>> &p_fp_table, std::vector<BlockNode> &p_unmarked_nodes, size_t p_cur_round) {
+    void create_fp_table(ankerl::unordered_dense::map<size_t, u_int32_t> &p_fp_table, std::vector<BlockNode> &p_unmarked_nodes, size_t p_cur_round, std::vector<BlockRef> *p_marked_refs=nullptr) {
         p_fp_table.clear();
         p_fp_table.reserve(p_unmarked_nodes.size());
         size_t block_size = std::bit_ceil(input_data.size()) >> p_cur_round;
-
+        
         for(auto &node : p_unmarked_nodes) {
-            if(node.block_id * block_size + block_size > input_data.size()) break;
+            if(node.block_id * block_size + block_size > input_data.size()) [[unlikely]] {
+                break;
+            }
 
-            auto block_group_iter = p_fp_table.find(node.fp.val);
-            if(block_group_iter == p_fp_table.end()) {
-                p_fp_table[node.fp.val].emplace_back(&node);
+            auto match_it = p_fp_table.find(node.fp.val);
+            if(match_it == p_fp_table.end()) {
+                p_fp_table[node.fp.val] = node.block_id * block_size;
             }
             else {
-                auto it_match = std::find_if(block_group_iter->second.begin(), block_group_iter->second.end(), [&](UniqueBlockGroup &p_group) {
-                    return std::equal(input_data.begin() + p_group.head()->block_id * block_size, input_data.begin() + p_group.head()->block_id * block_size + block_size,
-                                        input_data.begin() + node.block_id * block_size);
-                });
-
-                if(it_match == block_group_iter->second.end()) {
-                    block_group_iter->second.emplace_back(&node);
-                }
-                else {
-                    it_match->blocks.push_back(&node);
-                }
+                node.chain_info |= block_size;
+                if(p_marked_refs) p_marked_refs->emplace_back(node.block_id * block_size, match_it->second);
             }
         }
     }
@@ -112,18 +102,20 @@ public:
     */
     void previous_nodes(std::vector<BlockNode> &p_cur_nodes, size_t p_diff_round) {
         size_t num_nodes_pack = 1 << p_diff_round;
-        size_t new_nodes_size = 0;
+
+        #pragma omp parallel for default(none) shared(p_cur_nodes, num_nodes_pack) schedule(static) num_threads(ApproxLZ77Par::num_threads)
         for(size_t i = 0; i < p_cur_nodes.size(); i += num_nodes_pack) {
             auto fp = std::accumulate(p_cur_nodes.begin() + i, p_cur_nodes.begin() + std::min(i + num_nodes_pack, p_cur_nodes.size()), RabinKarpFingerprint(), 
             [](RabinKarpFingerprint p_fp, const BlockNode &p_node_right) {
                 return p_fp + p_node_right.fp;
             });
-            p_cur_nodes[new_nodes_size].block_id = new_nodes_size;
-            p_cur_nodes[new_nodes_size].chain_info = 0;
-            p_cur_nodes[new_nodes_size].fp = fp;
-            new_nodes_size++;
+
+            size_t new_block_id = i / num_nodes_pack;
+            p_cur_nodes[new_block_id].block_id = new_block_id;
+            p_cur_nodes[new_block_id].chain_info = 0;
+            p_cur_nodes[new_block_id].fp = fp;
         }
-        p_cur_nodes.resize(new_nodes_size);
+        p_cur_nodes.resize((p_cur_nodes.size() + num_nodes_pack - 1) / num_nodes_pack);
     }
 
     /**
@@ -133,7 +125,7 @@ public:
      * @param p_chain_ids Sequence of CherryNodes to be expanded in case of new fully marked blocks
      * @param p_prev_round The previous round of the algorithm
     */
-    auto next_nodes(std::vector<BlockNode> &p_prev_nodes, std::set<CherryNode> &p_chain_ids, size_t p_prev_round) {
+    auto next_nodes(std::vector<BlockNode> &p_prev_nodes, std::vector<CherryNode> &p_chain_ids, size_t p_prev_round) {
         size_t prev_block_size = std::bit_ceil(input_data.size()) >> p_prev_round;
         size_t cur_block_size = prev_block_size >> 1;
         std::vector<BlockNode> next_unmarked_nodes;
@@ -145,9 +137,9 @@ public:
             bool is_sibling_marked = sibling_node && sibling_node->chain_info & prev_block_size;
             
             if(is_marked && (!sibling_node || is_sibling_marked)) {
-                p_chain_ids.emplace(block_node->block_id * prev_block_size + prev_block_size - 1, block_node->chain_info);
+                p_chain_ids.emplace_back(block_node->block_id * prev_block_size + prev_block_size - 1, block_node->chain_info);
                 if(sibling_node) {
-                    p_chain_ids.emplace(sibling_node->block_id * prev_block_size, sibling_node->chain_info);
+                    p_chain_ids.emplace_back(sibling_node->block_id * prev_block_size, sibling_node->chain_info);
                 }
                 continue;
             }
@@ -174,55 +166,39 @@ public:
     }
 
     /**
-     * @brief Match blocks in current round using Fingerprint-Table
+     * @brief Match current data-window to any unmarked block by updated the leftmost reference-position
      * 
-     * @param p_pos The current position in the input data
-     * @param p_fp The fingerprint of the sliding block
-     * @param p_fp_table The Fingerprint-Table to use
-     * @param p_marked_refs The set of marked references to be expanded in case of exact matches
-     * @param p_cur_round The current round of the algorithm
-    */
-    void preprocess_matches(size_t p_pos, u_int32_t p_fp, std::unordered_map<u_int32_t, std::list<UniqueBlockGroup>> &p_fp_table, size_t p_cur_round) {
-        size_t block_size = std::bit_ceil(input_data.size()) >> p_cur_round;
-        auto candidate_blocks = p_fp_table.find(p_fp);
-        if(candidate_blocks == p_fp_table.end()) return;
+     * @param p_pos Startposition of sliding window
+     * @param p_fp Fingerprint of Sliding Window to check against
+     * @param p_fp_table Fingerprint Table of unmarked blocks
+     */
+    void preprocess_matches(u_int32_t p_pos, size_t p_fp, ankerl::unordered_dense::map<size_t, u_int32_t> &p_fp_table) {
+        auto match = p_fp_table.find(p_fp);
+        if(match == p_fp_table.end()) return;
 
-        for(auto it = candidate_blocks->second.begin(); it != candidate_blocks->second.end(); it++) {
-            auto block = it->head();
-
-            if(std::equal(input_data.begin() + block->block_id * block_size, input_data.begin() + block->block_id * block_size + block_size, input_data.begin() + p_pos)) {
-                it->leftmost_ref = std::min(it->leftmost_ref, p_pos);
-                break;
-            }
-        }
+        if(match->second > p_pos) match->second = p_pos;
     }
 
-    void postprocess_matches(std::unordered_map<u_int32_t, std::list<UniqueBlockGroup>> &p_fp_table, size_t p_cur_round, std::set<BlockRef> *p_marked_refs = nullptr) {
-        size_t block_size = std::bit_ceil(input_data.size()) >> p_cur_round;
-        
-        for(auto &block_container : p_fp_table) { 
-            for(auto &block_group : block_container.second | std::views::filter([](UniqueBlockGroup &p_group) { return p_group.leftmost_ref != SIZE_MAX; })) {
+    /**
+     * @brief Translate previuosly matched references into marked BlockNodes
+     * 
+     * @param p_unmarked_nodes Sequence of BlockNodes(partly marked)
+     * @param p_fp_table Fingerprint Table of unmarked blocks
+     * @param p_round Current Round
+     * @param p_marked_refs Sequence of raw reference factors
+     */
+    void postprocess_matches(std::vector<BlockNode> &p_unmarked_nodes, ankerl::unordered_dense::map<size_t, u_int32_t> &p_fp_table, size_t p_round, std::vector<BlockRef> *p_marked_refs=nullptr) {
+        size_t block_size = std::bit_ceil(input_data.size()) >> p_round;
 
-                if(block_group.blocks.size() < num_threads) {
-                    for(size_t i = 0; i < block_group.blocks.size(); i++) {
-                        auto block = block_group.blocks[i];
-                        if(block->block_id * block_size > block_group.leftmost_ref) {
-                            block->chain_info |= block_size;
-                            if(p_marked_refs) p_marked_refs->emplace(block->block_id * block_size, block_group.leftmost_ref);
-                        }
-                    }
-                }
-                else {
-                    #pragma omp parallel for
-                    for(size_t i = 0; i < block_group.blocks.size(); i++) {
-                        auto block = block_group.blocks[i];
-                        if(block->block_id * block_size > block_group.leftmost_ref) {
-                            block->chain_info |= block_size;
-                            #pragma omp critical
-                            if(p_marked_refs) p_marked_refs->emplace(block->block_id * block_size, block_group.leftmost_ref);
-                        }
-                    }
-                }
+        #pragma omp parallel for default(none) shared(p_unmarked_nodes, p_fp_table, block_size, p_marked_refs) schedule(static) num_threads(ApproxLZ77Par::num_threads)
+        for(auto &node : p_unmarked_nodes) {
+            if(node.block_id * block_size + block_size > input_data.size()) [[unlikely]] continue;
+            if(node.chain_info & block_size) continue;
+            auto ref_pos = p_fp_table[node.fp.val];
+            if(ref_pos < node.block_id * block_size) {
+                node.chain_info |= block_size;
+                #pragma omp critical
+                if(p_marked_refs) p_marked_refs->emplace_back(node.block_id*block_size, ref_pos);
             }
         }
     }
@@ -234,11 +210,11 @@ public:
      * @param p_chain_ids The set of CherryNodes to populate
      * @param p_round The current/last round of the algorithm
     */
-    void populate_unmarked_chain(std::vector<BlockNode> &p_unmarked_nodes, std::set<CherryNode> &p_chain_ids, size_t p_round) {
+    void populate_unmarked_chain(std::vector<BlockNode> &p_unmarked_nodes, std::vector<CherryNode> &p_chain_ids, size_t p_round) {
         size_t block_size = std::bit_ceil(input_data.size()) >> p_round;
         for(auto &node : p_unmarked_nodes) {
             size_t tmp_block_size = std::min(block_size, input_data.size() - node.block_id * block_size + 1);
-            p_chain_ids.emplace(node.block_id * block_size, node.chain_info | tmp_block_size);
+            p_chain_ids.emplace_back(node.block_id * block_size, node.chain_info | tmp_block_size);
         }
     }
 };

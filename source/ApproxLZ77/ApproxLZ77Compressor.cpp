@@ -22,7 +22,7 @@ void ApproxLZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<Appr
     size_t min_round = std::min(in_log_size, ApproxLZ77::min_round), max_round = in_log_size - std::bit_width(ApproxLZ77::min_block_size) + 1;
     size_t max_block_log_size;
     size_t round = min_round;
-    size_t time = 0;
+
     auto match_nodes = [&](size_t p_round, bool p_capture_refs = true) {
         
         size_t block_size = in_size >> p_round;
@@ -32,7 +32,7 @@ void ApproxLZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<Appr
             block_table.preprocess_matches(pos, test_fp.val, fp_table);
             test_fp.shift_right(input_span[pos], input_span[pos + block_size]);
         }
-        block_table.postprocess_matches(unmarked_nodes, fp_table, round, p_capture_refs ? &marked_refs : nullptr);
+        block_table.postprocess_matches(unmarked_nodes, fp_table, p_round, p_capture_refs ? &marked_refs : nullptr);
         return 1;
     };
 
@@ -126,6 +126,7 @@ void ApproxLZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<Appr
         if(process_round()) round++;
         else break;
     }
+
     block_table.populate_unmarked_chain(unmarked_nodes, chain_ids, round);
     push_factors();
 }
