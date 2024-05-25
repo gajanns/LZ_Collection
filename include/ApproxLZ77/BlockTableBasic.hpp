@@ -158,7 +158,7 @@ public:
      * @param p_unmarked_nodes The current unmarked nodes
      * @param p_cur_round The current round of the algorithm
     */
-    void create_fp_table(ankerl::unordered_dense::map<size_t, u_int32_t> &p_fp_table, std::vector<BlockNode> &p_unmarked_nodes, size_t p_cur_round) {
+    void create_fp_table(ankerl::unordered_dense::map<size_t, u_int32_t> &p_fp_table, std::vector<BlockNode> &p_unmarked_nodes, size_t p_cur_round, std::vector<BlockRef> *p_marked_refs=nullptr) {
         p_fp_table.clear();
         p_fp_table.reserve(p_unmarked_nodes.size());
         size_t block_size = std::bit_ceil(input_data.size()) >> p_cur_round;
@@ -167,9 +167,16 @@ public:
             if(node.block_id * block_size + block_size > input_data.size()) [[unlikely]] {
                 break;
             }
-            p_fp_table[node.fp.val] = std::numeric_limits<u_int32_t>::max();
+
+            auto match_it = p_fp_table.find(node.fp.val);
+            if(match_it == p_fp_table.end()) {
+                p_fp_table[node.fp.val] = node.block_id * block_size;
+            }
+            else {
+                node.chain_info |= block_size;
+                if(p_marked_refs) p_marked_refs->emplace_back(node.block_id * block_size, match_it->second);
+            }
         }
-        p_fp_table.rehash(p_fp_table.size());
     }
 
     /**
@@ -277,12 +284,12 @@ public:
         size_t block_size = std::bit_ceil(input_data.size()) >> p_round;
 
         for(auto &node : p_unmarked_nodes) {
-            if(node.block_id * block_size + block_size < input_data.size()) [[likely]] {
-                auto ref_pos = p_fp_table[node.fp.val];
-                if(ref_pos < node.block_id * block_size) {
-                    node.chain_info |= block_size;
-                    if(p_marked_refs) p_marked_refs->emplace_back(node.block_id*block_size, ref_pos);
-                }
+            if(node.block_id * block_size + block_size > input_data.size()) [[unlikely]] break;
+            if(node.chain_info & block_size) continue;
+            auto ref_pos = p_fp_table[node.fp.val];
+            if(ref_pos < node.block_id * block_size) {
+                node.chain_info |= block_size;
+                if(p_marked_refs) p_marked_refs->emplace_back(node.block_id*block_size, ref_pos);
             }
         }
     }
