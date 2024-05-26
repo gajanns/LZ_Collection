@@ -33,7 +33,7 @@ void LZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<LZ77::fact
         }
 
         size_t lcp = std::max(lcp_psv, lcp_nsv);
-        if(lcp <= LZ77::min_ref_size) {
+        if(lcp < LZ77::min_ref_size) {
             p_out.encode(LZ77::factor_id{.value = input_span[k++], .length = 0});
         }
         else {
