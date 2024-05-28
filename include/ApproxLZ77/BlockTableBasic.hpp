@@ -38,19 +38,6 @@ namespace ApproxLZ77 {
         }
     };
 
-    struct UniqueBlockGroup {
-        size_t leftmost_ref = SIZE_MAX;
-        std::vector<BlockNode*> blocks = {};
-
-        BlockNode* head() {
-            return blocks[0];
-        }
-
-        UniqueBlockGroup(BlockNode *p_block) {
-            blocks.push_back(p_block);
-        }
-    };
-
     /**
      * @brief Encapsulates a reference to a block (=> LZ77-Factor)
      * 
