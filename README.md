@@ -6,8 +6,8 @@ Simple Collection of Prototypes of LZ-Algorithms:LZW, LZ77, Approx. LZ77 (seq+ p
 
 ### System = Codespace-P8 : Dynamic Granularity = On : Dynamic Init = On
 
-|File.Size|Algorithm|Compression(Out/In)|Runtime[s]|Factors(#/In)|Memory(Mem[Byte]/In)|
-|---------------|---------------|:---------------:|:---------------:|:---------------:|:---------------:|
+|File.Size|Algorithm|Ratio(Out/In)|Runtime[s]|Factors(#/In)|Memory([Byte]/In)|
+|---------------|---------------|:---------------:|:---------------:|:---------------:|:------------:|
 |sources.50MB|LZ77|39.28%|3.90|7.75%|20.00|
 |sources.50MB|Approx.LZ77|42.79%|19.35|11.89%|8.08|
 |sources.50MB|Approx.LZ77Par|42.79%|7.00|11.89%|8.08|
