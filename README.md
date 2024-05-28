@@ -27,20 +27,20 @@ Simple Collection of Prototypes of LZ-Algorithms:LZW, LZ77, Approx. LZ77 (seq+ p
 
 |File.Size|Algorithm|Compression(Out/In)|Runtime[s]|Factors(#/In)|Memory([Byte]/In)|
 |---------------|---------------|:---------------:|:---------------:|:---------------:|:------------:|
-|sources.50MB|LZ77|38.66%|5.21|8.90%|20.00|
-|sources.50MB|Approx.LZ77|42.79%|19.31|11.89%|8.08|
-|pitches.50MB|LZ77|55.48%|7.22|33.31%|20.00|
-|pitches.50MB|Approx.LZ77|57.41%|19.66|19.62%|10.50|
-|dna.50MB|LZ77|48.67%|5.40|7.36%|20.00|
-|dna.50MB|Approx.LZ77|45.29%|19.56|11.32%|10.01|
-|proteins.50MB|LZ77|74.03%|9.10|49.45%|20.00|
-|proteins.50MB|Approx.LZ77|72.29%|21.68|18.36%|19.34|
-|english.50MB|LZ77|43.01%|5.38|8.61%|20.00|
-|english.50MB|Approx.LZ77|41.39%|18.37|10.77%|7.01|
-|dblp.xml.50MB|LZ77|23.59%|4.12|5.21%|20.00|
-|dblp.xml.50MB|Approx.LZ77|28.24%|17.02|7.69%|4.36|
-|dummy.6018B|LZ77|16.53%|0.00|11.58%|20.00|
-|dummy.6018B|Approx.LZ77|22.05%|0.00|11.78%|6.94||
+|sources.50MB|LZ77|39.28%|4.94|7.75%|20.00|
+|sources.50MB|Approx.LZ77|42.79%|19.83|11.89%|8.08|
+|pitches.50MB|LZ77|56.38%|6.02|27.06%|20.00|
+|pitches.50MB|Approx.LZ77|57.41%|19.40|19.62%|10.50|
+|dna.50MB|LZ77|48.67%|5.12|7.35%|20.00|
+|dna.50MB|Approx.LZ77|45.29%|18.64|11.32%|10.01|
+|proteins.50MB|LZ77|75.86%|7.49|26.11%|20.00|
+|proteins.50MB|Approx.LZ77|72.29%|22.01|18.36%|19.34|
+|english.50MB|LZ77|43.60%|5.12|7.63%|20.00|
+|english.50MB|Approx.LZ77|41.38%|20.02|10.77%|7.01|
+|dblp.xml.50MB|LZ77|23.77%|4.15|4.64%|20.00|
+|dblp.xml.50MB|Approx.LZ77|28.24%|17.04|7.69%|4.36|
+|dummy.6018B|LZ77|16.85%|0.00|9.70%|20.00|
+|dummy.6018B|Approx.LZ77|20.41%|0.00|11.05%|6.69|
 
 ## Thesis-Plan
 
