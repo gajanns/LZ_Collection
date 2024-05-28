@@ -5,6 +5,7 @@
 #include <list>
 #include "unordered_dense.h"
 #include <omp.h>
+#include <execution>
 
 
 void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<ApproxLZ77::factor_id> &p_out) {
@@ -101,8 +102,8 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
     };   
 
     auto push_factors = [&]() {
-        std::sort(marked_refs.begin(), marked_refs.end());
-        std::sort(chain_ids.begin(), chain_ids.end());
+        std::sort(std::execution::par, marked_refs.begin(), marked_refs.end());
+        std::sort(std::execution::par, chain_ids.begin(), chain_ids.end());
 
         auto it_ref = marked_refs.begin();
         size_t cur_pos = 0;
