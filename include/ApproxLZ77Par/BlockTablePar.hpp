@@ -188,9 +188,8 @@ public:
      * @param p_unmarked_nodes Sequence of BlockNodes(partly marked)
      * @param p_fp_table Fingerprint Table of unmarked blocks
      * @param p_round Current Round
-     * @param p_marked_refs Sequence of raw reference factors
      */
-    void postprocess_matches(std::vector<BlockNode> &p_unmarked_nodes, ankerl::unordered_dense::map<size_t, u_int32_t> &p_fp_table, size_t p_round, std::vector<BlockRef> *p_marked_refs=nullptr) {
+    void postprocess_matches(std::vector<BlockNode> &p_unmarked_nodes, ankerl::unordered_dense::map<size_t, u_int32_t> &p_fp_table, size_t p_round) {
         size_t block_size = std::bit_ceil(input_data.size()) >> p_round;
 
         #pragma omp parallel for
@@ -200,8 +199,30 @@ public:
             auto ref_pos = p_fp_table[node.fp.val];
             if(ref_pos < node.block_id * block_size) {
                 node.chain_info |= block_size;
-                #pragma omp critical
-                if(p_marked_refs) p_marked_refs->emplace_back(node.block_id*block_size, ref_pos);
+            }
+        }
+    }
+
+    /**
+     * @brief Translate previuosly matched references into marked BlockNodes
+     * 
+     * @param p_unmarked_nodes Sequence of BlockNodes(partly marked)
+     * @param p_fp_table Fingerprint Table of unmarked blocks
+     * @param p_round Current Round
+     * @param p_marked_refs Sequence of raw reference factors
+     */
+    void postprocess_matches(std::vector<BlockNode> &p_unmarked_nodes, ankerl::unordered_dense::map<size_t, u_int32_t> &p_fp_table, size_t p_round, std::vector<BlockRef> &p_marked_refs) {
+        size_t block_size = std::bit_ceil(input_data.size()) >> p_round;
+
+        #pragma omp declare reduction (merge : std::vector<BlockRef> : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end()))
+        #pragma omp parallel for reduction(merge: p_marked_refs)
+        for(auto &node : p_unmarked_nodes) {
+            if(node.block_id * block_size + block_size > input_data.size()) [[unlikely]] continue;
+            if(node.chain_info & block_size) continue;
+            auto ref_pos = p_fp_table[node.fp.val];
+            if(ref_pos < node.block_id * block_size) {
+                node.chain_info |= block_size;
+                p_marked_refs.emplace_back(node.block_id*block_size, ref_pos);
             }
         }
     }
@@ -217,7 +238,7 @@ public:
         size_t block_size = std::bit_ceil(input_data.size()) >> p_round;
         size_t init_size = p_chain_ids.size();
         p_chain_ids.resize(init_size + p_unmarked_nodes.size());
-
+        
         #pragma omp parallel for
         for(size_t i = 0; i < p_unmarked_nodes.size(); i++) {
             auto &node = p_unmarked_nodes[i];

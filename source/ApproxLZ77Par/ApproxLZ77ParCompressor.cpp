@@ -51,7 +51,8 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
             }           
         }
 
-        block_table.postprocess_matches(unmarked_nodes, fp_table, p_round, p_capture_refs ? &marked_refs : nullptr);
+        if(p_capture_refs) block_table.postprocess_matches(unmarked_nodes, fp_table, p_round, marked_refs);
+        else block_table.postprocess_matches(unmarked_nodes, fp_table, p_round);
         return 1;
     };
 
