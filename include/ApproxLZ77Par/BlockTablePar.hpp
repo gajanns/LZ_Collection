@@ -215,9 +215,15 @@ public:
     */
     void populate_unmarked_chain(std::vector<BlockNode> &p_unmarked_nodes, std::vector<CherryNode> &p_chain_ids, size_t p_round) {
         size_t block_size = std::bit_ceil(input_data.size()) >> p_round;
-        for(auto &node : p_unmarked_nodes) {
+        size_t init_size = p_chain_ids.size();
+        p_chain_ids.resize(init_size + p_unmarked_nodes.size());
+
+        #pragma omp parallel for
+        for(size_t i = 0; i < p_unmarked_nodes.size(); i++) {
+            auto &node = p_unmarked_nodes[i];
             size_t tmp_block_size = std::min(block_size, input_data.size() - node.block_id * block_size + 1);
-            p_chain_ids.emplace_back(node.block_id * block_size, node.chain_info | tmp_block_size);
+            p_chain_ids[i + init_size].block_position = node.block_id * block_size;
+            p_chain_ids[i + init_size].chain_info = node.chain_info | tmp_block_size;
         }
     }
 };
