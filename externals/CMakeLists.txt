@@ -35,6 +35,13 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(rabinkarp)
 
+# Sharded Map Library written by Skadic : MIT License
+FetchContent_Declare(
+  shardedmap
+  GIT_REPOSITORY https://github.com/Skadic/sharded_map.git
+  SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/shardedmap
+)
+FetchContent_MakeAvailable(shardedmap)
 
 
 
