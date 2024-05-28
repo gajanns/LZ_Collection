@@ -52,7 +52,7 @@ public:
         size_t num_blocks = (input_data.size() + block_size - 1) / block_size;
         auto unmarked_nodes = std::vector<BlockNode>(num_blocks);
 
-        #pragma omp parallel for default(none) shared(unmarked_nodes, block_size, num_blocks, input_data) schedule(static) num_threads(ApproxLZ77Par::num_threads)
+        #pragma omp parallel for
         for(size_t i = 0; i < num_blocks; i++) {            
             unmarked_nodes[i].block_id = i;
             unmarked_nodes[i].chain_info = 0;
@@ -102,8 +102,8 @@ public:
     */
     void previous_nodes(std::vector<BlockNode> &p_cur_nodes, size_t p_diff_round) {
         size_t num_nodes_pack = 1 << p_diff_round;
-
-        #pragma omp parallel for default(none) shared(p_cur_nodes, num_nodes_pack) schedule(static) num_threads(ApproxLZ77Par::num_threads)
+        
+        #pragma omp parallel for ordered
         for(size_t i = 0; i < p_cur_nodes.size(); i += num_nodes_pack) {
             auto fp = std::accumulate(p_cur_nodes.begin() + i, p_cur_nodes.begin() + std::min(i + num_nodes_pack, p_cur_nodes.size()), RabinKarpFingerprint(), 
             [](RabinKarpFingerprint p_fp, const BlockNode &p_node_right) {
@@ -111,9 +111,12 @@ public:
             });
 
             size_t new_block_id = i / num_nodes_pack;
-            p_cur_nodes[new_block_id].block_id = new_block_id;
-            p_cur_nodes[new_block_id].chain_info = 0;
-            p_cur_nodes[new_block_id].fp = fp;
+            #pragma omp ordered
+            {
+                p_cur_nodes[new_block_id].block_id = new_block_id;
+                p_cur_nodes[new_block_id].chain_info = 0;
+                p_cur_nodes[new_block_id].fp = fp;
+            }
         }
         p_cur_nodes.resize((p_cur_nodes.size() + num_nodes_pack - 1) / num_nodes_pack);
     }
@@ -190,7 +193,7 @@ public:
     void postprocess_matches(std::vector<BlockNode> &p_unmarked_nodes, ankerl::unordered_dense::map<size_t, u_int32_t> &p_fp_table, size_t p_round, std::vector<BlockRef> *p_marked_refs=nullptr) {
         size_t block_size = std::bit_ceil(input_data.size()) >> p_round;
 
-        #pragma omp parallel for default(none) shared(p_unmarked_nodes, p_fp_table, block_size, p_marked_refs) schedule(static) num_threads(ApproxLZ77Par::num_threads)
+        #pragma omp parallel for
         for(auto &node : p_unmarked_nodes) {
             if(node.block_id * block_size + block_size > input_data.size()) [[unlikely]] continue;
             if(node.chain_info & block_size) continue;
