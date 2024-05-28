@@ -90,6 +90,7 @@ namespace ApproxLZ77 {
             return block_position < p_rhs.block_position;
         }
 
+        CherryNode() = default;
         CherryNode(u_int32_t p_block_position, u_int32_t p_chain_info): block_position(p_block_position), chain_info(p_chain_info){}
     };
 }
