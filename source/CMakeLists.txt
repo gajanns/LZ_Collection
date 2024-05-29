@@ -13,7 +13,7 @@ if(PERFORMANCE_MEASUREMENT)
 endif()
 
 find_package(OpenMP)
-find_package(TBB)
+find_package(TBB REQUIRED)
 
 target_link_libraries(${BINARY} libsais OpenMP::OpenMP_CXX unordered_dense::unordered_dense TBB::tbb)
 target_link_libraries(${BINARY}_lib libsais OpenMP::OpenMP_CXX unordered_dense::unordered_dense TBB::tbb)

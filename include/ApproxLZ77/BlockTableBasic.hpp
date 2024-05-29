@@ -39,6 +39,12 @@ namespace ApproxLZ77 {
     };
 
     /**
+     * @brief Concept for Range containing BlockNodes
+    */
+    template<typename T>
+    concept BlockNodeRange = std::ranges::range<T> && std::same_as<typename T::value_type, BlockNode>;
+
+    /**
      * @brief Encapsulates a reference to a block (=> LZ77-Factor)
      * 
      * @param block_position The position of the block in the input data
@@ -94,13 +100,13 @@ class BlockTableBasic {
 private:
     Sequence input_data;
 
-    auto split_block_node(BlockNode *p_block_node, size_t block_size) {
+    auto split_block_node(const BlockNode *p_block_node, size_t block_size) {
         auto block_start_it = input_data.begin() + p_block_node->block_id * 2 * block_size;
         auto block_end_it = (p_block_node->block_id + 1) * 2 * block_size <= input_data.size() ? input_data.begin() + (p_block_node->block_id + 1) * 2 * block_size 
                             : input_data.end();
         
         if(p_block_node->block_id * 2 * block_size + block_size < input_data.size()) {
-            auto [left_fp, right_fp] = p_block_node->fp.split(std::span<const Item>(block_start_it, block_end_it), block_size);
+            const auto [left_fp, right_fp] = p_block_node->fp.split(std::span<const Item>(block_start_it, block_end_it), block_size);
             return std::pair<BlockNode, BlockNode>{BlockNode(p_block_node->block_id*2, 0, left_fp), BlockNode(p_block_node->block_id*2+1, 0, right_fp)};
         }
         else {
@@ -148,7 +154,7 @@ public:
         p_fp_table.reserve(p_unmarked_nodes.size());
         size_t block_size = std::bit_ceil(input_data.size()) >> p_cur_round;
         
-        for(auto &node : p_unmarked_nodes) {
+        for(auto &node : p_unmarked_nodes | std::views::drop(1)) {
             if(node.block_id * block_size + block_size > input_data.size()) [[unlikely]] {
                 break;
             }
@@ -193,13 +199,13 @@ public:
      * @param p_chain_ids Sequence of CherryNodes to be expanded in case of new fully marked blocks
      * @param p_prev_round The previous round of the algorithm
     */
-    auto next_nodes(std::vector<BlockNode> &p_prev_nodes, std::vector<CherryNode> &p_chain_ids, size_t p_prev_round) {
+    auto next_nodes(const BlockNodeRange auto &p_prev_nodes, std::vector<CherryNode> &p_chain_ids, size_t p_prev_round) {
         size_t prev_block_size = std::bit_ceil(input_data.size()) >> p_prev_round;
         size_t cur_block_size = prev_block_size >> 1;
         std::vector<BlockNode> next_unmarked_nodes;
 
         for(size_t i = 0; i < p_prev_nodes.size(); i += 2) {
-            BlockNode* block_node = &p_prev_nodes[i], *sibling_node = (i < p_prev_nodes.size()-1) ? &p_prev_nodes[i+1] : nullptr;
+            const BlockNode* block_node = &p_prev_nodes[i], *sibling_node = (i < p_prev_nodes.size()-1) ? &p_prev_nodes[i+1] : nullptr;
 
             bool is_marked = block_node->chain_info & prev_block_size;
             bool is_sibling_marked = sibling_node && sibling_node->chain_info & prev_block_size;

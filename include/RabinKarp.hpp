@@ -86,7 +86,7 @@ public:
      * @param p_data Underlying Dataphrase (No Coherence-Check possible)
      * @return std::pair<RabinKarpFingerprint, RabinKarpFingerprint> Fingerprint after splitting
      */
-    std::pair<RabinKarpFingerprint, RabinKarpFingerprint> split(const NumRange auto& p_data, size_t p_pos){
+    std::pair<RabinKarpFingerprint, RabinKarpFingerprint> split(const NumRange auto& p_data, size_t p_pos) const {
         if(p_pos == 0) return {RabinKarpFingerprint(1, 0), *this};
         if(p_pos == p_data.size()) return {*this, RabinKarpFingerprint(1, 0)};
         if(p_pos > p_data.size()) throw std::invalid_argument("Split position out of range");

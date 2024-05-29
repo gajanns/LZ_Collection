@@ -22,25 +22,15 @@ class BlockTablePar {
     using Item = typename Sequence::value_type;
 private:
     Sequence input_data;
+    BlockTableBasic<Sequence> block_table_basic;
 
-    auto split_block_node(BlockNode *p_block_node, size_t block_size) {
-        auto block_start_it = input_data.begin() + p_block_node->block_id * 2 * block_size;
-        auto block_end_it = (p_block_node->block_id + 1) * 2 * block_size <= input_data.size() ? input_data.begin() + (p_block_node->block_id + 1) * 2 * block_size 
-                            : input_data.end();
-        
-        if(p_block_node->block_id * 2 * block_size + block_size < input_data.size()) {
-            auto [left_fp, right_fp] = p_block_node->fp.split(std::span<const Item>(block_start_it, block_end_it), block_size);
-            return std::pair<BlockNode, BlockNode>{BlockNode(p_block_node->block_id*2, 0, left_fp), BlockNode(p_block_node->block_id*2+1, 0, right_fp)};
-        }
-        else {
-            auto left_fp = RabinKarpFingerprint(std::span<const Item>(block_start_it, block_end_it));
-            return std::pair<BlockNode, BlockNode>{BlockNode(p_block_node->block_id*2, 0, left_fp), BlockNode()};
-        }
+    auto split_block_node(const BlockNode *p_block_node, size_t block_size) {
+        return block_table_basic.split_block_node(p_block_node, block_size);
     }
 
 public:
 
-    BlockTablePar(const Sequence &p_input_data) : input_data(p_input_data) {}
+    BlockTablePar(const Sequence &p_input_data) : input_data(p_input_data), block_table_basic(p_input_data) {}
 
     /**
      * @brief Initializes Sequence of unmarked Blocknodes for the initial round
@@ -74,24 +64,7 @@ public:
      * @param p_cur_round The current round of the algorithm
     */
     void create_fp_table(ankerl::unordered_dense::map<size_t, u_int32_t> &p_fp_table, std::vector<BlockNode> &p_unmarked_nodes, size_t p_cur_round, std::vector<BlockRef> *p_marked_refs=nullptr) {
-        p_fp_table.clear();
-        p_fp_table.reserve(p_unmarked_nodes.size());
-        size_t block_size = std::bit_ceil(input_data.size()) >> p_cur_round;
-        
-        for(auto &node : p_unmarked_nodes) {
-            if(node.block_id * block_size + block_size > input_data.size()) [[unlikely]] {
-                break;
-            }
-
-            auto match_it = p_fp_table.find(node.fp.val);
-            if(match_it == p_fp_table.end()) {
-                p_fp_table[node.fp.val] = node.block_id * block_size;
-            }
-            else {
-                node.chain_info |= block_size;
-                if(p_marked_refs) p_marked_refs->emplace_back(node.block_id * block_size, match_it->second);
-            }
-        }
+        block_table_basic.create_fp_table(p_fp_table, p_unmarked_nodes, p_cur_round, p_marked_refs);
     }
 
     /**
@@ -128,44 +101,30 @@ public:
      * @param p_chain_ids Sequence of CherryNodes to be expanded in case of new fully marked blocks
      * @param p_prev_round The previous round of the algorithm
     */
-    auto next_nodes(std::vector<BlockNode> &p_prev_nodes, std::vector<CherryNode> &p_chain_ids, size_t p_prev_round) {
-        size_t prev_block_size = std::bit_ceil(input_data.size()) >> p_prev_round;
-        size_t cur_block_size = prev_block_size >> 1;
+    auto next_nodes(const BlockNodeRange auto &p_prev_nodes, std::vector<CherryNode> &p_chain_ids, size_t p_prev_round) {
         std::vector<BlockNode> next_unmarked_nodes;
+        size_t nodes_per_chunk = [&](){
+            size_t tmp = (p_prev_nodes.size() + ApproxLZ77Par::num_threads - 1) / ApproxLZ77Par::num_threads;
+            return tmp + tmp % 2;
+        }();
+        size_t num_chunks = (p_prev_nodes.size() + nodes_per_chunk - 1) / nodes_per_chunk;
+        
+        #pragma omp parallel for num_threads(ApproxLZ77Par::num_threads) ordered
+        for(size_t chunk_id = 0; chunk_id < num_chunks; chunk_id++)
+        {
+            std::vector<CherryNode> chain;            
+            size_t start_pos = chunk_id * nodes_per_chunk;
+            size_t end_pos = std::min(start_pos + nodes_per_chunk, p_prev_nodes.size());
+            if(end_pos <= start_pos) continue;
 
-        for(size_t i = 0; i < p_prev_nodes.size(); i += 2) {
-            BlockNode* block_node = &p_prev_nodes[i], *sibling_node = (i < p_prev_nodes.size()-1) ? &p_prev_nodes[i+1] : nullptr;
-
-            bool is_marked = block_node->chain_info & prev_block_size;
-            bool is_sibling_marked = sibling_node && sibling_node->chain_info & prev_block_size;
-            
-            if(is_marked && (!sibling_node || is_sibling_marked)) {
-                p_chain_ids.emplace_back(block_node->block_id * prev_block_size + prev_block_size - 1, block_node->chain_info);
-                if(sibling_node) {
-                    p_chain_ids.emplace_back(sibling_node->block_id * prev_block_size, sibling_node->chain_info);
-                }
-                continue;
-            }
-
-            if(!is_marked) {
-                auto [left_node, right_node] = split_block_node(block_node, cur_block_size);
-                left_node.chain_info = block_node->chain_info;
-                if(sibling_node && is_sibling_marked) right_node.chain_info = sibling_node->chain_info;
-                next_unmarked_nodes.push_back(left_node);
-                if(right_node.is_valid()) next_unmarked_nodes.push_back(right_node);
-            }
-
-            if(sibling_node && !is_sibling_marked) {
-                auto [left_node, right_node] = split_block_node(sibling_node, cur_block_size);
-                if(is_marked) left_node.chain_info = block_node->chain_info;
-                next_unmarked_nodes.push_back(left_node);
-                if(right_node.is_valid()) {
-                    right_node.chain_info = sibling_node->chain_info;
-                    next_unmarked_nodes.push_back(right_node);
-                }
+            auto tmp = block_table_basic.next_nodes(std::span<const BlockNode>(p_prev_nodes.begin() + start_pos, p_prev_nodes.begin() + end_pos), chain, p_prev_round);
+            #pragma omp ordered
+            {
+                next_unmarked_nodes.insert(next_unmarked_nodes.end(), tmp.begin(), tmp.end());
+                p_chain_ids.insert(p_chain_ids.end(), chain.begin(), chain.end());
             }
         }
-        return next_unmarked_nodes;        
+        return next_unmarked_nodes;
     }
 
     /**
@@ -176,10 +135,7 @@ public:
      * @param p_fp_table Fingerprint Table of unmarked blocks
      */
     void preprocess_matches(u_int32_t p_pos, size_t p_fp, ankerl::unordered_dense::map<size_t, u_int32_t> &p_fp_table) {
-        auto match = p_fp_table.find(p_fp);
-        if(match == p_fp_table.end()) return;
-
-        if(match->second > p_pos) match->second = p_pos;
+        block_table_basic.preprocess_matches(p_pos, p_fp, p_fp_table);
     }
 
     /**
@@ -193,7 +149,7 @@ public:
         size_t block_size = std::bit_ceil(input_data.size()) >> p_round;
 
         #pragma omp parallel for
-        for(auto &node : p_unmarked_nodes) {
+        for(auto &node : p_unmarked_nodes | std::views::drop(1)) {
             if(node.block_id * block_size + block_size > input_data.size()) [[unlikely]] continue;
             if(node.chain_info & block_size) continue;
             auto ref_pos = p_fp_table[node.fp.val];
@@ -216,7 +172,7 @@ public:
 
         #pragma omp declare reduction (merge : std::vector<BlockRef> : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end()))
         #pragma omp parallel for reduction(merge: p_marked_refs)
-        for(auto &node : p_unmarked_nodes) {
+        for(auto &node : p_unmarked_nodes | std::views::drop(1)) {
             if(node.block_id * block_size + block_size > input_data.size()) [[unlikely]] continue;
             if(node.chain_info & block_size) continue;
             auto ref_pos = p_fp_table[node.fp.val];
