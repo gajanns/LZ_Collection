@@ -29,7 +29,7 @@ struct ExecutionSetup {
     std::string fout_name;
     std::vector<Algorithm> algorithms;
     bool compress = true;
-    bool benchmark = true;
+    bool benchmark = false;
     bool progressive = false;
     size_t num_steps = 1;
 };
