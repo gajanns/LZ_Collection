@@ -99,13 +99,15 @@ class BlockTableBasic {
     using Item = typename Sequence::value_type;
 private:
     Sequence input_data;
+    const u_int32_t in_size;
+    const u_int32_t in_ceil_size;
 
     auto split_block_node(const BlockNode *p_block_node, size_t block_size) {
         auto block_start_it = input_data.begin() + p_block_node->block_id * 2 * block_size;
-        auto block_end_it = (p_block_node->block_id + 1) * 2 * block_size <= input_data.size() ? input_data.begin() + (p_block_node->block_id + 1) * 2 * block_size 
+        auto block_end_it = (p_block_node->block_id + 1) * 2 * block_size <= in_size ? input_data.begin() + (p_block_node->block_id + 1) * 2 * block_size 
                             : input_data.end();
         
-        if(p_block_node->block_id * 2 * block_size + block_size < input_data.size()) {
+        if(p_block_node->block_id * 2 * block_size + block_size < in_size) {
             const auto [left_fp, right_fp] = p_block_node->fp.split(std::span<const Item>(block_start_it, block_end_it), block_size);
             return std::pair<BlockNode, BlockNode>{BlockNode(p_block_node->block_id*2, 0, left_fp), BlockNode(p_block_node->block_id*2+1, 0, right_fp)};
         }
@@ -117,7 +119,7 @@ private:
 
 public:
 
-    BlockTableBasic(const Sequence &p_input_data) : input_data(p_input_data) {}
+    BlockTableBasic(const Sequence &p_input_data) : input_data(p_input_data), in_size(input_data.size()), in_ceil_size(std::bit_ceil(in_size)) {}
 
     /**
      * @brief Initializes Sequence of unmarked Blocknodes for the initial round
@@ -125,8 +127,8 @@ public:
      * @param p_init_round The initial round of the algorithm
     */
     auto init_nodes(size_t p_init_round) {
-        size_t block_size = std::bit_ceil(input_data.size()) >> p_init_round;
-        size_t num_blocks = (input_data.size() + block_size - 1) / block_size;
+        size_t block_size = in_ceil_size >> p_init_round;
+        size_t num_blocks = (in_size + block_size - 1) / block_size;
         auto unmarked_nodes = std::vector<BlockNode>(num_blocks);
 
         for(size_t i = 0; i < num_blocks; i++) {            
@@ -152,12 +154,10 @@ public:
     void create_fp_table(ankerl::unordered_dense::map<size_t, u_int32_t> &p_fp_table, std::vector<BlockNode> &p_unmarked_nodes, size_t p_cur_round, std::vector<BlockRef> *p_marked_refs=nullptr) {
         p_fp_table.clear();
         p_fp_table.reserve(p_unmarked_nodes.size());
-        size_t block_size = std::bit_ceil(input_data.size()) >> p_cur_round;
+        size_t block_size = in_ceil_size >> p_cur_round;
         
         for(auto &node : p_unmarked_nodes | std::views::drop(1)) {
-            if(node.block_id * block_size + block_size > input_data.size()) [[unlikely]] {
-                break;
-            }
+            if(node.block_id * block_size + block_size > in_size) [[unlikely]] break;
 
             auto match_it = p_fp_table.find(node.fp.val);
             if(match_it == p_fp_table.end()) {
@@ -178,18 +178,18 @@ public:
     */
     void previous_nodes(std::vector<BlockNode> &p_cur_nodes, size_t p_diff_round) {
         size_t num_nodes_pack = 1 << p_diff_round;
-        size_t new_nodes_size = 0;
+        
         for(size_t i = 0; i < p_cur_nodes.size(); i += num_nodes_pack) {
             auto fp = std::accumulate(p_cur_nodes.begin() + i, p_cur_nodes.begin() + std::min(i + num_nodes_pack, p_cur_nodes.size()), RabinKarpFingerprint(), 
             [](RabinKarpFingerprint p_fp, const BlockNode &p_node_right) {
                 return p_fp + p_node_right.fp;
             });
-            p_cur_nodes[new_nodes_size].block_id = new_nodes_size;
-            p_cur_nodes[new_nodes_size].chain_info = 0;
-            p_cur_nodes[new_nodes_size].fp = fp;
-            new_nodes_size++;
+
+            int32_t new_block_id = i / num_nodes_pack;
+            p_cur_nodes[new_block_id] = { new_block_id, 0, fp };
+            
         }
-        p_cur_nodes.resize(new_nodes_size);
+        p_cur_nodes.resize((p_cur_nodes.size() + num_nodes_pack - 1) / num_nodes_pack);
     }
 
     /**
@@ -200,7 +200,7 @@ public:
      * @param p_prev_round The previous round of the algorithm
     */
     auto next_nodes(const BlockNodeRange auto &p_prev_nodes, std::vector<CherryNode> &p_chain_ids, size_t p_prev_round) {
-        size_t prev_block_size = std::bit_ceil(input_data.size()) >> p_prev_round;
+        size_t prev_block_size = in_ceil_size >> p_prev_round;
         size_t cur_block_size = prev_block_size >> 1;
         std::vector<BlockNode> next_unmarked_nodes;
 
@@ -212,9 +212,7 @@ public:
             
             if(is_marked && (!sibling_node || is_sibling_marked)) {
                 p_chain_ids.emplace_back(block_node->block_id * prev_block_size + prev_block_size - 1, block_node->chain_info);
-                if(sibling_node) {
-                    p_chain_ids.emplace_back(sibling_node->block_id * prev_block_size, sibling_node->chain_info);
-                }
+                if(sibling_node) [[likely]] p_chain_ids.emplace_back(sibling_node->block_id * prev_block_size, sibling_node->chain_info);
                 continue;
             }
 
@@ -223,14 +221,14 @@ public:
                 left_node.chain_info = block_node->chain_info;
                 if(sibling_node && is_sibling_marked) right_node.chain_info = sibling_node->chain_info;
                 next_unmarked_nodes.push_back(left_node);
-                if(right_node.is_valid()) next_unmarked_nodes.push_back(right_node);
+                if(right_node.is_valid()) [[likely]] next_unmarked_nodes.push_back(right_node);
             }
 
             if(sibling_node && !is_sibling_marked) {
                 auto [left_node, right_node] = split_block_node(sibling_node, cur_block_size);
                 if(is_marked) left_node.chain_info = block_node->chain_info;
                 next_unmarked_nodes.push_back(left_node);
-                if(right_node.is_valid()) {
+                if(right_node.is_valid()) [[likely]] {
                     right_node.chain_info = sibling_node->chain_info;
                     next_unmarked_nodes.push_back(right_node);
                 }
@@ -248,9 +246,7 @@ public:
      */
     void preprocess_matches(u_int32_t p_pos, size_t p_fp, ankerl::unordered_dense::map<size_t, u_int32_t> &p_fp_table) {
         auto match = p_fp_table.find(p_fp);
-        if(match == p_fp_table.end()) return;
-
-        if(match->second > p_pos) match->second = p_pos;
+        if(match != p_fp_table.end() && match->second > p_pos) match->second = p_pos;
     }
 
     /**
@@ -262,10 +258,10 @@ public:
      * @param p_marked_refs Sequence of raw reference factors
      */
     void postprocess_matches(std::vector<BlockNode> &p_unmarked_nodes, ankerl::unordered_dense::map<size_t, u_int32_t> &p_fp_table, size_t p_round, std::vector<BlockRef> *p_marked_refs=nullptr) {
-        size_t block_size = std::bit_ceil(input_data.size()) >> p_round;
+        size_t block_size = in_ceil_size >> p_round;
 
         for(auto &node : p_unmarked_nodes) {
-            if(node.block_id * block_size + block_size > input_data.size()) [[unlikely]] break;
+            if(node.block_id * block_size + block_size > in_size) [[unlikely]] break;
             if(node.chain_info & block_size) continue;
             auto ref_pos = p_fp_table[node.fp.val];
             if(ref_pos < node.block_id * block_size) {
@@ -283,9 +279,9 @@ public:
      * @param p_round The current/last round of the algorithm
     */
     void populate_unmarked_chain(std::vector<BlockNode> &p_unmarked_nodes, std::vector<CherryNode> &p_chain_ids, size_t p_round) {
-        size_t block_size = std::bit_ceil(input_data.size()) >> p_round;
+        u_int32_t block_size = in_ceil_size >> p_round;
         for(auto &node : p_unmarked_nodes) {
-            size_t tmp_block_size = std::min(block_size, input_data.size() - node.block_id * block_size + 1);
+            u_int32_t tmp_block_size = std::min(block_size, in_size - node.block_id * block_size + 1);
             p_chain_ids.emplace_back(node.block_id * block_size, node.chain_info | tmp_block_size);
         }
     }
