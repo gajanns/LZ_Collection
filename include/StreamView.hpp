@@ -46,10 +46,10 @@ public:
         }
     }
 
-    InStreamView(const char* p_filename, size_t max_size = 0, bool buffered = true): m_buffered(buffered), m_source(FILE) {
+    InStreamView(std::string p_filename, size_t max_size = 0, bool buffered = true): m_buffered(buffered), m_source(FILE) {
         
         if(buffered) {
-            int fd = open(p_filename, O_RDONLY);
+            int fd = open(p_filename.c_str(), O_RDONLY);
             if(fd == -1) {
                 std::cerr << "Cannot open file: " << p_filename << std::endl;
                 exit(EXIT_FAILURE);
