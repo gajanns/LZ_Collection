@@ -111,33 +111,42 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
 
         auto it_ref = marked_refs.begin();
         size_t cur_pos = 0;
-        bool is_chain_up = false;
+        size_t chains_per_chunk = (chain_ids.size() + ApproxLZ77Par::num_threads - 1) / ApproxLZ77Par::num_threads;
 
-        for(auto it_chain = chain_ids.begin(); it_chain != chain_ids.end(); it_chain++) {
-            size_t chain = it_chain -> chain_info;
-            int bit_pos = is_chain_up ? min_block_log_size : max_block_log_size;
-            int bit_dir = is_chain_up ? 1 : -1;
-            int bit_end = is_chain_up ? max_block_log_size + 1 : min_block_log_size - 1;
+        #pragma omp parallel for ordered
+        for(size_t i = 0; i < chain_ids.size(); i += chains_per_chunk) {
+            std::vector<u_int8_t> chain_sizes;
+            
+            for(size_t j = i; j < std::min(i + chains_per_chunk, chain_ids.size()); j++) {
+                u_int32_t chain = chain_ids[j].chain_info;
+                bool is_chain_up = j % 2;
+                int bit_pos = is_chain_up ? min_block_log_size : max_block_log_size;
+                int bit_dir = is_chain_up ? 1 : -1;
+                int bit_end = is_chain_up ? max_block_log_size + 1 : min_block_log_size - 1;
 
-            while(bit_pos != bit_end) {
-                while(!(chain & (1 << bit_pos)) && bit_pos != bit_end) {
+                while(bit_pos != bit_end) {
+                    while(bit_pos != bit_end && !(chain & (1 << bit_pos)) ) {
+                        bit_pos += bit_dir;
+                    }
+                    if(bit_pos == bit_end) break;
+                    chain_sizes.push_back(static_cast<u_int8_t>(bit_pos));
                     bit_pos += bit_dir;
                 }
-                if(bit_pos == bit_end) break;
+            }
 
+            #pragma omp ordered
+            for(auto size : chain_sizes) {
                 if(it_ref != marked_refs.end() && it_ref->block_position == cur_pos) {
-                    p_out.encode(ApproxLZ77::factor_id{.value = it_ref->ref_position, .log_length = static_cast<size_t>(bit_pos+1)});
-                    cur_pos += 1 << bit_pos;
+                    p_out.encode(ApproxLZ77::factor_id{.value = it_ref->ref_position, .log_length = static_cast<size_t>(size) + 1});
+                    cur_pos += 1 << size;
                     it_ref++;
                 }
                 else {
-                    for(size_t i = 0; i < (1 << bit_pos); i++) {
+                    for(size_t k = 0; k < (1 << size); k++) {
                         p_out.encode(ApproxLZ77::factor_id{.value = input_span[cur_pos++], .log_length = 0});
                     }
                 }
-                bit_pos += bit_dir;
             }
-            is_chain_up = !is_chain_up;
         }
         return 0;
     };    
