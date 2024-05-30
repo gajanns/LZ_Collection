@@ -21,16 +21,15 @@ template<typename Sequence> requires NumRange<Sequence>
 class BlockTablePar {
     using Item = typename Sequence::value_type;
 private:
-    Sequence input_data;
-    BlockTableBasic<Sequence> block_table_basic;
+    const Sequence input_data;
+    const u_int32_t in_size;
+    const u_int32_t in_ceil_size;
 
-    auto split_block_node(const BlockNode *p_block_node, size_t block_size) {
-        return block_table_basic.split_block_node(p_block_node, block_size);
-    }
+    BlockTableBasic<Sequence> block_table_basic;
 
 public:
 
-    BlockTablePar(const Sequence &p_input_data) : input_data(p_input_data), block_table_basic(p_input_data) {}
+    BlockTablePar(const Sequence &p_input_data) : input_data(p_input_data), in_size(input_data.size()), in_ceil_size(std::bit_ceil(in_size)), block_table_basic(p_input_data) {}
 
     /**
      * @brief Initializes Sequence of unmarked Blocknodes for the initial round
@@ -38,8 +37,8 @@ public:
      * @param p_init_round The initial round of the algorithm
     */
     auto init_nodes(size_t p_init_round) {
-        size_t block_size = std::bit_ceil(input_data.size()) >> p_init_round;
-        size_t num_blocks = (input_data.size() + block_size - 1) / block_size;
+        size_t block_size = in_ceil_size >> p_init_round;
+        size_t num_blocks = (in_size + block_size - 1) / block_size;
         auto unmarked_nodes = std::vector<BlockNode>(num_blocks);
 
         #pragma omp parallel for
@@ -83,13 +82,10 @@ public:
                 return p_fp + p_node_right.fp;
             });
 
-            size_t new_block_id = i / num_nodes_pack;
+            int32_t new_block_id = i / num_nodes_pack;
             #pragma omp ordered
-            {
-                p_cur_nodes[new_block_id].block_id = new_block_id;
-                p_cur_nodes[new_block_id].chain_info = 0;
-                p_cur_nodes[new_block_id].fp = fp;
-            }
+            p_cur_nodes[new_block_id] = { new_block_id, 0, fp };
+            
         }
         p_cur_nodes.resize((p_cur_nodes.size() + num_nodes_pack - 1) / num_nodes_pack);
     }
@@ -109,13 +105,13 @@ public:
         }();
         size_t num_chunks = (p_prev_nodes.size() + nodes_per_chunk - 1) / nodes_per_chunk;
         
-        #pragma omp parallel for num_threads(ApproxLZ77Par::num_threads) ordered
+        #pragma omp parallel for ordered
         for(size_t chunk_id = 0; chunk_id < num_chunks; chunk_id++)
         {
             std::vector<CherryNode> chain;            
             size_t start_pos = chunk_id * nodes_per_chunk;
             size_t end_pos = std::min(start_pos + nodes_per_chunk, p_prev_nodes.size());
-            if(end_pos <= start_pos) continue;
+            if(end_pos <= start_pos) [[unlikely]] continue;
 
             auto tmp = block_table_basic.next_nodes(std::span<const BlockNode>(p_prev_nodes.begin() + start_pos, p_prev_nodes.begin() + end_pos), chain, p_prev_round);
             #pragma omp ordered
@@ -146,21 +142,19 @@ public:
      * @param p_round Current Round
      */
     void postprocess_matches(std::vector<BlockNode> &p_unmarked_nodes, ankerl::unordered_dense::map<size_t, u_int32_t> &p_fp_table, size_t p_round) {
-        size_t block_size = std::bit_ceil(input_data.size()) >> p_round;
+        size_t block_size = in_ceil_size >> p_round;
 
         #pragma omp parallel for
         for(auto &node : p_unmarked_nodes | std::views::drop(1)) {
-            if(node.block_id * block_size + block_size > input_data.size()) [[unlikely]] continue;
+            if(node.block_id * block_size + block_size > in_size) [[unlikely]] continue;
             if(node.chain_info & block_size) continue;
-            auto ref_pos = p_fp_table[node.fp.val];
-            if(ref_pos < node.block_id * block_size) {
-                node.chain_info |= block_size;
-            }
+
+            if(p_fp_table[node.fp.val] < node.block_id * block_size) node.chain_info |= block_size;
         }
     }
 
     /**
-     * @brief Translate previuosly matched references into marked BlockNodes
+     * @brief Translate previously matched references into marked BlockNodes
      * 
      * @param p_unmarked_nodes Sequence of BlockNodes(partly marked)
      * @param p_fp_table Fingerprint Table of unmarked blocks
@@ -168,12 +162,12 @@ public:
      * @param p_marked_refs Sequence of raw reference factors
      */
     void postprocess_matches(std::vector<BlockNode> &p_unmarked_nodes, ankerl::unordered_dense::map<size_t, u_int32_t> &p_fp_table, size_t p_round, std::vector<BlockRef> &p_marked_refs) {
-        size_t block_size = std::bit_ceil(input_data.size()) >> p_round;
+        size_t block_size = in_ceil_size >> p_round;
 
         #pragma omp declare reduction (merge : std::vector<BlockRef> : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end()))
         #pragma omp parallel for reduction(merge: p_marked_refs)
         for(auto &node : p_unmarked_nodes | std::views::drop(1)) {
-            if(node.block_id * block_size + block_size > input_data.size()) [[unlikely]] continue;
+            if(node.block_id * block_size + block_size > in_size) [[unlikely]] continue;
             if(node.chain_info & block_size) continue;
             auto ref_pos = p_fp_table[node.fp.val];
             if(ref_pos < node.block_id * block_size) {
@@ -191,16 +185,15 @@ public:
      * @param p_round The current/last round of the algorithm
     */
     void populate_unmarked_chain(std::vector<BlockNode> &p_unmarked_nodes, std::vector<CherryNode> &p_chain_ids, size_t p_round) {
-        size_t block_size = std::bit_ceil(input_data.size()) >> p_round;
-        size_t init_size = p_chain_ids.size();
+        u_int32_t block_size = in_ceil_size >> p_round;
+        u_int32_t init_size = p_chain_ids.size();
         p_chain_ids.resize(init_size + p_unmarked_nodes.size());
         
         #pragma omp parallel for
         for(size_t i = 0; i < p_unmarked_nodes.size(); i++) {
             auto &node = p_unmarked_nodes[i];
-            size_t tmp_block_size = std::min(block_size, input_data.size() - node.block_id * block_size + 1);
-            p_chain_ids[i + init_size].block_position = node.block_id * block_size;
-            p_chain_ids[i + init_size].chain_info = node.chain_info | tmp_block_size;
+            u_int32_t tmp_block_size = std::min(block_size, in_size - node.block_id * block_size + 1);
+            p_chain_ids[i + init_size] = { node.block_id * block_size, node.chain_info | tmp_block_size };
         }
     }
 };
