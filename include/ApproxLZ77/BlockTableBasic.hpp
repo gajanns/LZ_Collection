@@ -58,6 +58,10 @@ namespace ApproxLZ77 {
             return block_position == p_rhs.block_position && ref_position == p_rhs.ref_position;
         }
 
+        friend auto operator<=>(const BlockRef &p_lhs, const BlockRef &p_rhs) {
+            return p_lhs.block_position <=> p_rhs.block_position;
+        }
+
         bool operator<(const BlockRef &p_rhs) const {
             return block_position < p_rhs.block_position;
         }
@@ -77,6 +81,10 @@ namespace ApproxLZ77 {
 
         bool operator==(const CherryNode &p_rhs) const {
             return block_position == p_rhs.block_position && chain_info == p_rhs.chain_info;
+        }
+
+        friend auto operator<=>(const CherryNode &p_lhs, const CherryNode &p_rhs) {
+            return p_lhs.block_position <=> p_rhs.block_position;
         }
 
         bool operator<(const CherryNode &p_rhs) const {
