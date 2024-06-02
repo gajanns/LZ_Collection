@@ -24,16 +24,37 @@ void ApproxLZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<Appr
     size_t max_block_log_size;
     size_t round = min_round;
 
-    auto match_nodes = [&](size_t p_round, bool p_capture_refs = true) {
-        
+    auto match_nodes = [&](size_t p_round, bool p_capture_refs = true, bool log_time = false) {
         size_t block_size = in_size >> p_round;
+
+        auto start = std::chrono::high_resolution_clock::now();
         block_table.create_fp_table(fp_table, unmarked_nodes, p_round, p_capture_refs ? &marked_refs : nullptr);
+        auto end = std::chrono::high_resolution_clock::now();
+
+        if(log_time) {
+            std::cout << "FP Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms ... ";
+            start = std::chrono::high_resolution_clock::now();
+        }
+
         RabinKarpFingerprint test_fp = unmarked_nodes[0].fp;
         for(u_int32_t pos = 0; pos < input_span.size() - block_size; pos++) {
             block_table.preprocess_matches(pos, test_fp.val, fp_table);
             test_fp.shift_right(input_span[pos], input_span[pos + block_size]);
         }
+
+        if(log_time) {
+            end = std::chrono::high_resolution_clock::now();
+            std::cout << "Pre-Match Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms ... ";
+            start = std::chrono::high_resolution_clock::now();
+        }
+
         block_table.postprocess_matches(unmarked_nodes, fp_table, p_round, p_capture_refs ? &marked_refs : nullptr);
+
+        if(log_time) {
+            end = std::chrono::high_resolution_clock::now();
+            std::cout << "Post-Match Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
+        }
+
         return 1;
     };
 
@@ -76,24 +97,12 @@ void ApproxLZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<Appr
         max_block_log_size = in_log_size - round;
         return 0;
     };
-    
-    auto process_round = [&]() {
-        match_nodes(round);
-        if(round == max_round) return 0;
-        unmarked_nodes = block_table.next_nodes(unmarked_nodes, chain_ids, round);
-        return 1;
-    };   
 
-    auto push_factors = [&]() {
-        std::sort(marked_refs.begin(), marked_refs.end());
-        std::sort(chain_ids.begin(), chain_ids.end());
+    auto extract_factor_log_sizes = [&chain_ids, &min_block_log_size, &max_block_log_size]() {
+        std::vector<u_int8_t> factor_log_sizes;
 
-        auto it_ref = marked_refs.begin();
-        size_t cur_pos = 0;
-        bool is_chain_up = false;
-
-        for(auto it_chain = chain_ids.begin(); it_chain != chain_ids.end(); it_chain++) {
-            size_t chain = it_chain -> chain_info;
+        for(bool is_chain_up = false; auto &cherry_node : chain_ids) {
+            size_t chain = cherry_node.chain_info;
             int bit_pos = is_chain_up ? min_block_log_size : max_block_log_size;
             int bit_dir = is_chain_up ? 1 : -1;
             int bit_end = is_chain_up ? max_block_log_size + 1 : min_block_log_size - 1;
@@ -104,20 +113,68 @@ void ApproxLZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<Appr
                 }
                 if(bit_pos == bit_end) break;
 
-                if(it_ref != marked_refs.end() && it_ref->block_position == cur_pos) {
-                    p_out.encode(ApproxLZ77::factor_id{.value = it_ref->ref_position, .log_length = static_cast<size_t>(bit_pos+1)});
-                    cur_pos += 1 << bit_pos;
-                    it_ref++;
-                }
-                else {
-                    for(size_t i = 0; i < (1 << bit_pos); i++) {
-                        p_out.encode(ApproxLZ77::factor_id{.value = input_span[cur_pos++], .log_length = 0});
-                    }
-                }
+                factor_log_sizes.push_back(bit_pos);
                 bit_pos += bit_dir;
             }
             is_chain_up = !is_chain_up;
         }
+        return factor_log_sizes;
+    };
+    
+    auto process_round = [&](bool log_time = false) {
+        auto start = std::chrono::high_resolution_clock::now();
+        match_nodes(round);
+        auto end = std::chrono::high_resolution_clock::now();
+        if(log_time) {
+            std::cout << "R" << round << ":Match Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms ... ";
+            start = std::chrono::high_resolution_clock::now();
+        }
+        if(round == max_round) return 0;
+        unmarked_nodes = block_table.next_nodes(unmarked_nodes, chain_ids, round);
+        if(log_time) {
+            end = std::chrono::high_resolution_clock::now();
+            std::cout << "Next Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
+        }
+        return 1;
+    };  
+
+    auto push_factors = [&](bool log_time = false) {
+        auto start = std::chrono::high_resolution_clock::now();
+        std::sort(marked_refs.begin(), marked_refs.end());
+        std::sort(chain_ids.begin(), chain_ids.end());
+        auto end = std::chrono::high_resolution_clock::now();
+
+        if(log_time) {
+            std::cout << "Sort Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms ... ";
+            start = std::chrono::high_resolution_clock::now();
+        }
+
+        auto factor_log_sizes = extract_factor_log_sizes();
+
+        if(log_time) {
+            end = std::chrono::high_resolution_clock::now();
+            std::cout << "Extract Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms ... ";
+            start = std::chrono::high_resolution_clock::now();
+        }
+
+        for(auto [it_ref, cur_pos] = std::pair{marked_refs.begin(), size_t{0}}; auto log_size : factor_log_sizes) {
+            if(it_ref != marked_refs.end() && it_ref->block_position == cur_pos) {
+                p_out.encode(ApproxLZ77::factor_id{.value = it_ref->ref_position, .log_length = static_cast<size_t>(log_size+1)});
+                cur_pos += 1 << log_size;
+                it_ref++;
+            }
+            else {
+                for(size_t i = 0; i < (1 << log_size); i++) {
+                    p_out.encode(ApproxLZ77::factor_id{.value = input_span[cur_pos++], .log_length = 0});
+                }
+            }
+        }
+
+        if(log_time) {
+            end = std::chrono::high_resolution_clock::now();
+            std::cout << "Internal Push Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms ... ";
+        }
+
         return 0;
     };    
 
