@@ -163,17 +163,30 @@ public:
      */
     void postprocess_matches(std::vector<BlockNode> &p_unmarked_nodes, ankerl::unordered_dense::map<size_t, u_int32_t> &p_fp_table, size_t p_round, std::vector<BlockRef> &p_marked_refs) {
         size_t block_size = in_ceil_size >> p_round;
+ 
+        size_t nodes_per_chunk = (p_unmarked_nodes.size() + ApproxLZ77Par::num_threads - 1) / ApproxLZ77Par::num_threads;
+        size_t num_chunk = (p_unmarked_nodes.size() + nodes_per_chunk - 1) / nodes_per_chunk;
 
-        #pragma omp declare reduction (merge : std::vector<BlockRef> : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end()))
-        #pragma omp parallel for reduction(merge: p_marked_refs)
-        for(auto &node : p_unmarked_nodes | std::views::drop(1)) {
-            if(node.block_id * block_size + block_size > in_size) [[unlikely]] continue;
-            if(node.chain_info & block_size) continue;
-            auto ref_pos = p_fp_table[node.fp.val];
-            if(ref_pos < node.block_id * block_size) {
-                node.chain_info |= block_size;
-                p_marked_refs.emplace_back(node.block_id*block_size, ref_pos);
+        #pragma omp parallel for
+        for(size_t chunk_id = 0; chunk_id < num_chunk; chunk_id++) {
+            size_t start_pos = chunk_id * nodes_per_chunk;
+            size_t end_pos = std::min(start_pos + nodes_per_chunk, p_unmarked_nodes.size());
+            if(end_pos <= start_pos) [[unlikely]] continue;
+
+            std::vector<BlockRef> tmp_refs;
+            for(size_t i = start_pos; i < end_pos; i++) {
+                auto &node = p_unmarked_nodes[i];
+                if(node.block_id * block_size + block_size > in_size) [[unlikely]] continue;
+                if(node.chain_info & block_size) continue;
+                auto ref_pos = p_fp_table[node.fp.val];
+                if(ref_pos < node.block_id * block_size) {
+                    node.chain_info |= block_size;
+                    tmp_refs.emplace_back(node.block_id*block_size, ref_pos);
+                }
             }
+
+            #pragma omp critical
+            p_marked_refs.insert(p_marked_refs.end(), tmp_refs.begin(), tmp_refs.end());
         }
     }
 
