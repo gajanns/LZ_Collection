@@ -45,7 +45,7 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
             auto & chunk_data = chunked_input[chunk_id];
             RabinKarpFingerprint test_fp = RabinKarpFingerprint(chunk_data | std::views::take(block_size));
 
-            for(size_t pos = 0; pos <= chunk_data.size() - block_size; pos++) {
+            for(size_t pos = 0; pos + block_size < chunk_data.size(); pos++) {
                 block_table.preprocess_matches(chunk_id * chunk_size + pos, test_fp.val, fp_table);
                 test_fp.shift_right(chunk_data[pos], chunk_data[pos + block_size]);
             }
@@ -141,7 +141,7 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
         return factor_log_sizes;
     };
     
-    auto process_round = [&](bool log_time = false) {
+    auto process_round = [&](bool log_time = true) {
         auto start = std::chrono::high_resolution_clock::now();
         match_nodes(round);
         auto end = std::chrono::high_resolution_clock::now();

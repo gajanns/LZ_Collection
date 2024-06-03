@@ -37,7 +37,7 @@ void ApproxLZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<Appr
         }
 
         RabinKarpFingerprint test_fp = unmarked_nodes[0].fp;
-        for(u_int32_t pos = 0; pos <= input_span.size() - block_size; pos++) {
+        for(u_int32_t pos = 0; pos < input_span.size() - block_size; pos++) {
             block_table.preprocess_matches(pos, test_fp.val, fp_table);
             test_fp.shift_right(input_span[pos], input_span[pos + block_size]);
         }
