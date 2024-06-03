@@ -141,7 +141,7 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
         return factor_log_sizes;
     };
     
-    auto process_round = [&](bool log_time = true) {
+    auto process_round = [&](bool log_time = false) {
         auto start = std::chrono::high_resolution_clock::now();
         match_nodes(round);
         auto end = std::chrono::high_resolution_clock::now();
