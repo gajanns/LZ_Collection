@@ -182,4 +182,18 @@ namespace ApproxLZ77 {
 
 namespace ApproxLZ77Par {
     const size_t num_threads = omp_get_max_threads();
+
+    template<typename Sequence, typename Item = typename Sequence::value_type>
+    std::pair<size_t, std::vector<std::span<const Item>>> chunks(const Sequence &p_data, size_t p_num_chunks, size_t p_overlap = 0) {
+        size_t data_per_chunk = (p_data.size() + p_num_chunks - 1) / p_num_chunks;
+        size_t num_chunks_trimmed = (p_data.size() + data_per_chunk - 1) / data_per_chunk;
+
+        std::vector<std::span<const Item>> tmp_chunks(num_chunks_trimmed);
+        for(size_t i = 0; i < num_chunks_trimmed; i++) {
+            size_t start_pos = i * data_per_chunk;
+            size_t end_pos = std::min(start_pos + data_per_chunk + p_overlap, p_data.size());
+            tmp_chunks[i] = std::span<const Item>(p_data.begin() + start_pos, p_data.begin() + end_pos);
+        }
+        return {data_per_chunk, tmp_chunks};
+    }
 }

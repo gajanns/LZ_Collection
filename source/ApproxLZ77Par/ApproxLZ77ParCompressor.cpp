@@ -7,6 +7,8 @@
 #include <omp.h>
 #include <execution>
 
+using namespace ApproxLZ77;
+using namespace ApproxLZ77Par;
 
 void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<ApproxLZ77::factor_id> &p_out) {
 
@@ -36,27 +38,17 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
         }
         
         size_t block_size = in_size >> p_round;        
-        size_t num_chunks = ApproxLZ77Par::num_threads;
+        auto [chunk_size, chunked_input] = chunks(input_span, num_threads, block_size - 1);
 
         #pragma omp parallel for
-        for(size_t chunk_id = 0; chunk_id < num_chunks; chunk_id++)
-        {   
-            size_t data_per_chunk = (input_span.size() - block_size + num_chunks - 1) / num_chunks;
-            size_t start_pos = chunk_id * data_per_chunk;
-            size_t end_pos = std::min(start_pos + data_per_chunk, input_span.size() - block_size);
-            
-            RabinKarpFingerprint test_fp = [&]() {
-                if(chunk_id == 0) return unmarked_nodes[0].fp;
-                else if(start_pos < end_pos){
-                    return RabinKarpFingerprint(std::span<const char8_t>(input_span.data() + start_pos, block_size));
-                }
-                else return RabinKarpFingerprint();
-            }();
-            
-            for(size_t pos = start_pos; pos < end_pos; pos++) {
-                block_table.preprocess_matches(pos, test_fp.val, fp_table);
-                test_fp.shift_right(input_span[pos], input_span[pos + block_size]);
-            }         
+        for(size_t chunk_id = 0; chunk_id < chunked_input.size(); chunk_id++) {
+            auto & chunk_data = chunked_input[chunk_id];
+            RabinKarpFingerprint test_fp = RabinKarpFingerprint(chunk_data | std::views::take(block_size));
+
+            for(size_t pos = 0; pos <= chunk_data.size() - block_size; pos++) {
+                block_table.preprocess_matches(chunk_id * chunk_size + pos, test_fp.val, fp_table);
+                test_fp.shift_right(chunk_data[pos], chunk_data[pos + block_size]);
+            }
         }
 
         if(log_time) {
@@ -119,25 +111,28 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
         std::vector<u_int8_t> factor_log_sizes;
         size_t chains_per_chunk = (chain_ids.size() + ApproxLZ77Par::num_threads - 1) / ApproxLZ77Par::num_threads;
 
+        auto [chunk_size, chunked_ids] = chunks(chain_ids, ApproxLZ77Par::num_threads);
+
         #pragma omp parallel for ordered
-        for(size_t i = 0; i < chain_ids.size(); i += chains_per_chunk) {
+        for(size_t chunk_id = 0; chunk_id < chunked_ids.size(); chunk_id++) {
+            auto & chunk = chunked_ids[chunk_id];
             std::vector<u_int8_t> chain_sizes;
             
-            for(size_t j = i; j < std::min(i + chains_per_chunk, chain_ids.size()); j++) {
-                u_int32_t chain = chain_ids[j].chain_info;
-                bool is_chain_up = j % 2;
+            bool is_chain_up = (chunk_size * chunk_id) % 2;
+            for(auto cherry_node : chunk) {
                 int bit_pos = is_chain_up ? min_block_log_size : max_block_log_size;
                 int bit_dir = is_chain_up ? 1 : -1;
                 int bit_end = is_chain_up ? max_block_log_size + 1 : min_block_log_size - 1;
 
                 while(bit_pos != bit_end) {
-                    while(bit_pos != bit_end && !(chain & (1 << bit_pos)) ) {
+                    while(bit_pos != bit_end && !(cherry_node.chain_info & (1 << bit_pos)) ) {
                         bit_pos += bit_dir;
                     }
                     if(bit_pos == bit_end) break;
                     chain_sizes.push_back(static_cast<u_int8_t>(bit_pos));
                     bit_pos += bit_dir;
                 }
+                is_chain_up = !is_chain_up;
             }
 
             #pragma omp ordered
