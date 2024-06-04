@@ -208,9 +208,22 @@ public:
      * @param p_prev_round The previous round of the algorithm
     */
     auto next_nodes(const BlockNodeRange auto &p_prev_nodes, std::vector<CherryNode> &p_chain_ids, size_t p_prev_round) {
-        size_t prev_block_size = in_ceil_size >> p_prev_round;
-        size_t cur_block_size = prev_block_size >> 1;
-        std::vector<BlockNode> next_unmarked_nodes;
+        std::vector<BlockNode> next_unmarked_nodes(p_prev_nodes.size() * 2);
+        p_chain_ids.resize(p_chain_ids.size() + p_prev_nodes.size());
+
+        std::span<BlockNode> res_nodes(next_unmarked_nodes.data(), next_unmarked_nodes.size());
+        std::span<CherryNode> chain_ids(p_chain_ids.data() + p_chain_ids.size() - p_prev_nodes.size(), p_prev_nodes.size());
+
+        auto [nodes_size, chain_size] = next_nodes(p_prev_nodes, res_nodes, chain_ids, p_prev_round);
+        next_unmarked_nodes.resize(nodes_size);
+        p_chain_ids.resize(p_chain_ids.size() - p_prev_nodes.size() + chain_size);
+        return next_unmarked_nodes;        
+    }
+
+    std::pair<u_int32_t, u_int32_t> next_nodes(const BlockNodeRange auto &p_prev_nodes, std::span<BlockNode> &p_res_nodes, std::span<CherryNode> &p_chain_ids, size_t p_prev_round) {
+        u_int32_t prev_block_size = in_ceil_size >> p_prev_round;
+        u_int32_t cur_block_size = prev_block_size >> 1;
+        u_int32_t cur_res_pos = 0, cur_chain_pos = 0;
 
         for(size_t i = 0; i < p_prev_nodes.size(); i += 2) {
             const BlockNode* block_node = &p_prev_nodes[i], *sibling_node = (i < p_prev_nodes.size()-1) ? &p_prev_nodes[i+1] : nullptr;
@@ -219,8 +232,8 @@ public:
             bool is_sibling_marked = sibling_node && sibling_node->chain_info & prev_block_size;
             
             if(is_marked && (!sibling_node || is_sibling_marked)) {
-                p_chain_ids.emplace_back(block_node->block_id * prev_block_size + prev_block_size - 1, block_node->chain_info);
-                if(sibling_node) [[likely]] p_chain_ids.emplace_back(sibling_node->block_id * prev_block_size, sibling_node->chain_info);
+                p_chain_ids[cur_chain_pos++] = {block_node->block_id * prev_block_size + prev_block_size - 1, block_node->chain_info};
+                if(sibling_node) [[likely]] p_chain_ids[cur_chain_pos++] = {sibling_node->block_id * prev_block_size, sibling_node->chain_info};
                 continue;
             }
 
@@ -228,21 +241,21 @@ public:
                 auto [left_node, right_node] = split_block_node(block_node, cur_block_size);
                 left_node.chain_info = block_node->chain_info;
                 if(sibling_node && is_sibling_marked) right_node.chain_info = sibling_node->chain_info;
-                next_unmarked_nodes.push_back(left_node);
-                if(right_node.is_valid()) [[likely]] next_unmarked_nodes.push_back(right_node);
+                p_res_nodes[cur_res_pos++] = left_node;
+                if(right_node.is_valid()) [[likely]] p_res_nodes[cur_res_pos++] = right_node;
             }
 
             if(sibling_node && !is_sibling_marked) {
                 auto [left_node, right_node] = split_block_node(sibling_node, cur_block_size);
                 if(is_marked) left_node.chain_info = block_node->chain_info;
-                next_unmarked_nodes.push_back(left_node);
+                p_res_nodes[cur_res_pos++] = left_node;
                 if(right_node.is_valid()) [[likely]] {
                     right_node.chain_info = sibling_node->chain_info;
-                    next_unmarked_nodes.push_back(right_node);
+                    p_res_nodes[cur_res_pos++] = right_node;
                 }
             }
         }
-        return next_unmarked_nodes;        
+        return {cur_res_pos, cur_chain_pos};      
     }
 
     /**

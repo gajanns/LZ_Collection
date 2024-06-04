@@ -155,15 +155,11 @@ public:
         #pragma omp parallel for
         for(size_t chunk_id = 0; chunk_id < num_chunks; chunk_id++)
         {
-            std::vector<CherryNode> chain;
-            chain.reserve(chains_buffer[chunk_id + 1] - chains_buffer[chunk_id]);            
+            std::span<BlockNode> nodes_window = std::span<BlockNode>(next_unmarked_nodes.begin() + nodes_buffer[chunk_id], next_unmarked_nodes.begin() + nodes_buffer[chunk_id + 1]);
+            std::span<CherryNode> chain_window = std::span<CherryNode>(p_chain_ids.begin() + init_chain_size + chains_buffer[chunk_id], p_chain_ids.begin() + init_chain_size + chains_buffer[chunk_id + 1]);       
             size_t start_pos = chunk_id * nodes_per_chunk;
             size_t end_pos = std::min(start_pos + nodes_per_chunk, p_prev_nodes.size());
-            if(end_pos <= start_pos) [[unlikely]] continue;
-
-            auto tmp = block_table_basic.next_nodes(std::span<const BlockNode>(p_prev_nodes.begin() + start_pos, p_prev_nodes.begin() + end_pos), chain, p_prev_round);
-            std::copy(tmp.begin(), tmp.end(), next_unmarked_nodes.begin() + nodes_buffer[chunk_id]);
-            std::copy(chain.begin(), chain.end(), p_chain_ids.begin() + init_chain_size + chains_buffer[chunk_id]);
+            block_table_basic.next_nodes(std::span<const BlockNode>(p_prev_nodes.begin() + start_pos, p_prev_nodes.begin() + end_pos), nodes_window, chain_window, p_prev_round);
         }
         return next_unmarked_nodes;
     }
