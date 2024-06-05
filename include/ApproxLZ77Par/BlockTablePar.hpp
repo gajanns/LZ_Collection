@@ -113,53 +113,27 @@ public:
      * @param p_prev_round The previous round of the algorithm
     */
     auto next_nodes(const BlockNodeRange auto &p_prev_nodes, std::vector<CherryNode> &p_chain_ids, size_t p_prev_round) {
-        size_t block_size = in_ceil_size >> p_prev_round;
-        
+        std::vector<BlockNode> next_unmarked_nodes;
         size_t nodes_per_chunk = [&](){
             size_t tmp = (p_prev_nodes.size() + ApproxLZ77Par::num_threads - 1) / ApproxLZ77Par::num_threads;
             return tmp + tmp % 2;
         }();
         size_t num_chunks = (p_prev_nodes.size() + nodes_per_chunk - 1) / nodes_per_chunk;
-
-        std::vector<BlockNode> next_unmarked_nodes;
-        std::vector<size_t> nodes_buffer(num_chunks + 1, 0), chains_buffer(num_chunks + 1, 0);
-
-        #pragma omp parallel for
-        for(size_t chunk_id = 0; chunk_id < num_chunks; chunk_id++) {
+        
+        #pragma omp parallel for ordered
+        for(size_t chunk_id = 0; chunk_id < num_chunks; chunk_id++)
+        {
+            std::vector<CherryNode> chain;            
             size_t start_pos = chunk_id * nodes_per_chunk;
             size_t end_pos = std::min(start_pos + nodes_per_chunk, p_prev_nodes.size());
             if(end_pos <= start_pos) [[unlikely]] continue;
 
-            for(size_t i = start_pos; i < end_pos; i+=2) {
-                auto *left_node = &p_prev_nodes[i];
-                auto *right_node = (i == p_prev_nodes.size() - 1) ? nullptr : &p_prev_nodes[i + 1];
-
-                if(left_node->block_id * block_size + block_size/2 >= in_size) nodes_buffer[chunk_id + 1]++;
-                else if(!(left_node->chain_info & block_size)) nodes_buffer[chunk_id + 1]+=2;
-                if(right_node && right_node->block_id * block_size + block_size/2 >= in_size) nodes_buffer[chunk_id + 1]++;
-                else if(right_node && !(right_node->chain_info & block_size)) nodes_buffer[chunk_id + 1]+=2;
-                
-                if((left_node->chain_info & block_size) && (!right_node || (right_node->chain_info & block_size))) {
-                    chains_buffer[chunk_id + 1]++;
-                    if(right_node) chains_buffer[chunk_id + 1]++;
-                }
+            auto tmp = block_table_basic.next_nodes(std::span<const BlockNode>(p_prev_nodes.begin() + start_pos, p_prev_nodes.begin() + end_pos), chain, p_prev_round);
+            #pragma omp ordered
+            {
+                next_unmarked_nodes.insert(next_unmarked_nodes.end(), tmp.begin(), tmp.end());
+                p_chain_ids.insert(p_chain_ids.end(), chain.begin(), chain.end());
             }
-        }
-
-        std::partial_sum(nodes_buffer.begin(), nodes_buffer.end(), nodes_buffer.begin());
-        std::partial_sum(chains_buffer.begin(), chains_buffer.end(), chains_buffer.begin());
-        next_unmarked_nodes.resize(nodes_buffer[num_chunks]);
-        size_t init_chain_size = p_chain_ids.size();
-        p_chain_ids.resize(init_chain_size + chains_buffer[num_chunks]);
-        
-        #pragma omp parallel for
-        for(size_t chunk_id = 0; chunk_id < num_chunks; chunk_id++)
-        {
-            std::span<BlockNode> nodes_window = std::span<BlockNode>(next_unmarked_nodes.begin() + nodes_buffer[chunk_id], next_unmarked_nodes.begin() + nodes_buffer[chunk_id + 1]);
-            std::span<CherryNode> chain_window = std::span<CherryNode>(p_chain_ids.begin() + init_chain_size + chains_buffer[chunk_id], p_chain_ids.begin() + init_chain_size + chains_buffer[chunk_id + 1]);       
-            size_t start_pos = chunk_id * nodes_per_chunk;
-            size_t end_pos = std::min(start_pos + nodes_per_chunk, p_prev_nodes.size());
-            block_table_basic.next_nodes(std::span<const BlockNode>(p_prev_nodes.begin() + start_pos, p_prev_nodes.begin() + end_pos), nodes_window, chain_window, p_prev_round);
         }
         return next_unmarked_nodes;
     }

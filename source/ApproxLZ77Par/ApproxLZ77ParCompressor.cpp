@@ -28,15 +28,9 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
     size_t max_block_log_size;
     size_t round = min_round;
 
-    auto match_nodes = [&](size_t p_round, bool p_capture_refs = true, bool log_time = false) {
-        auto start = std::chrono::high_resolution_clock::now();
+    auto match_nodes = [&](size_t p_round, bool p_capture_refs = true) {
         block_table.create_fp_table(fp_table, unmarked_nodes, p_round, p_capture_refs ? &marked_refs : nullptr);
-        auto end = std::chrono::high_resolution_clock::now();
-        if(log_time) {
-            std::cout << "FP Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms ... ";
-            start = std::chrono::high_resolution_clock::now();
-        }
-        
+
         size_t block_size = in_size >> p_round;        
         auto [chunk_size, chunked_input] = chunks(input_span, num_threads, block_size - 1);
 
@@ -51,19 +45,9 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
             }
         }
 
-        if(log_time) {
-            end = std::chrono::high_resolution_clock::now();
-            std::cout << "Pre-Match Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms ... ";
-            start = std::chrono::high_resolution_clock::now();
-        }
-
         if(p_capture_refs) block_table.postprocess_matches(unmarked_nodes, fp_table, p_round, marked_refs);
         else block_table.postprocess_matches(unmarked_nodes, fp_table, p_round);
 
-        if(log_time) {
-            end = std::chrono::high_resolution_clock::now();
-            std::cout << "Post-Match Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
-        }
         return 1;
     };
 
@@ -141,41 +125,19 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
         return factor_log_sizes;
     };
     
-    auto process_round = [&](bool log_time = false) {
-        auto start = std::chrono::high_resolution_clock::now();
+    auto process_round = [&]() {
         match_nodes(round);
-        auto end = std::chrono::high_resolution_clock::now();
-        if(log_time) {
-            std::cout << "R" << round << ":Match Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms ... ";
-            start = std::chrono::high_resolution_clock::now();
-        }
         if(round == max_round) return 0;
         unmarked_nodes = block_table.next_nodes(unmarked_nodes, chain_ids, round);
-        if(log_time) {
-            end = std::chrono::high_resolution_clock::now();
-            std::cout << "Next Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms" << std::endl;
-        }
         return 1;
     };   
 
-    auto push_factors = [&](bool log_time = false) {
-        auto start = std::chrono::high_resolution_clock::now();
+    auto push_factors = [&]() {
+
         std::sort(std::execution::par, marked_refs.begin(), marked_refs.end());
         std::sort(std::execution::par, chain_ids.begin(), chain_ids.end());
-        auto end = std::chrono::high_resolution_clock::now();
-
-        if(log_time) {
-            std::cout << "Sort Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms ... ";
-            start = std::chrono::high_resolution_clock::now();
-        }
 
         auto factor_log_sizes = extract_factor_log_sizes();
-
-        if(log_time) {
-            end = std::chrono::high_resolution_clock::now();
-            std::cout << "Extract Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms ... ";
-            start = std::chrono::high_resolution_clock::now();
-        }
 
         for(auto [it_ref, cur_pos] = std::pair{marked_refs.begin(), size_t{0}}; auto log_size : factor_log_sizes) {
             if(it_ref != marked_refs.end() && it_ref->block_position == cur_pos) {
@@ -189,12 +151,6 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
                 }
             }
         }
-
-        if(log_time) {
-            end = std::chrono::high_resolution_clock::now();
-            std::cout << "Internal Push Time: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms ... ";
-        }
-
         return 0;
     };    
 
