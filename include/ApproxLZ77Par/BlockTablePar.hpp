@@ -62,23 +62,26 @@ public:
      * @param p_unmarked_nodes The current unmarked nodes
      * @param p_cur_round The current round of the algorithm
     */
-    void create_fp_table(ankerl::unordered_dense::map<size_t, u_int32_t> &p_fp_table, std::vector<BlockNode> &p_unmarked_nodes, size_t p_cur_round, std::vector<BlockRef> *p_marked_refs=nullptr) {
+    std::vector<u_int32_t> create_fp_table(ankerl::unordered_dense::map<size_t, u_int32_t> &p_fp_table, std::vector<BlockNode> &p_unmarked_nodes, size_t p_cur_round) {
         p_fp_table.clear();
-        p_fp_table.reserve(p_unmarked_nodes.size());
+        std::vector<u_int32_t> ref_table(p_unmarked_nodes.size());
+
         size_t block_size = in_ceil_size >> p_cur_round;
         
-        for(auto &node : p_unmarked_nodes | std::views::drop(1)) {
+        for(size_t i = 1; i < p_unmarked_nodes.size(); i++) {
+            auto &node = p_unmarked_nodes[i];
+            ref_table[i] = node.block_id * block_size;
             if(node.block_id * block_size + block_size > in_size) [[unlikely]] break;
 
             auto match_it = p_fp_table.find(node.fp.val);
             if(match_it == p_fp_table.end()) {
-                p_fp_table[node.fp.val] = node.block_id * block_size;
+                p_fp_table[node.fp.val] = i;
             }
             else {
-                node.chain_info |= block_size;
-                if(p_marked_refs) p_marked_refs->emplace_back(node.block_id * block_size, match_it->second);
+                ref_table[i] = ref_table[match_it->second];
             }
         }
+        return ref_table;
     }
 
     /**
@@ -126,7 +129,6 @@ public:
             std::vector<CherryNode> chain;            
             size_t start_pos = chunk_id * nodes_per_chunk;
             size_t end_pos = std::min(start_pos + nodes_per_chunk, p_prev_nodes.size());
-            if(end_pos <= start_pos) [[unlikely]] continue;
 
             auto tmp = block_table_basic.next_nodes(std::span<const BlockNode>(p_prev_nodes.begin() + start_pos, p_prev_nodes.begin() + end_pos), chain, p_prev_round);
             #pragma omp ordered
@@ -145,9 +147,9 @@ public:
      * @param p_fp Fingerprint of Sliding Window to check against
      * @param p_fp_table Fingerprint Table of unmarked blocks
      */
-    void preprocess_matches(u_int32_t p_pos, size_t p_fp, ankerl::unordered_dense::map<size_t, u_int32_t> &p_fp_table) {
-        auto match = p_fp_table.find(p_fp);
-        if(match != p_fp_table.end() && match->second > p_pos) match->second = p_pos;
+    void preprocess_matches(u_int32_t p_pos, size_t p_fp, ankerl::unordered_dense::map<size_t, u_int32_t> &p_fp_table, std::vector<u_int32_t> &p_ref_table) {
+        auto match_it = p_fp_table.find(p_fp);
+        if(match_it != p_fp_table.end() && p_ref_table[match_it->second] > p_pos) p_ref_table[match_it->second] = p_pos;
     }
 
     /**
@@ -157,15 +159,13 @@ public:
      * @param p_fp_table Fingerprint Table of unmarked blocks
      * @param p_round Current Round
      */
-    void postprocess_matches(std::vector<BlockNode> &p_unmarked_nodes, ankerl::unordered_dense::map<size_t, u_int32_t> &p_fp_table, size_t p_round) {
+    void postprocess_matches(std::vector<BlockNode> &p_unmarked_nodes, std::vector<u_int32_t> &p_ref_table, size_t p_round) {
         size_t block_size = in_ceil_size >> p_round;
 
         #pragma omp parallel for
-        for(auto &node : p_unmarked_nodes | std::views::drop(1)) {
-            if(node.block_id * block_size + block_size > in_size) [[unlikely]] continue;
-            if(node.chain_info & block_size) continue;
-
-            if(p_fp_table[node.fp.val] < node.block_id * block_size) node.chain_info |= block_size;
+        for(size_t i = 1; i < p_unmarked_nodes.size(); i++) {
+            auto &node = p_unmarked_nodes[i];
+            if(p_ref_table[i] < node.block_id * block_size) node.chain_info |= block_size;
         }
     }
 
@@ -177,7 +177,7 @@ public:
      * @param p_round Current Round
      * @param p_marked_refs Sequence of raw reference factors
      */
-    void postprocess_matches(std::vector<BlockNode> &p_unmarked_nodes, ankerl::unordered_dense::map<size_t, u_int32_t> &p_fp_table, size_t p_round, std::vector<BlockRef> &p_marked_refs) {
+    void postprocess_matches(std::vector<BlockNode> &p_unmarked_nodes, std::vector<u_int32_t> &p_ref_table, size_t p_round, std::vector<BlockRef> &p_marked_refs) {
         size_t block_size = in_ceil_size >> p_round;
  
         size_t nodes_per_chunk = (p_unmarked_nodes.size() + ApproxLZ77Par::num_threads - 1) / ApproxLZ77Par::num_threads;
@@ -187,17 +187,13 @@ public:
         for(size_t chunk_id = 0; chunk_id < num_chunk; chunk_id++) {
             size_t start_pos = chunk_id * nodes_per_chunk;
             size_t end_pos = std::min(start_pos + nodes_per_chunk, p_unmarked_nodes.size());
-            if(end_pos <= start_pos) [[unlikely]] continue;
 
             std::vector<BlockRef> tmp_refs;
             for(size_t i = start_pos; i < end_pos; i++) {
                 auto &node = p_unmarked_nodes[i];
-                if(node.block_id * block_size + block_size > in_size) [[unlikely]] continue;
-                if(node.chain_info & block_size) continue;
-                auto ref_pos = p_fp_table[node.fp.val];
-                if(ref_pos < node.block_id * block_size) {
+                if(p_ref_table[i] < node.block_id * block_size) {
                     node.chain_info |= block_size;
-                    tmp_refs.emplace_back(node.block_id*block_size, ref_pos);
+                    tmp_refs.emplace_back(node.block_id * block_size, p_ref_table[i]);
                 }
             }
 

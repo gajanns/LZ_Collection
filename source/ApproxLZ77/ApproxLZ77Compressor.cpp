@@ -27,15 +27,15 @@ void ApproxLZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<Appr
     auto match_nodes = [&](size_t p_round, bool p_capture_refs = true) {
         size_t block_size = in_size >> p_round;
 
-        block_table.create_fp_table(fp_table, unmarked_nodes, p_round, p_capture_refs ? &marked_refs : nullptr);
+        auto ref_table = block_table.create_fp_table(fp_table, unmarked_nodes, p_round);
 
         RabinKarpFingerprint test_fp = unmarked_nodes[0].fp;
         for(u_int32_t pos = 0; pos < input_span.size() - block_size; pos++) {
-            block_table.preprocess_matches(pos, test_fp.val, fp_table);
+            block_table.preprocess_matches(pos, test_fp.val, fp_table, ref_table);
             test_fp.shift_right(input_span[pos], input_span[pos + block_size]);
         }
 
-        block_table.postprocess_matches(unmarked_nodes, fp_table, p_round, p_capture_refs ? &marked_refs : nullptr);
+        block_table.postprocess_matches(unmarked_nodes, ref_table, p_round, p_capture_refs ? &marked_refs : nullptr);
 
         return 1;
     };

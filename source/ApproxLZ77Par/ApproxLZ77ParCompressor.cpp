@@ -29,24 +29,34 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
     size_t round = min_round;
 
     auto match_nodes = [&](size_t p_round, bool p_capture_refs = true) {
-        block_table.create_fp_table(fp_table, unmarked_nodes, p_round, p_capture_refs ? &marked_refs : nullptr);
+        auto ref_table = block_table.create_fp_table(fp_table, unmarked_nodes, p_round);
 
         size_t block_size = in_size >> p_round;        
-        auto [chunk_size, chunked_input] = chunks(input_span, num_threads, block_size - 1);
+        size_t data_per_chunk = (input_span.size() - block_size + num_threads - 1) / num_threads;
+        size_t num_chunks = (input_span.size() - block_size + data_per_chunk - 1) / data_per_chunk;
 
         #pragma omp parallel for
-        for(size_t chunk_id = 0; chunk_id < chunked_input.size(); chunk_id++) {
-            auto & chunk_data = chunked_input[chunk_id];
-            RabinKarpFingerprint test_fp = RabinKarpFingerprint(chunk_data | std::views::take(block_size));
-
-            for(size_t pos = 0; pos + block_size < chunk_data.size(); pos++) {
-                block_table.preprocess_matches(chunk_id * chunk_size + pos, test_fp.val, fp_table);
-                test_fp.shift_right(chunk_data[pos], chunk_data[pos + block_size]);
-            }
+        for(size_t chunk_id = 0; chunk_id < num_chunks; chunk_id++)
+        {
+            size_t start_pos = chunk_id * data_per_chunk;
+            size_t end_pos = std::min(start_pos + data_per_chunk, input_span.size() - block_size);
+            
+            RabinKarpFingerprint test_fp = [&]() {
+                if(chunk_id == 0) return unmarked_nodes[0].fp;
+                else if(start_pos < end_pos){
+                    return RabinKarpFingerprint(std::span<const char8_t>(input_span.data() + start_pos, block_size));
+                }
+                else return RabinKarpFingerprint();
+            }();
+            
+            for(size_t pos = start_pos; pos < end_pos; pos++) {
+                block_table.preprocess_matches(pos, test_fp.val, fp_table, ref_table);
+                test_fp.shift_right(input_span[pos], input_span[pos + block_size]);
+            }           
         }
 
-        if(p_capture_refs) block_table.postprocess_matches(unmarked_nodes, fp_table, p_round, marked_refs);
-        else block_table.postprocess_matches(unmarked_nodes, fp_table, p_round);
+        if(p_capture_refs) block_table.postprocess_matches(unmarked_nodes, ref_table, p_round, marked_refs);
+        else block_table.postprocess_matches(unmarked_nodes, ref_table, p_round);
 
         return 1;
     };
