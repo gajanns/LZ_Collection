@@ -245,44 +245,6 @@ public:
         return next_unmarked_nodes;        
     }
 
-    std::pair<u_int32_t, u_int32_t> next_nodes(const BlockNodeRange auto &p_prev_nodes, std::span<BlockNode> &p_res_nodes, std::span<CherryNode> &p_chain_ids, size_t p_prev_round) {
-        u_int32_t prev_block_size = in_ceil_size >> p_prev_round;
-        u_int32_t cur_block_size = prev_block_size >> 1;
-        u_int32_t cur_res_pos = 0, cur_chain_pos = 0;
-
-        for(size_t i = 0; i < p_prev_nodes.size(); i += 2) {
-            const BlockNode* block_node = &p_prev_nodes[i], *sibling_node = (i < p_prev_nodes.size()-1) ? &p_prev_nodes[i+1] : nullptr;
-
-            bool is_marked = block_node->chain_info & prev_block_size;
-            bool is_sibling_marked = sibling_node && sibling_node->chain_info & prev_block_size;
-            
-            if(is_marked && (!sibling_node || is_sibling_marked)) {
-                p_chain_ids[cur_chain_pos++] = {block_node->block_id * prev_block_size + prev_block_size - 1, block_node->chain_info};
-                if(sibling_node) [[likely]] p_chain_ids[cur_chain_pos++] = {sibling_node->block_id * prev_block_size, sibling_node->chain_info};
-                continue;
-            }
-
-            if(!is_marked) {
-                auto [left_node, right_node] = split_block_node(block_node, cur_block_size);
-                left_node.chain_info = block_node->chain_info;
-                if(sibling_node && is_sibling_marked) right_node.chain_info = sibling_node->chain_info;
-                p_res_nodes[cur_res_pos++] = left_node;
-                if(right_node.is_valid()) [[likely]] p_res_nodes[cur_res_pos++] = right_node;
-            }
-
-            if(sibling_node && !is_sibling_marked) {
-                auto [left_node, right_node] = split_block_node(sibling_node, cur_block_size);
-                if(is_marked) left_node.chain_info = block_node->chain_info;
-                p_res_nodes[cur_res_pos++] = left_node;
-                if(right_node.is_valid()) [[likely]] {
-                    right_node.chain_info = sibling_node->chain_info;
-                    p_res_nodes[cur_res_pos++] = right_node;
-                }
-            }
-        }
-        return {cur_res_pos, cur_chain_pos};      
-    }
-
     /**
      * @brief Match current data-window to any unmarked block by updated the leftmost reference-position
      * 
