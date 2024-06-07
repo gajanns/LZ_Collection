@@ -38,6 +38,7 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
         #pragma omp parallel for
         for(size_t chunk_id = 0; chunk_id < num_chunks; chunk_id++)
         {
+            std::vector<u_int32_t> t_ref_table(ref_table);
             size_t start_pos = chunk_id * data_per_chunk;
             size_t end_pos = std::min(start_pos + data_per_chunk, input_span.size() - block_size);
             
@@ -50,9 +51,16 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
             }();
             
             for(size_t pos = start_pos; pos < end_pos; pos++) {
-                block_table.preprocess_matches(pos, test_fp.val, fp_table, ref_table);
+                block_table.preprocess_matches(pos, test_fp.val, fp_table, t_ref_table);
                 test_fp.shift_right(input_span[pos], input_span[pos + block_size]);
-            }           
+            }
+
+            #pragma omp critical
+            {
+                for(size_t i = 0; i < ref_table.size(); i++) {
+                    if(ref_table[i] > t_ref_table[i]) ref_table[i] = t_ref_table[i];
+                }
+            }       
         }
 
         if(p_capture_refs) block_table.postprocess_matches(unmarked_nodes, ref_table, p_round, marked_refs);
