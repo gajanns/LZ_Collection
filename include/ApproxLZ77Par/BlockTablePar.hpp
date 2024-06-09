@@ -63,24 +63,24 @@ public:
      * @param p_cur_round The current round of the algorithm
     */
     std::vector<u_int32_t> create_fp_table(ankerl::unordered_dense::map<size_t, u_int32_t> &p_fp_table, std::vector<BlockNode> &p_unmarked_nodes, size_t p_cur_round) {
-        p_fp_table.clear();
         std::vector<u_int32_t> ref_table(p_unmarked_nodes.size());
 
         size_t block_size = in_ceil_size >> p_cur_round;
         
         for(size_t i = 1; i < p_unmarked_nodes.size(); i++) {
             auto &node = p_unmarked_nodes[i];
-            ref_table[i] = node.block_id * block_size;
-            if(node.block_id * block_size + block_size > in_size) [[unlikely]] break;
-
+            if(node.block_id * block_size + block_size > in_size) [[unlikely]] continue;
+            
             auto match_it = p_fp_table.find(node.fp.val);
             if(match_it == p_fp_table.end()) {
                 p_fp_table[node.fp.val] = i;
+                ref_table[i] = node.block_id * block_size;
             }
             else {
                 ref_table[i] = ref_table[match_it->second];
             }
         }
+
         return ref_table;
     }
 

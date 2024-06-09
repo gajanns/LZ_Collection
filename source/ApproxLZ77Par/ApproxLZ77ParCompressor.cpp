@@ -20,8 +20,6 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
     std::vector<BlockRef> marked_refs;
     std::vector<BlockNode> unmarked_nodes;
 
-    ankerl::unordered_dense::map<size_t, u_int32_t> fp_table;
-
     const size_t in_size = std::bit_ceil(input_span.size()), in_log_size = std::bit_width(in_size) - 1;
     const size_t min_round = std::min(in_log_size, ApproxLZ77::min_round), max_round = in_log_size - std::bit_width(ApproxLZ77::min_block_size) + 1;
     const int min_block_log_size = std::bit_width(ApproxLZ77::min_block_size) - 1;
@@ -29,42 +27,29 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
     size_t round = min_round;
 
     auto match_nodes = [&](size_t p_round, bool p_capture_refs = true) {
-        auto ref_table = block_table.create_fp_table(fp_table, unmarked_nodes, p_round);
-
         size_t block_size = in_size >> p_round;        
         size_t data_per_chunk = (input_span.size() - block_size + num_threads - 1) / num_threads;
         size_t num_chunks = (input_span.size() - block_size + data_per_chunk - 1) / data_per_chunk;
 
-        size_t nodes_per_chunk = (unmarked_nodes.size() + num_threads - 1) / num_threads;
-        size_t num_nodes_chunks = (unmarked_nodes.size() + nodes_per_chunk - 1) / nodes_per_chunk;
+        ankerl::unordered_dense::map<size_t, u_int32_t> fp_table;
+        auto ref_table = block_table.create_fp_table(fp_table, unmarked_nodes, p_round);
 
-        #pragma omp parallel num_threads(num_chunks)
-        {
-            std::vector<u_int32_t> t_ref_table(ref_table.size(), std::numeric_limits<u_int32_t>::max());
-            size_t chunk_id = omp_get_thread_num();
+        #pragma omp parallel for
+        for(size_t chunk_id = 0; chunk_id < num_chunks; chunk_id++) {
             size_t start_pos = chunk_id * data_per_chunk;
             size_t end_pos = std::min(start_pos + data_per_chunk, input_span.size() - block_size);
 
             RabinKarpFingerprint test_fp = [&]() {
                 if(chunk_id == 0) return unmarked_nodes[0].fp;
-                else if(start_pos < end_pos){
+                else if(start_pos < end_pos) {
                     return RabinKarpFingerprint(std::span<const char8_t>(input_span.data() + start_pos, block_size));
                 }
                 else return RabinKarpFingerprint();
             }();
 
             for(size_t pos = start_pos; pos < end_pos; pos++) {
-                block_table.preprocess_matches(pos, test_fp.val, fp_table, t_ref_table);
+                block_table.preprocess_matches(pos, test_fp.val, fp_table, ref_table);
                 test_fp.shift_right(input_span[pos], input_span[pos + block_size]);
-            }
-            #pragma omp barrier
-
-            for(size_t i = 0; i < num_nodes_chunks; i++) {
-                size_t start_pos = ((chunk_id + i) % num_nodes_chunks) * nodes_per_chunk;
-                for(size_t j = start_pos; j < std::min(start_pos + nodes_per_chunk, unmarked_nodes.size()); j++) {
-                    ref_table[j] = std::min(ref_table[j], t_ref_table[j]);
-                }
-                #pragma omp barrier
             }
         }
 

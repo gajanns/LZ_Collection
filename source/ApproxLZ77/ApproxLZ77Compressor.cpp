@@ -16,7 +16,7 @@ void ApproxLZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<Appr
     std::vector<BlockRef> marked_refs;
     std::vector<BlockNode> unmarked_nodes;
 
-    ankerl::unordered_dense::map<size_t, u_int32_t> fp_table;
+    
 
     const size_t in_size = std::bit_ceil(input_span.size()), in_log_size = std::bit_width(in_size) - 1;
     const size_t min_round = std::min(in_log_size, ApproxLZ77::min_round), max_round = in_log_size - std::bit_width(ApproxLZ77::min_block_size) + 1;
@@ -26,7 +26,7 @@ void ApproxLZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<Appr
 
     auto match_nodes = [&](size_t p_round, bool p_capture_refs = true) {
         size_t block_size = in_size >> p_round;
-
+        ankerl::unordered_dense::map<size_t, u_int32_t> fp_table;
         auto ref_table = block_table.create_fp_table(fp_table, unmarked_nodes, p_round);
 
         RabinKarpFingerprint test_fp = unmarked_nodes[0].fp;
