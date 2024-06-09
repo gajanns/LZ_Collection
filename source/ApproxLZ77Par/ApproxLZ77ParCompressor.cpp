@@ -31,7 +31,7 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
         size_t data_per_chunk = (input_span.size() - block_size + num_threads - 1) / num_threads;
         size_t num_chunks = (input_span.size() - block_size + data_per_chunk - 1) / data_per_chunk;
 
-        ankerl::unordered_dense::map<size_t, u_int32_t> fp_table;
+        std::unique_ptr<ankerl::unordered_dense::map<size_t, u_int32_t>> fp_table[ApproxLZ77Par::num_threads];
         auto ref_table = block_table.create_fp_table(fp_table, unmarked_nodes, p_round);
 
         #pragma omp parallel for
