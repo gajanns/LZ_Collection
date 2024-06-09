@@ -271,6 +271,7 @@ public:
         size_t block_size = in_ceil_size >> p_round;
         for(size_t i = 1; i < p_unmarked_nodes.size(); i++) {
             auto &node = p_unmarked_nodes[i];
+            if(node.block_id * block_size + block_size > in_size) [[unlikely]] continue;
             if(p_ref_table[i] < node.block_id * block_size) {
                 node.chain_info |= block_size;
                 if(p_marked_refs) p_marked_refs->emplace_back(node.block_id * block_size, p_ref_table[i]);
