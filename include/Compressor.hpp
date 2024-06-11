@@ -51,8 +51,8 @@ namespace Compression {
             void compress(InStreamView &p_in, Coder::Encoder<Factor> &p_out) {
                 #ifdef PERF
                 MemoryTracker::start_mem_record();
-                auto start = std::chrono::high_resolution_clock::now();
                 #endif
+                auto start = std::chrono::high_resolution_clock::now();
 
                 compress_impl(p_in, p_out);
 
@@ -62,12 +62,11 @@ namespace Compression {
                 m_stats.m_factor_count = p_out.factors_written();
                 p_in.reset();
                 
-
+                auto end = std::chrono::high_resolution_clock::now();
+                m_stats.m_run_time_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
                 #ifdef PERF
                 MemoryTracker::stop_mem_record();
                 m_stats.m_mem_usage = MemoryTracker::peak_mem_usage;
-                auto end = std::chrono::high_resolution_clock::now();
-                m_stats.m_run_time_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
                 #endif
             }
             
