@@ -6,9 +6,12 @@
 #include "unordered_dense.h"
 #include <omp.h>
 #include <execution>
+#include "sharded_map.hpp"
 
 using namespace ApproxLZ77;
 using namespace ApproxLZ77Par;
+using namespace sharded_map;
+
 
 void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<ApproxLZ77::factor_id> &p_out) {
 
@@ -31,8 +34,9 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
         size_t data_per_chunk = (input_span.size() - block_size + num_threads - 1) / num_threads;
         size_t num_chunks = (input_span.size() - block_size + data_per_chunk - 1) / data_per_chunk;
 
-        std::unique_ptr<ankerl::unordered_dense::map<size_t, u_int32_t>> fp_table[ApproxLZ77Par::num_threads];
-        auto ref_table = block_table.create_fp_table(fp_table, unmarked_nodes, p_round);
+        //ShardedMap<size_t, u_int32_t, ankerl::unordered_dense::map, LeftMostOccurence> fp_table(num_threads, 128);
+        std::unique_ptr<ankerl::unordered_dense::map<size_t, u_int32_t>> fp_table[num_threads];
+        auto ref_table = block_table.create_fp_table(fp_table, unmarked_nodes, p_round);        
 
         #pragma omp parallel for
         for(size_t chunk_id = 0; chunk_id < num_chunks; chunk_id++) {

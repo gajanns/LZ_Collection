@@ -7,9 +7,27 @@
 #include "RabinKarp.hpp"
 #include "unordered_dense.h"
 #include "BlockTableBasic.hpp"
+#include "sharded_map.hpp"
 #include <omp.h>
 
 using namespace ApproxLZ77;
+
+
+namespace ApproxLZ77Par {
+
+    struct LeftMostOccurence {
+        using InputValue = u_int32_t*;
+
+        static void update(const size_t &, u_int32_t &metric, InputValue &&position) {
+            if(metric > *position) metric = *position;
+            else *position = metric;
+        }
+
+        static u_int32_t init(const size_t &, InputValue &&position) {
+            return *position;
+        }
+    };
+}
 
 /**
  * @brief Class controls Data-Storage and Manipulation for ApproxLZ77-Algorithm
@@ -20,6 +38,8 @@ using namespace ApproxLZ77;
 template<typename Sequence> requires NumRange<Sequence>
 class BlockTablePar {
     using Item = typename Sequence::value_type;
+    using ShardedMap = sharded_map::ShardedMap<size_t, u_int32_t, ankerl::unordered_dense::map, ApproxLZ77Par::LeftMostOccurence>;
+
 private:
     const Sequence input_data;
     const u_int32_t in_size;
@@ -62,36 +82,33 @@ public:
      * @param p_unmarked_nodes The current unmarked nodes
      * @param p_cur_round The current round of the algorithm
     */
-    std::vector<u_int32_t> create_fp_table(std::unique_ptr<ankerl::unordered_dense::map<size_t, u_int32_t>> p_fp_table[], std::vector<BlockNode> &p_unmarked_nodes, size_t p_cur_round) {
-        std::vector<u_int32_t> ref_table(p_unmarked_nodes.size());
-
+    auto create_fp_table(std::unique_ptr<ankerl::unordered_dense::map<size_t, u_int32_t>> p_fp_table[], const BlockNodeRange auto& p_unmarked_nodes, size_t p_cur_round) {
         size_t block_size = in_ceil_size >> p_cur_round;
+        size_t nodes_size = p_unmarked_nodes.back().block_id * block_size + block_size > in_size ? p_unmarked_nodes.size() - 1 : p_unmarked_nodes.size();
 
-        std::vector<std::vector<std::pair<size_t, u_int32_t>>> fp_push_queues(ApproxLZ77Par::num_threads);
-        for(size_t i = 1; i < p_unmarked_nodes.size(); i++) {
-            auto &node = p_unmarked_nodes[i];
-            if(node.block_id * block_size + block_size > in_size) [[unlikely]] continue;
-            fp_push_queues[node.fp.val & (ApproxLZ77Par::num_threads - 1)].emplace_back(node.fp.val, i);
-        }
+        std::vector<u_int32_t> ref_table(p_unmarked_nodes.size());
         
-        #pragma omp parallel for
-        for(size_t i = 0; i < ApproxLZ77Par::num_threads; i++) {
-            ankerl::unordered_dense::map<size_t, u_int32_t> t_fp_table;
-
-            for(auto &[fp, node_id] : fp_push_queues[i]) {
-                if(auto match_it = t_fp_table.find(fp); match_it == t_fp_table.end()) {
-                    t_fp_table[fp] = node_id;
-                    ref_table[node_id] = p_unmarked_nodes[node_id].block_id * block_size;
-                }
-                else {
-                    ref_table[node_id] = ref_table[match_it->second];
-                }
+        #pragma omp parallel
+        {
+            #pragma omp for
+            for(size_t i = 1; i < nodes_size; i++) {
+                ref_table[i] = p_unmarked_nodes[i].block_id * block_size % ApproxLZ77Par::num_threads;
             }
-            p_fp_table[i] = std::make_unique<ankerl::unordered_dense::map<size_t, u_int32_t>>(std::move(t_fp_table));
+
+            ankerl::unordered_dense::map<size_t, u_int32_t> t_fp_table;
+            u_int32_t chunk_id = omp_get_thread_num();
+            for(size_t i = 0; i < nodes_size; i++) {
+                if(ref_table[i] != chunk_id) continue;
+                auto [match_it, insert_success] = t_fp_table.insert(std::pair(p_unmarked_nodes[i].fp.val, i));
+                ref_table[i] = p_unmarked_nodes[match_it->second].block_id * block_size;
+            }
+            p_fp_table[chunk_id] = std::make_unique<ankerl::unordered_dense::map<size_t, u_int32_t>>(std::move(t_fp_table));
         }
 
         return ref_table;
     }
+
+    std::vector<u_int32_t> create_fp_table(ShardedMap &p_fp_table, const std::vector<BlockNode> &p_unmarked_nodes, size_t p_cur_round);
 
     /**
      * @brief Create previous instance of unmarked nodes from current unmarked nodes
@@ -192,10 +209,12 @@ public:
      * @param p_fp_table Fingerprint Table of unmarked blocks
      */
     void preprocess_matches(u_int32_t p_pos, size_t p_fp, std::unique_ptr<ankerl::unordered_dense::map<size_t, u_int32_t>> p_fp_table[], std::vector<u_int32_t> &p_ref_table) {
-        auto &t_fp_table = *p_fp_table[p_fp & (ApproxLZ77Par::num_threads - 1)];
+        auto &t_fp_table = *p_fp_table[p_fp % ApproxLZ77Par::num_threads];
         auto match_it = t_fp_table.find(p_fp);
         if(match_it != t_fp_table.end() && p_ref_table[match_it->second] > p_pos) p_ref_table[match_it->second] = p_pos;
     }
+
+     void preprocess_matches(u_int32_t p_pos, size_t p_fp, ShardedMap &p_fp_table, std::vector<u_int32_t> &p_ref_table);
 
     /**
      * @brief Translate previuosly matched references into marked BlockNodes

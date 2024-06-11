@@ -163,19 +163,12 @@ public:
         std::vector<u_int32_t> ref_table(p_unmarked_nodes.size());
 
         size_t block_size = in_ceil_size >> p_cur_round;
+        size_t nodes_size = p_unmarked_nodes.back().block_id * block_size + block_size > in_size ? p_unmarked_nodes.size() - 1 : p_unmarked_nodes.size();
         
-        for(size_t i = 1; i < p_unmarked_nodes.size(); i++) {
+        for(size_t i = 1; i < nodes_size; i++) {
             auto &node = p_unmarked_nodes[i];
-            if(node.block_id * block_size + block_size > in_size) [[unlikely]] continue;
-
-            auto match_it = p_fp_table.find(node.fp.val);
-            if(match_it == p_fp_table.end()) {
-                p_fp_table[node.fp.val] = i;
-                ref_table[i] = node.block_id * block_size;
-            }
-            else {
-                ref_table[i] = ref_table[match_it->second];
-            }
+            auto [match_it, insert_success] = p_fp_table.insert({node.fp.val, i});
+            ref_table[i] = p_unmarked_nodes[match_it->second].block_id * block_size;
         }
         return ref_table;
     }
