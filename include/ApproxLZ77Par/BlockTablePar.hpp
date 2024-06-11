@@ -87,18 +87,19 @@ public:
         size_t nodes_size = p_unmarked_nodes.back().block_id * block_size + block_size > in_size ? p_unmarked_nodes.size() - 1 : p_unmarked_nodes.size();
 
         std::vector<u_int32_t> ref_table(p_unmarked_nodes.size());
+        std::vector<u_int8_t> flag_table(p_unmarked_nodes.size());
         
         #pragma omp parallel
         {
             #pragma omp for
             for(size_t i = 1; i < nodes_size; i++) {
-                ref_table[i] = p_unmarked_nodes[i].block_id * block_size % ApproxLZ77Par::num_threads;
+                flag_table[i] = p_unmarked_nodes[i].fp.val & ApproxLZ77Par::num_thread_mask;
             }
 
             ankerl::unordered_dense::map<size_t, u_int32_t> t_fp_table;
             u_int32_t chunk_id = omp_get_thread_num();
-            for(size_t i = 0; i < nodes_size; i++) {
-                if(ref_table[i] != chunk_id) continue;
+            for(size_t i = 1; i < nodes_size; i++) {
+                if(flag_table[i] != chunk_id) continue;
                 auto [match_it, insert_success] = t_fp_table.insert(std::pair(p_unmarked_nodes[i].fp.val, i));
                 ref_table[i] = p_unmarked_nodes[match_it->second].block_id * block_size;
             }
@@ -209,7 +210,7 @@ public:
      * @param p_fp_table Fingerprint Table of unmarked blocks
      */
     void preprocess_matches(u_int32_t p_pos, size_t p_fp, std::unique_ptr<ankerl::unordered_dense::map<size_t, u_int32_t>> p_fp_table[], std::vector<u_int32_t> &p_ref_table) {
-        auto &t_fp_table = *p_fp_table[p_fp % ApproxLZ77Par::num_threads];
+        auto &t_fp_table = *p_fp_table[p_fp & ApproxLZ77Par::num_thread_mask];
         auto match_it = t_fp_table.find(p_fp);
         if(match_it != t_fp_table.end() && p_ref_table[match_it->second] > p_pos) p_ref_table[match_it->second] = p_pos;
     }

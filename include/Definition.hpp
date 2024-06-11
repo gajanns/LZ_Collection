@@ -182,6 +182,7 @@ namespace ApproxLZ77 {
 
 namespace ApproxLZ77Par {
     const size_t num_threads = omp_get_max_threads();
+    const size_t num_thread_mask = std::bit_floor(num_threads) - 1;
 
     template<typename Sequence, typename Item = typename Sequence::value_type>
     std::pair<size_t, std::vector<std::span<const Item>>> chunks(const Sequence &p_data, size_t p_num_chunks, size_t p_overlap = 0) {
