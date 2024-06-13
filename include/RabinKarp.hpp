@@ -108,6 +108,13 @@ public:
         return {RabinKarpFingerprint(left_acc_base, left_hash), right_fp};
     }
 
+    /**
+     * @brief Generate Fingerprint by splitting off a part of the underlying Dataphrase
+     * 
+     * @param p_right Fingerprint of Dataphrase to split off
+     * @param p_cut_length Length of Dataphrase to split off
+     * @return RabinKarpFingerprint Fingerprint of remaining Dataphrase
+     */
     RabinKarpFingerprint split_off(RabinKarpFingerprint &p_right, size_t p_cut_length) const {
         if(p_cut_length == 0) return *this;
 
@@ -125,6 +132,12 @@ public:
         return RabinKarpFingerprint(left_acc_base, left_hash);
     }
 
+    /**
+     * @brief Calculate Modular Inverse of base^p_exp
+     * 
+     * @param p_exp Exponent
+     * @return size_t Modular Inverse of base^p_exp
+     */
     static size_t calc_inv_acc_base(size_t p_exp){
         __uint128_t inv_acc_base = 1, inv_base = base_inverse;
         while(p_exp > 0) {
@@ -136,6 +149,7 @@ public:
         }
         return mod(inv_acc_base, prime);
     }
+    
     /**
      * @brief Slide Dataphrase to the right
      * 

@@ -125,12 +125,13 @@ private:
         
         if(p_block_node->block_id * 2 * block_size + block_size < in_size) {
             auto right_fp = p_round <= precomputed_round ? extract_precomputed_fp(p_round, p_block_node->block_id*2+1) : 
-                                            RabinKarpFingerprint(std::span<const Item>(block_start_it + block_size, block_end_it));
+                            RabinKarpFingerprint(std::span<const Item>(block_start_it + block_size, block_end_it));
             auto left_fp = p_block_node->fp.split_off(right_fp, block_end_it - block_start_it - block_size);    
             return std::pair<BlockNode, BlockNode>{BlockNode(p_block_node->block_id*2, 0, left_fp), BlockNode(p_block_node->block_id*2+1, 0, right_fp)};
         }
         else {
-            auto left_fp = p_round <= precomputed_round ? extract_precomputed_fp(p_round, p_block_node->block_id*2) : RabinKarpFingerprint(std::span<const Item>(block_start_it, block_end_it));
+            auto left_fp =  p_round <= precomputed_round ? extract_precomputed_fp(p_round, p_block_node->block_id*2) : 
+                            RabinKarpFingerprint(std::span<const Item>(block_start_it, block_end_it));
             return std::pair<BlockNode, BlockNode>{BlockNode(p_block_node->block_id*2, 0, left_fp), BlockNode()};
         }
     }
@@ -161,6 +162,11 @@ public:
         return unmarked_nodes;
     }
 
+    /**
+     * @brief Precompute Fingerprint of blocks for a given round
+     * 
+     * @param p_round The round to precompute the fingerprints for
+    */
     void precompute_fingerprint(size_t p_round) {
         precomputed_round = p_round;
         const size_t block_size = in_ceil_size >> p_round;
