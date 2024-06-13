@@ -44,12 +44,88 @@ private:
     const Sequence input_data;
     const u_int32_t in_size;
     const u_int32_t in_ceil_size;
+    size_t precomputed_round = 0;
+    std::vector<RabinKarpFingerprint> precomputed_fps;
 
-    BlockTableBasic<Sequence> block_table_basic;
+    RabinKarpFingerprint extract_precomputed_fp(size_t p_round, size_t p_block_id) {
+        if(p_round == precomputed_round) return precomputed_fps[p_block_id];
+
+        size_t start_block_id = p_block_id << (precomputed_round - p_round);
+        size_t num_chunk = 1 << (precomputed_round - p_round);
+        size_t end_block_id = std::min(start_block_id + num_chunk, precomputed_fps.size());
+
+        return std::accumulate(precomputed_fps.begin() + start_block_id, precomputed_fps.begin() + end_block_id, RabinKarpFingerprint(), 
+        [](RabinKarpFingerprint p_fp, const RabinKarpFingerprint &p_fp_right) {
+            return p_fp + p_fp_right;
+        });
+    }
+
+    auto split_block_node(const BlockNode *p_block_node, size_t p_round) {
+        const size_t block_size = in_ceil_size >> p_round;
+        const auto block_start_it = input_data.begin() + p_block_node->block_id * 2 * block_size;
+        const auto block_end_it = (p_block_node->block_id + 1) * 2 * block_size <= in_size ? input_data.begin() + (p_block_node->block_id + 1) * 2 * block_size 
+                            : input_data.end();
+        
+        if(p_block_node->block_id * 2 * block_size + block_size < in_size) {
+            RabinKarpFingerprint left_fp, right_fp;
+            if(p_round <= precomputed_round) {
+                left_fp = extract_precomputed_fp(p_round, p_block_node->block_id*2);
+                right_fp = extract_precomputed_fp(p_round, p_block_node->block_id*2+1);
+            }
+            else {
+                auto [l, r] = p_block_node->fp.split(std::span<const Item>(block_start_it, block_end_it), block_size);
+                left_fp = l;
+                right_fp = r;
+            }            
+            return std::pair<BlockNode, BlockNode>{BlockNode(p_block_node->block_id*2, 0, left_fp), BlockNode(p_block_node->block_id*2+1, 0, right_fp)};
+        }
+        else {
+            auto left_fp = p_round <= precomputed_round ? extract_precomputed_fp(p_round, p_block_node->block_id*2) : RabinKarpFingerprint(std::span<const Item>(block_start_it, block_end_it));
+            return std::pair<BlockNode, BlockNode>{BlockNode(p_block_node->block_id*2, 0, left_fp), BlockNode()};
+        }
+    }
+
+    auto next_nodes_seq(const BlockNodeRange auto &p_prev_nodes, std::vector<CherryNode> &p_chain_ids, size_t p_prev_round) {
+        const size_t prev_block_size = in_ceil_size >> p_prev_round;
+        const size_t cur_block_size = prev_block_size >> 1;
+        std::vector<BlockNode> next_unmarked_nodes;
+
+        for(size_t i = 0; i < p_prev_nodes.size(); i += 2) {
+            const BlockNode* block_node = &p_prev_nodes[i], *sibling_node = (i < p_prev_nodes.size()-1) ? &p_prev_nodes[i+1] : nullptr;
+
+            const bool is_marked = block_node->chain_info & prev_block_size;
+            const bool is_sibling_marked = sibling_node && sibling_node->chain_info & prev_block_size;
+            
+            if(is_marked && (!sibling_node || is_sibling_marked)) {
+                p_chain_ids.emplace_back(block_node->block_id * prev_block_size + prev_block_size - 1, block_node->chain_info);
+                if(sibling_node) [[likely]] p_chain_ids.emplace_back(sibling_node->block_id * prev_block_size, sibling_node->chain_info);
+                continue;
+            }
+
+            if(!is_marked) {
+                auto [left_node, right_node] = split_block_node(block_node, p_prev_round + 1);
+                left_node.chain_info = block_node->chain_info;
+                if(sibling_node && is_sibling_marked) right_node.chain_info = sibling_node->chain_info;
+                next_unmarked_nodes.push_back(left_node);
+                if(right_node.is_valid()) [[likely]] next_unmarked_nodes.push_back(right_node);
+            }
+
+            if(sibling_node && !is_sibling_marked) {
+                auto [left_node, right_node] = split_block_node(sibling_node, p_prev_round + 1);
+                if(is_marked) left_node.chain_info = block_node->chain_info;
+                next_unmarked_nodes.push_back(left_node);
+                if(right_node.is_valid()) [[likely]] {
+                    right_node.chain_info = sibling_node->chain_info;
+                    next_unmarked_nodes.push_back(right_node);
+                }
+            }
+        }
+        return next_unmarked_nodes;        
+    }
 
 public:
 
-    BlockTablePar(const Sequence &p_input_data) : input_data(p_input_data), in_size(input_data.size()), in_ceil_size(std::bit_ceil(in_size)), block_table_basic(p_input_data) {}
+    BlockTablePar(const Sequence &p_input_data) : input_data(p_input_data), in_size(input_data.size()), in_ceil_size(std::bit_ceil(in_size)) {}
 
     /**
      * @brief Initializes Sequence of unmarked Blocknodes for the initial round
@@ -65,14 +141,28 @@ public:
         for(size_t i = 0; i < num_blocks; i++) {            
             unmarked_nodes[i].block_id = i;
             unmarked_nodes[i].chain_info = 0;
-            if(i == num_blocks - 1) [[unlikely]] {
-                unmarked_nodes[i].fp = RabinKarpFingerprint(std::span<const Item>(input_data.begin() + i*block_size, input_data.end()));
-            }
-            else [[likely]] {
-                unmarked_nodes[i].fp = RabinKarpFingerprint(std::span<const Item>(input_data.data() + i*block_size, block_size));
-            }
+            unmarked_nodes[i].fp = [&](){
+                if(precomputed_round >= p_init_round) return extract_precomputed_fp(p_init_round, i);
+                if(i == num_blocks - 1) [[unlikely]] return RabinKarpFingerprint(std::span<const Item>(input_data.begin() + i*block_size, input_data.end()));
+                return RabinKarpFingerprint(std::span<const Item>(input_data.data() + i*block_size, block_size));
+            }();
         }
         return unmarked_nodes;
+    }
+
+    void precompute_fingerprint(size_t p_round) {
+        precomputed_round = p_round;
+        const size_t block_size = in_ceil_size >> p_round;
+        const size_t num_blocks = (in_size + block_size - 1) / block_size;
+
+        precomputed_fps.resize(num_blocks);
+
+        #pragma omp parallel for
+        for(size_t i = 0; i < num_blocks; i++) {
+            const size_t start = i * block_size;
+            const size_t end = std::min(start + block_size, input_data.size());
+            precomputed_fps[i] = RabinKarpFingerprint(std::span(input_data.begin() + start, input_data.begin() + end));
+        }
     }
 
     /**
@@ -195,7 +285,7 @@ public:
             size_t start_pos = chunk_id * nodes_per_chunk;
             size_t end_pos = std::min(start_pos + nodes_per_chunk, p_prev_nodes.size());
 
-            auto tmp = block_table_basic.next_nodes(std::span<const BlockNode>(p_prev_nodes.begin() + start_pos, p_prev_nodes.begin() + end_pos), chain, p_prev_round);
+            auto tmp = next_nodes_seq(std::span<const BlockNode>(p_prev_nodes.begin() + start_pos, p_prev_nodes.begin() + end_pos), chain, p_prev_round);
             std::copy(tmp.begin(), tmp.end(), next_unmarked_nodes.begin() + node_sizes[chunk_id]);
             std::copy(chain.begin(), chain.end(), p_chain_ids.begin() + chain_init_size + chain_sizes[chunk_id]);
         }

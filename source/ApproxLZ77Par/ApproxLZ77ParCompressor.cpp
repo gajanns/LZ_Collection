@@ -166,10 +166,11 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
 
     
     // Execute Algorithm
+    block_table.precompute_fingerprint(max_round - 3);
     init_nodes(ApproxLZ77::dynamic_init);
     while(round <= max_round) {
-        process_round();
-        round++;
+        if(process_round()) round++;
+        else break;
     }
     block_table.populate_unmarked_chain(unmarked_nodes, chain_ids, round);
     push_factors();
