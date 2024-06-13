@@ -15,7 +15,7 @@ using namespace sharded_map;
 
 void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<ApproxLZ77::factor_id> &p_out) {
 
-    std::span<const char8_t> input_span = p_in.slice_ref(0, p_in.size());
+    const std::span<const char8_t> input_span = p_in.slice_ref(0, p_in.size());
     if(input_span.size() == 0) return;
 
     BlockTablePar block_table(input_span);
@@ -30,9 +30,9 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
     size_t round = min_round;
 
     auto match_nodes = [&](size_t p_round, bool p_capture_refs = true) {
-        size_t block_size = in_size >> p_round;        
-        size_t data_per_chunk = (input_span.size() - block_size + num_threads - 1) / num_threads;
-        size_t num_chunks = (input_span.size() - block_size + data_per_chunk - 1) / data_per_chunk;
+        const size_t block_size = in_size >> p_round;        
+        const size_t data_per_chunk = (input_span.size() - block_size + num_threads - 1) / num_threads;
+        const size_t num_chunks = (input_span.size() - block_size + data_per_chunk - 1) / data_per_chunk;
 
         //ShardedMap<size_t, u_int32_t, ankerl::unordered_dense::map, LeftMostOccurence> fp_table(num_threads, 128);
         std::unique_ptr<ankerl::unordered_dense::map<size_t, u_int32_t>> fp_table[num_threads];
@@ -40,8 +40,8 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
 
         #pragma omp parallel for
         for(size_t chunk_id = 0; chunk_id < num_chunks; chunk_id++) {
-            size_t start_pos = chunk_id * data_per_chunk;
-            size_t end_pos = std::min(start_pos + data_per_chunk, input_span.size() - block_size);
+            const size_t start_pos = chunk_id * data_per_chunk;
+            const size_t end_pos = std::min(start_pos + data_per_chunk, input_span.size() - block_size);
 
             RabinKarpFingerprint test_fp = [&]() {
                 if(chunk_id == 0) return unmarked_nodes[0].fp;
@@ -59,12 +59,10 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
 
         if(p_capture_refs) block_table.postprocess_matches(unmarked_nodes, ref_table, p_round, marked_refs);
         else block_table.postprocess_matches(unmarked_nodes, ref_table, p_round);
-
         return 1;
     };
 
     auto init_nodes = [&](bool dynamic_init) {
-       
         if(dynamic_init) {
             const size_t probe_round = (min_round + max_round) / 2;
 
@@ -105,7 +103,7 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
 
     auto extract_factor_log_sizes = [&]() {
         std::vector<u_int8_t> factor_log_sizes;
-        size_t chains_per_chunk = (chain_ids.size() + ApproxLZ77Par::num_threads - 1) / ApproxLZ77Par::num_threads;
+        const size_t chains_per_chunk = (chain_ids.size() + ApproxLZ77Par::num_threads - 1) / ApproxLZ77Par::num_threads;
 
         auto [chunk_size, chunked_ids] = chunks(chain_ids, ApproxLZ77Par::num_threads);
 
@@ -117,8 +115,8 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
             bool is_chain_up = (chunk_size * chunk_id) % 2;
             for(auto cherry_node : chunk) {
                 int bit_pos = is_chain_up ? min_block_log_size : max_block_log_size;
-                int bit_dir = is_chain_up ? 1 : -1;
-                int bit_end = is_chain_up ? max_block_log_size + 1 : min_block_log_size - 1;
+                const int bit_dir = is_chain_up ? 1 : -1;
+                const int bit_end = is_chain_up ? max_block_log_size + 1 : min_block_log_size - 1;
 
                 while(bit_pos != bit_end) {
                     while(bit_pos != bit_end && !(cherry_node.chain_info & (1 << bit_pos)) ) {
@@ -149,7 +147,7 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
         std::sort(std::execution::par, marked_refs.begin(), marked_refs.end());
         std::sort(std::execution::par, chain_ids.begin(), chain_ids.end());
 
-        auto factor_log_sizes = extract_factor_log_sizes();
+        const auto factor_log_sizes = extract_factor_log_sizes();
 
         for(auto [it_ref, cur_pos] = std::pair{marked_refs.begin(), size_t{0}}; auto log_size : factor_log_sizes) {
             if(it_ref != marked_refs.end() && it_ref->block_position == cur_pos) {
@@ -170,8 +168,8 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
     // Execute Algorithm
     init_nodes(ApproxLZ77::dynamic_init);
     while(round <= max_round) {
-        if(process_round()) round++;
-        else break;
+        process_round();
+        round++;
     }
     block_table.populate_unmarked_chain(unmarked_nodes, chain_ids, round);
     push_factors();

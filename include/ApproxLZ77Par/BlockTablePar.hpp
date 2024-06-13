@@ -57,8 +57,8 @@ public:
      * @param p_init_round The initial round of the algorithm
     */
     auto init_nodes(size_t p_init_round) {
-        size_t block_size = in_ceil_size >> p_init_round;
-        size_t num_blocks = (in_size + block_size - 1) / block_size;
+        const size_t block_size = in_ceil_size >> p_init_round;
+        const size_t num_blocks = (in_size + block_size - 1) / block_size;
         auto unmarked_nodes = std::vector<BlockNode>(num_blocks);
 
         #pragma omp parallel for
@@ -83,8 +83,8 @@ public:
      * @param p_cur_round The current round of the algorithm
     */
     auto create_fp_table(std::unique_ptr<ankerl::unordered_dense::map<size_t, u_int32_t>> p_fp_table[], const BlockNodeRange auto& p_unmarked_nodes, size_t p_cur_round) {
-        size_t block_size = in_ceil_size >> p_cur_round;
-        size_t nodes_size = p_unmarked_nodes.back().block_id * block_size + block_size > in_size ? p_unmarked_nodes.size() - 1 : p_unmarked_nodes.size();
+        const size_t block_size = in_ceil_size >> p_cur_round;
+        const size_t nodes_size = p_unmarked_nodes.back().block_id * block_size + block_size > in_size ? p_unmarked_nodes.size() - 1 : p_unmarked_nodes.size();
 
         std::vector<u_int32_t> ref_table(p_unmarked_nodes.size());
         std::vector<u_int8_t> flag_table(p_unmarked_nodes.size());
@@ -118,7 +118,7 @@ public:
      * @param p_diff_round Numer of rounds to move back
     */
     void previous_nodes(std::vector<BlockNode> &p_cur_nodes, size_t p_diff_round) {
-        size_t num_nodes_pack = 1 << p_diff_round;
+        const size_t num_nodes_pack = 1 << p_diff_round;
         
         #pragma omp parallel for ordered
         for(size_t i = 0; i < p_cur_nodes.size(); i += num_nodes_pack) {
@@ -127,7 +127,7 @@ public:
                 return p_fp + p_node_right.fp;
             });
 
-            int32_t new_block_id = i / num_nodes_pack;
+            u_int32_t new_block_id = i / num_nodes_pack;
             #pragma omp ordered
             p_cur_nodes[new_block_id] = { new_block_id, 0, fp };
             
@@ -225,7 +225,7 @@ public:
      * @param p_round Current Round
      */
     void postprocess_matches(std::vector<BlockNode> &p_unmarked_nodes, std::vector<u_int32_t> &p_ref_table, size_t p_round) {
-        size_t block_size = in_ceil_size >> p_round;
+        const size_t block_size = in_ceil_size >> p_round;
 
         #pragma omp parallel for
         for(size_t i = 1; i < p_unmarked_nodes.size(); i++) {
@@ -244,15 +244,15 @@ public:
      * @param p_marked_refs Sequence of raw reference factors
      */
     void postprocess_matches(std::vector<BlockNode> &p_unmarked_nodes, std::vector<u_int32_t> &p_ref_table, size_t p_round, std::vector<BlockRef> &p_marked_refs) {
-        size_t block_size = in_ceil_size >> p_round;
+        const size_t block_size = in_ceil_size >> p_round;
  
-        size_t nodes_per_chunk = (p_unmarked_nodes.size() + ApproxLZ77Par::num_threads - 1) / ApproxLZ77Par::num_threads;
-        size_t num_chunk = (p_unmarked_nodes.size() + nodes_per_chunk - 1) / nodes_per_chunk;
+        const size_t nodes_per_chunk = (p_unmarked_nodes.size() + ApproxLZ77Par::num_threads - 1) / ApproxLZ77Par::num_threads;
+        const size_t num_chunk = (p_unmarked_nodes.size() + nodes_per_chunk - 1) / nodes_per_chunk;
 
         #pragma omp parallel for
         for(size_t chunk_id = 0; chunk_id < num_chunk; chunk_id++) {
-            size_t start_pos = chunk_id * nodes_per_chunk;
-            size_t end_pos = std::min(start_pos + nodes_per_chunk, p_unmarked_nodes.size());
+            const size_t start_pos = chunk_id * nodes_per_chunk;
+            const size_t end_pos = std::min(start_pos + nodes_per_chunk, p_unmarked_nodes.size());
 
             std::vector<BlockRef> tmp_refs;
             for(size_t i = start_pos; i < end_pos; i++) {
@@ -277,8 +277,8 @@ public:
      * @param p_round The current/last round of the algorithm
     */
     void populate_unmarked_chain(std::vector<BlockNode> &p_unmarked_nodes, std::vector<CherryNode> &p_chain_ids, size_t p_round) {
-        u_int32_t block_size = in_ceil_size >> p_round;
-        u_int32_t init_size = p_chain_ids.size();
+        const u_int32_t block_size = in_ceil_size >> p_round;
+        const u_int32_t init_size = p_chain_ids.size();
         p_chain_ids.resize(init_size + p_unmarked_nodes.size());
         
         #pragma omp parallel for

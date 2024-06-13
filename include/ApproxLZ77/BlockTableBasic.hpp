@@ -23,7 +23,7 @@ namespace ApproxLZ77 {
         RabinKarpFingerprint fp;
         
         BlockNode() = default;
-        BlockNode(int32_t p_block_id, u_int32_t p_chain_info, RabinKarpFingerprint p_fp): block_id(p_block_id), chain_info(p_chain_info), fp(p_fp){}
+        BlockNode(u_int32_t p_block_id, u_int32_t p_chain_info, RabinKarpFingerprint p_fp): block_id(p_block_id), chain_info(p_chain_info), fp(p_fp){}
 
         bool operator==(const BlockNode &p_rhs) const {
             return block_id == p_rhs.block_id && chain_info == p_rhs.chain_info && fp == p_rhs.fp;
@@ -58,10 +58,6 @@ namespace ApproxLZ77 {
             return block_position == p_rhs.block_position && ref_position == p_rhs.ref_position;
         }
 
-        friend auto operator<=>(const BlockRef &p_lhs, const BlockRef &p_rhs) {
-            return p_lhs.block_position <=> p_rhs.block_position;
-        }
-
         bool operator<(const BlockRef &p_rhs) const {
             return block_position < p_rhs.block_position;
         }
@@ -83,10 +79,6 @@ namespace ApproxLZ77 {
             return block_position == p_rhs.block_position && chain_info == p_rhs.chain_info;
         }
 
-        friend auto operator<=>(const CherryNode &p_lhs, const CherryNode &p_rhs) {
-            return p_lhs.block_position <=> p_rhs.block_position;
-        }
-
         bool operator<(const CherryNode &p_rhs) const {
             return block_position < p_rhs.block_position;
         }
@@ -106,13 +98,13 @@ template<typename Sequence> requires NumRange<Sequence>
 class BlockTableBasic {
     using Item = typename Sequence::value_type;
 private:
-    Sequence input_data;
+    const Sequence input_data;
     const u_int32_t in_size;
     const u_int32_t in_ceil_size;
 
     auto split_block_node(const BlockNode *p_block_node, size_t block_size) {
-        auto block_start_it = input_data.begin() + p_block_node->block_id * 2 * block_size;
-        auto block_end_it = (p_block_node->block_id + 1) * 2 * block_size <= in_size ? input_data.begin() + (p_block_node->block_id + 1) * 2 * block_size 
+        const auto block_start_it = input_data.begin() + p_block_node->block_id * 2 * block_size;
+        const auto block_end_it = (p_block_node->block_id + 1) * 2 * block_size <= in_size ? input_data.begin() + (p_block_node->block_id + 1) * 2 * block_size 
                             : input_data.end();
         
         if(p_block_node->block_id * 2 * block_size + block_size < in_size) {
@@ -135,8 +127,8 @@ public:
      * @param p_init_round The initial round of the algorithm
     */
     auto init_nodes(size_t p_init_round) {
-        size_t block_size = in_ceil_size >> p_init_round;
-        size_t num_blocks = (in_size + block_size - 1) / block_size;
+        const size_t block_size = in_ceil_size >> p_init_round;
+        const size_t num_blocks = (in_size + block_size - 1) / block_size;
         auto unmarked_nodes = std::vector<BlockNode>(num_blocks);
 
         for(size_t i = 0; i < num_blocks; i++) {            
@@ -162,12 +154,11 @@ public:
     std::vector<u_int32_t> create_fp_table(ankerl::unordered_dense::map<size_t, u_int32_t> &p_fp_table, std::vector<BlockNode> &p_unmarked_nodes, size_t p_cur_round) {
         std::vector<u_int32_t> ref_table(p_unmarked_nodes.size());
 
-        size_t block_size = in_ceil_size >> p_cur_round;
-        size_t nodes_size = p_unmarked_nodes.back().block_id * block_size + block_size > in_size ? p_unmarked_nodes.size() - 1 : p_unmarked_nodes.size();
+        const size_t block_size = in_ceil_size >> p_cur_round;
+        const size_t nodes_size = p_unmarked_nodes.back().block_id * block_size + block_size > in_size ? p_unmarked_nodes.size() - 1 : p_unmarked_nodes.size();
         
         for(size_t i = 1; i < nodes_size; i++) {
-            auto &node = p_unmarked_nodes[i];
-            auto [match_it, insert_success] = p_fp_table.insert({node.fp.val, i});
+            auto [match_it, insert_success] = p_fp_table.insert({p_unmarked_nodes[i].fp.val, i});
             ref_table[i] = p_unmarked_nodes[match_it->second].block_id * block_size;
         }
         return ref_table;
@@ -180,17 +171,15 @@ public:
      * @param p_diff_round Numer of rounds to move back
     */
     void previous_nodes(std::vector<BlockNode> &p_cur_nodes, size_t p_diff_round) {
-        size_t num_nodes_pack = 1 << p_diff_round;
+        const size_t num_nodes_pack = 1 << p_diff_round;
         
         for(size_t i = 0; i < p_cur_nodes.size(); i += num_nodes_pack) {
             auto fp = std::accumulate(p_cur_nodes.begin() + i, p_cur_nodes.begin() + std::min(i + num_nodes_pack, p_cur_nodes.size()), RabinKarpFingerprint(), 
             [](RabinKarpFingerprint p_fp, const BlockNode &p_node_right) {
                 return p_fp + p_node_right.fp;
             });
-
-            int32_t new_block_id = i / num_nodes_pack;
+            u_int32_t new_block_id = i / num_nodes_pack;
             p_cur_nodes[new_block_id] = { new_block_id, 0, fp };
-            
         }
         p_cur_nodes.resize((p_cur_nodes.size() + num_nodes_pack - 1) / num_nodes_pack);
     }
@@ -203,15 +192,15 @@ public:
      * @param p_prev_round The previous round of the algorithm
     */
     auto next_nodes(const BlockNodeRange auto &p_prev_nodes, std::vector<CherryNode> &p_chain_ids, size_t p_prev_round) {
-        size_t prev_block_size = in_ceil_size >> p_prev_round;
-        size_t cur_block_size = prev_block_size >> 1;
+        const size_t prev_block_size = in_ceil_size >> p_prev_round;
+        const size_t cur_block_size = prev_block_size >> 1;
         std::vector<BlockNode> next_unmarked_nodes;
 
         for(size_t i = 0; i < p_prev_nodes.size(); i += 2) {
             const BlockNode* block_node = &p_prev_nodes[i], *sibling_node = (i < p_prev_nodes.size()-1) ? &p_prev_nodes[i+1] : nullptr;
 
-            bool is_marked = block_node->chain_info & prev_block_size;
-            bool is_sibling_marked = sibling_node && sibling_node->chain_info & prev_block_size;
+            const bool is_marked = block_node->chain_info & prev_block_size;
+            const bool is_sibling_marked = sibling_node && sibling_node->chain_info & prev_block_size;
             
             if(is_marked && (!sibling_node || is_sibling_marked)) {
                 p_chain_ids.emplace_back(block_node->block_id * prev_block_size + prev_block_size - 1, block_node->chain_info);
@@ -261,7 +250,7 @@ public:
      * @param p_marked_refs Sequence of raw reference factors
      */
     void postprocess_matches(std::vector<BlockNode> &p_unmarked_nodes, std::vector<u_int32_t> &p_ref_table, size_t p_round, std::vector<BlockRef> *p_marked_refs=nullptr) {
-        size_t block_size = in_ceil_size >> p_round;
+        const size_t block_size = in_ceil_size >> p_round;
         for(size_t i = 1; i < p_unmarked_nodes.size(); i++) {
             auto &node = p_unmarked_nodes[i];
             if(node.block_id * block_size + block_size > in_size) [[unlikely]] continue;
@@ -280,7 +269,7 @@ public:
      * @param p_round The current/last round of the algorithm
     */
     void populate_unmarked_chain(std::vector<BlockNode> &p_unmarked_nodes, std::vector<CherryNode> &p_chain_ids, size_t p_round) {
-        u_int32_t block_size = in_ceil_size >> p_round;
+        const u_int32_t block_size = in_ceil_size >> p_round;
         for(auto &node : p_unmarked_nodes) {
             u_int32_t tmp_block_size = std::min(block_size, in_size - node.block_id * block_size + 1);
             p_chain_ids.emplace_back(node.block_id * block_size, node.chain_info | tmp_block_size);
