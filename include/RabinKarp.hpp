@@ -13,7 +13,9 @@
 #include "StreamView.hpp"
 #include "Definition.hpp"
 
-    
+static size_t cur_exp = 0;
+static size_t cur_inv_base = 1;
+
 /**
  * @brief Class covers generation and manipulation of Rabin-Karp-Hashfunction 
  * H(i,j)=Sum(k=i,j){S[k]*base^(j-k)}%prime
@@ -106,6 +108,34 @@ public:
         return {RabinKarpFingerprint(left_acc_base, left_hash), right_fp};
     }
 
+    RabinKarpFingerprint split_off(RabinKarpFingerprint &p_right, size_t p_cut_length) const {
+        if(p_cut_length == 0) return *this;
+
+        __uint128_t inv_acc_base;
+        if(cur_exp == p_cut_length){
+            inv_acc_base = cur_inv_base;
+        }
+        else{
+            cur_inv_base = calc_inv_acc_base(p_cut_length);
+            cur_exp = p_cut_length;
+            inv_acc_base = cur_inv_base;
+        }
+        size_t left_hash = mod((static_cast<__uint128_t>(val) + prime - p_right.val) * inv_acc_base, prime);
+        size_t left_acc_base = mod(static_cast<__uint128_t>(m_acc_base) * inv_acc_base, prime);
+        return RabinKarpFingerprint(left_acc_base, left_hash);
+    }
+
+    static size_t calc_inv_acc_base(size_t p_exp){
+        __uint128_t inv_acc_base = 1, inv_base = base_inverse;
+        while(p_exp > 0) {
+            if(p_exp%2) {
+                inv_acc_base = mod(inv_acc_base * inv_base, prime);
+            }
+            p_exp >>= 1;
+            inv_base = mod(inv_base * inv_base, prime);
+        }
+        return mod(inv_acc_base, prime);
+    }
     /**
      * @brief Slide Dataphrase to the right
      * 

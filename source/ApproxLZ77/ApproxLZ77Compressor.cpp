@@ -132,7 +132,7 @@ void ApproxLZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<Appr
 
     
     // Execute Algorithm
-    block_table.precompute_fingerprint(max_round - 3);
+    if (max_round - min_round > 6) block_table.precompute_fingerprint(max_round - 3);
     init_nodes(ApproxLZ77::dynamic_init);
     while(round <= max_round) {
         if(process_round()) round++;
