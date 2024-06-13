@@ -13,8 +13,6 @@
 #include "StreamView.hpp"
 #include "Definition.hpp"
 
-static size_t cur_exp = 0;
-static size_t cur_inv_base = 1;
 
 /**
  * @brief Class covers generation and manipulation of Rabin-Karp-Hashfunction 
@@ -35,7 +33,9 @@ public:
     static const size_t base_inverse = 1717389705276502644;
     static const size_t prime_exp = 61;
     static const size_t prime = 2305843009213693951; // 2^61-1
-
+    static inline size_t cur_exp = 0;
+    static inline size_t cur_inv_base = 1;
+    
     RabinKarpFingerprint() = default;
     RabinKarpFingerprint(const NumRange auto& p_data): val(calc_hash_value(p_data, &m_acc_base)){}
     RabinKarpFingerprint(const size_t p_acc_base, const size_t p_hash_value):m_acc_base(p_acc_base),val(p_hash_value){}
@@ -123,10 +123,9 @@ public:
             inv_acc_base = cur_inv_base;
         }
         else{
-            cur_inv_base = calc_inv_acc_base(p_cut_length);
-            cur_exp = p_cut_length;
-            inv_acc_base = cur_inv_base;
+            inv_acc_base = calc_inv_acc_base(p_cut_length);
         }
+
         size_t left_hash = mod((static_cast<__uint128_t>(val) + prime - p_right.val) * inv_acc_base, prime);
         size_t left_acc_base = mod(static_cast<__uint128_t>(m_acc_base) * inv_acc_base, prime);
         return RabinKarpFingerprint(left_acc_base, left_hash);

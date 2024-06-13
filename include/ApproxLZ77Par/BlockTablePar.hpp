@@ -84,6 +84,9 @@ private:
         const size_t cur_block_size = prev_block_size >> 1;
         std::vector<BlockNode> next_unmarked_nodes;
 
+        RabinKarpFingerprint::cur_exp = cur_block_size;
+        RabinKarpFingerprint::cur_inv_base = RabinKarpFingerprint::calc_inv_acc_base(cur_block_size);
+
         for(size_t i = 0; i < p_prev_nodes.size(); i += 2) {
             const BlockNode* block_node = &p_prev_nodes[i], *sibling_node = (i < p_prev_nodes.size()-1) ? &p_prev_nodes[i+1] : nullptr;
 
