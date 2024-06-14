@@ -79,13 +79,14 @@ private:
         }
     }
 
-    auto next_nodes_seq(const BlockNodeRange auto &p_prev_nodes, std::vector<CherryNode> &p_chain_ids, size_t p_prev_round) {
+    auto next_nodes_seq(const BlockNodeRange auto &p_prev_nodes, std::span<BlockNode> &p_new_nodes, std::span<CherryNode> &p_chain_ids, size_t p_prev_round) {
         const size_t prev_block_size = in_ceil_size >> p_prev_round;
         const size_t cur_block_size = prev_block_size >> 1;
-        std::vector<BlockNode> next_unmarked_nodes;
 
         RabinKarpFingerprint::cur_exp = cur_block_size;
         RabinKarpFingerprint::cur_inv_base = RabinKarpFingerprint::calc_inv_acc_base(cur_block_size);
+        
+        size_t node_id = 0, chain_id = 0;
 
         for(size_t i = 0; i < p_prev_nodes.size(); i += 2) {
             const BlockNode* block_node = &p_prev_nodes[i], *sibling_node = (i < p_prev_nodes.size()-1) ? &p_prev_nodes[i+1] : nullptr;
@@ -94,8 +95,8 @@ private:
             const bool is_sibling_marked = sibling_node && sibling_node->chain_info & prev_block_size;
             
             if(is_marked && (!sibling_node || is_sibling_marked)) {
-                p_chain_ids.emplace_back(block_node->block_id * prev_block_size + prev_block_size - 1, block_node->chain_info);
-                if(sibling_node) [[likely]] p_chain_ids.emplace_back(sibling_node->block_id * prev_block_size, sibling_node->chain_info);
+                p_chain_ids[chain_id++] = CherryNode(block_node->block_id * prev_block_size + prev_block_size - 1, block_node->chain_info);
+                if(sibling_node) [[likely]] p_chain_ids[chain_id++] = CherryNode(sibling_node->block_id * prev_block_size, sibling_node->chain_info);
                 continue;
             }
 
@@ -103,21 +104,20 @@ private:
                 auto [left_node, right_node] = split_block_node(block_node, p_prev_round + 1);
                 left_node.chain_info = block_node->chain_info;
                 if(sibling_node && is_sibling_marked) right_node.chain_info = sibling_node->chain_info;
-                next_unmarked_nodes.push_back(left_node);
-                if(right_node.is_valid()) [[likely]] next_unmarked_nodes.push_back(right_node);
+                p_new_nodes[node_id++] = left_node;
+                if(right_node.is_valid()) [[likely]] p_new_nodes[node_id++] = right_node;
             }
 
             if(sibling_node && !is_sibling_marked) {
                 auto [left_node, right_node] = split_block_node(sibling_node, p_prev_round + 1);
                 if(is_marked) left_node.chain_info = block_node->chain_info;
-                next_unmarked_nodes.push_back(left_node);
+                p_new_nodes[node_id++] = left_node;
                 if(right_node.is_valid()) [[likely]] {
                     right_node.chain_info = sibling_node->chain_info;
-                    next_unmarked_nodes.push_back(right_node);
+                    p_new_nodes[node_id++] = right_node;
                 }
             }
-        }
-        return next_unmarked_nodes;        
+        }      
     }
 
 public:
@@ -281,15 +281,14 @@ public:
 
         #pragma omp parallel for
         for(size_t chunk_id = 0; chunk_id < num_chunks; chunk_id++)
-        {
-            std::vector<CherryNode> chain;
-            chain.reserve(chain_sizes[chunk_id + 1] - chain_sizes[chunk_id]);            
+        {            
             size_t start_pos = chunk_id * nodes_per_chunk;
             size_t end_pos = std::min(start_pos + nodes_per_chunk, p_prev_nodes.size());
 
-            auto tmp = next_nodes_seq(std::span<const BlockNode>(p_prev_nodes.begin() + start_pos, p_prev_nodes.begin() + end_pos), chain, p_prev_round);
-            std::copy(tmp.begin(), tmp.end(), next_unmarked_nodes.begin() + node_sizes[chunk_id]);
-            std::copy(chain.begin(), chain.end(), p_chain_ids.begin() + chain_init_size + chain_sizes[chunk_id]);
+            std::span<BlockNode> nodes_space(next_unmarked_nodes.begin() + node_sizes[chunk_id], next_unmarked_nodes.begin() + node_sizes[chunk_id + 1]);
+            std::span<CherryNode> chain_space(p_chain_ids.begin() + chain_init_size + chain_sizes[chunk_id], p_chain_ids.begin() + chain_init_size + chain_sizes[chunk_id + 1]);
+
+            next_nodes_seq(std::span<const BlockNode>(p_prev_nodes.begin() + start_pos, p_prev_nodes.begin() + end_pos), nodes_space, chain_space, p_prev_round);
         }
         return next_unmarked_nodes;
     }
