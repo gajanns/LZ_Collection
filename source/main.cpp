@@ -19,7 +19,7 @@ const std::vector<Algorithm> algo_ids = {lzw, lz77, appr77seq ,appr77par};
 const std::vector<std::string> algo_names = {"LZW", "LZ77", "Approx.LZ77", "Approx.LZ77Par"};
  
 std::filesystem::path data_path("data");
-const std::string report_path = "report/report.csv";
+const std::string report_path = "report/";
 
 const std::string report_header = "input,in_size,algorithm,out_size,n_factors,comp_time,mem_usage";
 const std::string report_format = "%s,%zu,%s,%zu,%zu,%zu,%zu";
@@ -319,7 +319,8 @@ int main(int argc, char** argv){
 
     std::unique_ptr<std::fstream> report_stream = nullptr;
     if(setup.benchmark) {
-        report_stream = std::unique_ptr<std::fstream>(new std::fstream("report/report.csv",  std::ios::in | std::ios::out | std::ios::trunc));
+        std::string report_file = setup.progressive ? report_path + "report_progressive.csv" : report_path + "report_by_file.csv";
+        report_stream = std::unique_ptr<std::fstream>(new std::fstream(report_file,  std::ios::in | std::ios::out | std::ios::trunc));
     }
 
     if(setup.compress) {

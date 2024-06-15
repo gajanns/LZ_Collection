@@ -95,16 +95,11 @@ public:
 
         auto right_data = p_data | std::views::drop(p_pos);
         RabinKarpFingerprint right_fp(right_data);
-        __uint128_t inv_acc_base = 1, inv_base = base_inverse, exp = right_data.size();
-        while(exp > 0) {
-            if(exp%2) {
-                inv_acc_base = mod(inv_acc_base * inv_base, prime);
-            }
-            exp >>= 1;
-            inv_base = mod(inv_base * inv_base, prime);
-        }
+
+        __uint128_t inv_acc_base = cur_exp == right_data.size() ? cur_inv_base : calc_inv_acc_base(right_data.size());
         size_t left_hash = mod((static_cast<__uint128_t>(val) + prime - right_fp.val) * inv_acc_base, prime);
         size_t left_acc_base = mod(static_cast<__uint128_t>(m_acc_base) * inv_acc_base, prime);
+        
         return {RabinKarpFingerprint(left_acc_base, left_hash), right_fp};
     }
 
@@ -118,13 +113,7 @@ public:
     RabinKarpFingerprint split_off(RabinKarpFingerprint &p_right, size_t p_cut_length) const {
         if(p_cut_length == 0) return *this;
 
-        __uint128_t inv_acc_base;
-        if(cur_exp == p_cut_length){
-            inv_acc_base = cur_inv_base;
-        }
-        else{
-            inv_acc_base = calc_inv_acc_base(p_cut_length);
-        }
+        __uint128_t inv_acc_base = cur_exp == p_cut_length ? cur_inv_base : calc_inv_acc_base(p_cut_length);
 
         size_t left_hash = mod((static_cast<__uint128_t>(val) + prime - p_right.val) * inv_acc_base, prime);
         size_t left_acc_base = mod(static_cast<__uint128_t>(m_acc_base) * inv_acc_base, prime);

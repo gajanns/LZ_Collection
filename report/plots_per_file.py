@@ -82,7 +82,7 @@ def plot_for_algo(data, input_rows, algo_rows, column, scale):
 
 
 def main():
-    if not os.path.exists('report.csv'):
+    if not os.path.exists('report_by_file.csv'):
         print("No report.csv found.")
         return
     if not os.path.exists('plots'):
