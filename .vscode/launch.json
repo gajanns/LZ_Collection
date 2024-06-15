@@ -8,7 +8,7 @@
             "name": "Plot-Debugger",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder}/report/report_plotter.py",
+            "program": "${workspaceFolder}/report/plots_per_file.py",
             "cwd": "${fileDirname}",
             "console": "integratedTerminal"
         },
