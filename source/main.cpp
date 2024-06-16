@@ -332,7 +332,7 @@ int main(int argc, char** argv){
 
     std::unique_ptr<std::fstream> report_stream = nullptr;
     if(setup.benchmark) {
-        std::string report_file = setup.progressive ? report_path + "report_progressive.csv" : report_path + "report_by_file.csv";
+        std::string report_file = setup.progressive ? report_path + "report_progressive_"+algo_names[setup.algorithms.back()]+".csv" : report_path + "report_by_file.csv";
         report_stream = std::unique_ptr<std::fstream>(new std::fstream(report_file,  std::ios::in | std::ios::out | std::ios::trunc));
     }
 
