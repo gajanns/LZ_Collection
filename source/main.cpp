@@ -31,17 +31,19 @@ struct ExecutionSetup {
     bool compress = true;
     bool benchmark = false;
     bool progressive = false;
+    bool progressive_speedup = false;
     size_t num_steps = 1;
 };
 
 void print_usage(){
-    std::cout << "Usage: LZ_Collection [input] [output] [algorithm] [direction] [benchmark] [progressive=Number of Steps]" << 
+    std::cout << "Usage: LZ_Collection [input] [output] [algorithm] [direction] [benchmark] [progressive=Number of Steps] [speedup-benchmark]" << 
     std::endl << "\tinput: Filename of Input or \"all\" for all Files in data/(only per File Compression)" <<
     std::endl << "\toutput: Filename of Output" <<
     std::endl << "\talgorithm: LZW | LZ77 | Approx.LZ77 | Approx.LZ77Par | \"all\" for all Algorithms(only per File Compression)" <<
     std::endl << "\t(optional)direction: -d => (Decompress) , -c => (Compress, default)" << 
     std::endl << "\t(optional)benchmark: -b => Populate Performance-Data into report.csv" << 
-    std::endl << "\t(optional)progressive: -bp=numsteps => Benchmark Progressive Compression with numsteps Steps(only Single File/Algorithm Compression)" << std::endl;
+    std::endl << "\t(optional)progressive: -bp=numsteps => Benchmark Progressive Compression with numsteps Steps(only Single File/Algorithm Compression)" << 
+    std::endl << "\t(optional)speedup-benchmark: -bs => Benchmark Speedup of Approx.LZ77Par against Approx.LZ77" << std::endl;
 }
 
 void extract_userinput(ExecutionSetup &exec_setup, int argc, char *argv[]){
@@ -124,6 +126,26 @@ void extract_userinput(ExecutionSetup &exec_setup, int argc, char *argv[]){
             }
             catch(const std::invalid_argument& e) {
                 std::cerr << "Invalid Argument for Progressive Compression" << std::endl;
+                print_usage();
+                exit(EXIT_FAILURE);
+            }
+        }
+        else if (tmp == "-bs") {
+            exec_setup.benchmark = true;
+            exec_setup.progressive_speedup = true;
+
+            if(!exec_setup.compress) {
+                std::cerr << "Progressive Compression only possible with Compression" << std::endl;
+                print_usage();
+                exit(EXIT_FAILURE);
+            }
+            if(exec_setup.fin_names.size() > 1) {
+                std::cerr << "Progressive Compression only possible with one Input-File" << std::endl;
+                print_usage();
+                exit(EXIT_FAILURE);
+            }
+            if(exec_setup.algorithms.size() > 1 || exec_setup.algorithms[0] != appr77par) {
+                std::cerr << "Progressive Compression only possible with Approx.LZ77Par" << std::endl;
                 print_usage();
                 exit(EXIT_FAILURE);
             }
@@ -278,6 +300,34 @@ void compress_progressive(ExecutionSetup &exec_setup, std::unique_ptr<std::ifstr
     }
 }
 
+void compress_speedup_benchmark(ExecutionSetup &exec_setup, std::unique_ptr<std::ifstream> &input_stream, std::unique_ptr<std::fstream> &output_stream, std::unique_ptr<std::fstream> &report_stream) {
+
+    for(size_t num_threads = 1; num_threads <= omp_get_max_threads(); num_threads<<=1) {
+        InStreamView in_stream(*input_stream);
+        output_stream->seekg(0, std::ios::beg);
+        output_stream->seekp(0, std::ios::beg);
+        Compression::CompressionStatistics stats;
+
+        if(num_threads == 1) {
+            std::cout << "Compressing " << exec_setup.fin_names[0] << " with " << algo_names[appr77seq] << " ... " << std::flush;
+            stats = compress(appr77seq, in_stream, *output_stream);
+        }
+        else {
+            std::cout << "Compressing " << exec_setup.fin_names[0] << " with " << algo_names[appr77par] << " and " << num_threads << " Threads ... " << std::flush;
+            omp_set_num_threads(num_threads);
+            ApproxLZ77Par::num_threads = num_threads;
+            ApproxLZ77Par::num_thread_mask = std::bit_floor(num_threads) - 1;
+            stats = compress(appr77par, in_stream, *output_stream);
+        }
+        output_stream->flush();
+        stats.m_input_size = num_threads;
+        if(report_stream != nullptr) {
+            push_stats(stats, *report_stream, exec_setup.fin_names[0], algo_names[appr77par]);
+        }
+        std::cout << "Finished" << std::endl;
+    }
+}
+
 void decompress_file(ExecutionSetup &exec_setup, std::unique_ptr<std::ifstream> &input_stream, std::unique_ptr<std::fstream> &output_stream, std::unique_ptr<std::fstream> &report_stream) {
     if(report_stream) {
         (*report_stream) << report_header;
@@ -316,7 +366,7 @@ int main(int argc, char** argv){
     }
 
     std::unique_ptr<std::ifstream> input_stream;
-    if(!setup.compress || setup.progressive) {
+    if(!setup.compress || setup.progressive || setup.progressive_speedup) {
         input_stream = std::unique_ptr<std::ifstream>(new std::ifstream(setup.fin_names[0], std::ios::in | std::ios::binary));
         if(!input_stream->is_open()){
             std::cerr << "Could not open input-file" <<std::endl;
@@ -332,13 +382,26 @@ int main(int argc, char** argv){
 
     std::unique_ptr<std::fstream> report_stream = nullptr;
     if(setup.benchmark) {
-        std::string report_file = setup.progressive ? report_path + "report_progressive_"+algo_names[setup.algorithms.back()]+".csv" : report_path + "report_by_file.csv";
+        std::string report_file = [&]() {
+            if(setup.progressive) {
+                return report_path + "report_progressive_"+algo_names[setup.algorithms.back()]+".csv";
+            }
+            else if(setup.progressive_speedup) {
+                return report_path + "report_speedup.csv";
+            }
+            else {
+                return report_path + "report_by_file.csv";
+            }
+        }();
         report_stream = std::unique_ptr<std::fstream>(new std::fstream(report_file,  std::ios::in | std::ios::out | std::ios::trunc));
     }
 
     if(setup.compress) {
         if(setup.progressive) {
             compress_progressive(setup, input_stream, output_stream, report_stream);
+        }
+        else if(setup.progressive_speedup) {
+            compress_speedup_benchmark(setup, input_stream, output_stream, report_stream);
         }
         else {
             compress_per_file(setup, output_stream, report_stream);
