@@ -90,9 +90,39 @@
             "args": [
                 "data/proteins.50MB",
                 "dummy_res",
-                "Approx.LZ77",
+                "Approx.LZ77Par",
                 "-c",
                 "-bp=10"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "Benchmark Speedup",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/source/LZ_Collection",
+            "args": [
+                "data/proteins.50MB",
+                "dummy_res",
+                "Approx.LZ77Par",
+                "-c",
+                "-bs"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
