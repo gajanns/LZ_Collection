@@ -302,7 +302,7 @@ void compress_progressive(ExecutionSetup &exec_setup, std::unique_ptr<std::ifstr
 
 void compress_speedup_benchmark(ExecutionSetup &exec_setup, std::unique_ptr<std::ifstream> &input_stream, std::unique_ptr<std::fstream> &output_stream, std::unique_ptr<std::fstream> &report_stream) {
 
-    for(size_t num_threads = 1; num_threads <= omp_get_max_threads(); num_threads<<=1) {
+    for(size_t num_threads = 1; num_threads <= omp_get_max_threads(); num_threads+=1) {
         InStreamView in_stream(*input_stream);
         output_stream->seekg(0, std::ios::beg);
         output_stream->seekp(0, std::ios::beg);

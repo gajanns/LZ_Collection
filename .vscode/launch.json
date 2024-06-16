@@ -21,6 +21,14 @@
             "console": "integratedTerminal"
         },
         {
+            "name": "Plot Speedup",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/report/plots_speedup.py",
+            "cwd": "${fileDirname}",
+            "console": "integratedTerminal"
+        },
+        {
             "name": "Report-Converter",
             "type": "debugpy",
             "request": "launch",
@@ -90,9 +98,9 @@
             "args": [
                 "data/proteins.50MB",
                 "dummy_res",
-                "Approx.LZ77Par",
+                "LZ77",
                 "-c",
-                "-bp=10"
+                "-bp=1"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
