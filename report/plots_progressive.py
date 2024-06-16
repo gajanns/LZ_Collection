@@ -88,7 +88,7 @@ def main():
     ax.spines["bottom"].set_bounds(min(x_input_sizes), max(x_input_sizes))
     ax.set_xlim(min(x_input_sizes), max(x_input_sizes))
     ax.xaxis.set_ticks_position("bottom")    
-    ax.set_yticks(np.arange(0, max(y_comp_times)+1, 5))
+    ax.set_yticks(np.arange(0, max(y_comp_times)+1, 2.5))
     
     plt.savefig("plots/progressive.png", bbox_inches='tight')
     
@@ -102,7 +102,7 @@ def main():
     
     #Do a stackplot
     ax.stackplot(x_input_sizes, y_io_times, y_match_times, y_init_times, labels=["IO", "Match", "Init"], colors=[color_palette[5], color_palette[3], color_palette[0]], alpha=0.5)
-    ax.set_title("Composition of Suequential Computation Time")
+    ax.set_title("Composition of Sequential Computation Time")
     ax.set_xlabel("Input Size [MB]")
     ax.set_ylabel("Computation Time [s]")
     ax.spines["left"].set_visible(False)
@@ -117,7 +117,7 @@ def main():
     ax.spines["bottom"].set_bounds(min(x_input_sizes), max(x_input_sizes))
     ax.set_xlim(min(x_input_sizes), max(x_input_sizes))
     ax.xaxis.set_ticks_position("bottom")    
-    ax.set_yticks(np.arange(0, max(y_comp_times)+1, 5))
+    ax.set_yticks(np.arange(0, max(y_comp_times)+1, 2.5))
     ax.legend(loc = 'upper left')
     
     plt.savefig("plots/progressive_stack_seq.png", bbox_inches='tight')
@@ -146,7 +146,7 @@ def main():
     ax.spines["bottom"].set_bounds(min(x_input_sizes), max(x_input_sizes))
     ax.set_xlim(min(x_input_sizes), max(x_input_sizes))
     ax.xaxis.set_ticks_position("bottom")    
-    ax.set_yticks(np.arange(0, max(y_comp_times)+1, 5))
+    ax.set_yticks(np.arange(0, max(y_comp_times)+0.5, 0.5))
     ax.legend(loc = 'upper left')
     
     plt.savefig("plots/progressive_stack_par.png", bbox_inches='tight')
