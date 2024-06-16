@@ -5,10 +5,18 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Plot-Debugger",
+            "name": "Plot Per File",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/report/plots_per_file.py",
+            "cwd": "${fileDirname}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Plot Progressive",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/report/plots_progressive.py",
             "cwd": "${fileDirname}",
             "console": "integratedTerminal"
         },
