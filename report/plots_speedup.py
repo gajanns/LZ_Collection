@@ -63,12 +63,12 @@ def main():
     # Draw horizontal dotted line at y=highest value in lz77
     x_input_sizes = np.arange(0, report_data_appr_par[-1, col_input_size]+0.05, 0.05)
     y_comp_times = np.full(x_input_sizes.shape, report_data_lz77[-1, col_comp_time]/1000)
-    plt.plot(x_input_sizes, y_comp_times, color=color_palette[1], linewidth=2, linestyle="--")
+    plt.plot(x_input_sizes, y_comp_times, color=color_palette[6], linewidth=2, linestyle="--")
     ax.text(
         x_input_sizes[-1] *1.01,
         y_comp_times[-1],
         "LZ77",
-        color=color_palette[1],
+        color=color_palette[6],
         fontweight="bold",
         horizontalalignment="left",
         verticalalignment="center",
