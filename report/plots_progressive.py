@@ -49,19 +49,23 @@ def plot_line_graph(fig, ax, report_data, filename, algorithm, plotcolor):
         verticalalignment="center",
     )
 
+def plot_linear_regression(fig, ax, x_input_sizes, y_comp_times):
+    m, b = np.polyfit(x_input_sizes, y_comp_times, 1)
+    ax.plot(x_input_sizes, m*x_input_sizes + b, color=color_palette[1], linestyle="--")
+
 def main():
     if not os.path.exists('plots'):
         os.mkdir('plots')
     
     fig, ax = plt.subplots(figsize=(8, 6))
     report_data_appr_seq, filename_appr_seq, algorithm_appr_seq = read_data("report_progressive_Approx.LZ77.csv")
-    report_data_lz77, filename_lz77, algorithm_lz77 = read_data("report_progressive_LZ77.csv")
-    report_data_appr_par, filename_appr_par, algorithm_appr_par = read_data("report_progressive_Approx.LZ77Par.csv")
+    #report_data_lz77, filename_lz77, algorithm_lz77 = read_data("report_progressive_LZ77.csv")
+    #report_data_appr_par, filename_appr_par, algorithm_appr_par = read_data("report_progressive_Approx.LZ77Par.csv")
     
     
     plot_line_graph(fig, ax, report_data_appr_seq, filename_appr_seq, algorithm_appr_seq, color_palette[0])
-    plot_line_graph(fig, ax, report_data_lz77, filename_lz77, algorithm_lz77, color_palette[4])
-    plot_line_graph(fig, ax, report_data_appr_par, filename_appr_par, algorithm_appr_par, color_palette[2])
+    #plot_line_graph(fig, ax, report_data_lz77, filename_lz77, algorithm_lz77, color_palette[4])
+    #plot_line_graph(fig, ax, report_data_appr_par, filename_appr_par, algorithm_appr_par, color_palette[2])
     
     ax.set_title("Compression by Prefix-Size")
     ax.set_xlabel("Input Size [MB]")
