@@ -59,15 +59,19 @@ def main():
     
     fig, ax = plt.subplots(figsize=(8, 6))
     report_data_appr_seq, filename_appr_seq, algorithm_appr_seq = read_data("report_progressive_Approx.LZ77.csv")
-    #report_data_lz77, filename_lz77, algorithm_lz77 = read_data("report_progressive_LZ77.csv")
-    #report_data_appr_par, filename_appr_par, algorithm_appr_par = read_data("report_progressive_Approx.LZ77Par.csv")
+    report_data_lz77, filename_lz77, algorithm_lz77 = read_data("report_progressive_LZ77.csv")
+    report_data_appr_par, filename_appr_par, algorithm_appr_par = read_data("report_progressive_Approx.LZ77Par.csv")
     
     
     plot_line_graph(fig, ax, report_data_appr_seq, filename_appr_seq, algorithm_appr_seq, color_palette[0])
-    #plot_line_graph(fig, ax, report_data_lz77, filename_lz77, algorithm_lz77, color_palette[4])
-    #plot_line_graph(fig, ax, report_data_appr_par, filename_appr_par, algorithm_appr_par, color_palette[2])
+    plot_line_graph(fig, ax, report_data_lz77, filename_lz77, algorithm_lz77, color_palette[4])
+    plot_line_graph(fig, ax, report_data_appr_par, filename_appr_par, algorithm_appr_par, color_palette[2])
     
-    ax.set_title("Compression by Prefix-Size")
+    plot_linear_regression(fig, ax, report_data_appr_seq[:, col_input_size]/(1024*1024), report_data_appr_seq[:, col_comp_time]/1000)
+    plot_linear_regression(fig, ax, report_data_lz77[:, col_input_size]/(1024*1024), report_data_lz77[:, col_comp_time]/1000)
+    plot_linear_regression(fig, ax, report_data_appr_par[:, col_input_size]/(1024*1024), report_data_appr_par[:, col_comp_time]/1000)
+    
+    ax.set_title("Compression Time per Prefix")
     ax.set_xlabel("Input Size [MB]")
     ax.set_ylabel("Computation Time [s]")
     ax.spines["left"].set_visible(False)
@@ -86,7 +90,66 @@ def main():
     ax.xaxis.set_ticks_position("bottom")    
     ax.set_yticks(np.arange(0, max(y_comp_times)+1, 5))
     
-    plt.savefig("plots/progressive.png", bbox_inches='tight')  
+    plt.savefig("plots/progressive.png", bbox_inches='tight')
+    
+    
+    fig, ax = plt.subplots(figsize=(8, 6))
+    x_input_sizes = report_data_appr_seq[:, col_input_size]/(1024*1024)
+    y_init_times = report_data_appr_seq[:, col_init_time]/1000
+    y_match_times = report_data_appr_seq[:, col_match_time]/1000
+    y_io_times = report_data_appr_seq[:, col_io_time]/1000
+    y_comp_times = report_data_appr_seq[:, col_comp_time]/1000
+    
+    #Do a stackplot
+    ax.stackplot(x_input_sizes, y_io_times, y_match_times, y_init_times, labels=["IO", "Match", "Init"], colors=[color_palette[5], color_palette[3], color_palette[0]], alpha=0.5)
+    ax.set_title("Composition of Suequential Computation Time")
+    ax.set_xlabel("Input Size [MB]")
+    ax.set_ylabel("Computation Time [s]")
+    ax.spines["left"].set_visible(False)
+    ax.yaxis.set_ticks_position("left")
+    ax.xaxis.set_ticks_position("bottom")    
+    ax.spines["right"].set_visible(False)    
+    ax.spines["top"].set_visible(False)    
+    ax.grid(axis='y')
+    ax.grid(axis='x')
+
+    ax.set_xticks(x_input_sizes)
+    ax.spines["bottom"].set_bounds(min(x_input_sizes), max(x_input_sizes))
+    ax.set_xlim(min(x_input_sizes), max(x_input_sizes))
+    ax.xaxis.set_ticks_position("bottom")    
+    ax.set_yticks(np.arange(0, max(y_comp_times)+1, 5))
+    ax.legend(loc = 'upper left')
+    
+    plt.savefig("plots/progressive_stack_seq.png", bbox_inches='tight')
+    
+    fig, ax = plt.subplots(figsize=(8, 6))
+    x_input_sizes = report_data_appr_par[:, col_input_size]/(1024*1024)
+    y_init_times = report_data_appr_par[:, col_init_time]/1000
+    y_match_times = report_data_appr_par[:, col_match_time]/1000
+    y_io_times = report_data_appr_par[:, col_io_time]/1000
+    y_comp_times = report_data_appr_par[:, col_comp_time]/1000
+    
+    #Do a stackplot
+    ax.stackplot(x_input_sizes, y_io_times, y_match_times, y_init_times, labels=["IO", "Match", "Init"], colors=[color_palette[5], color_palette[3], color_palette[0]], alpha=0.5)
+    ax.set_title("Composition of Parallel Computation Time")
+    ax.set_xlabel("Input Size [MB]")
+    ax.set_ylabel("Computation Time [s]")
+    ax.spines["left"].set_visible(False)
+    ax.yaxis.set_ticks_position("left")
+    ax.xaxis.set_ticks_position("bottom")    
+    ax.spines["right"].set_visible(False)    
+    ax.spines["top"].set_visible(False)    
+    ax.grid(axis='y')
+    ax.grid(axis='x')
+
+    ax.set_xticks(x_input_sizes)
+    ax.spines["bottom"].set_bounds(min(x_input_sizes), max(x_input_sizes))
+    ax.set_xlim(min(x_input_sizes), max(x_input_sizes))
+    ax.xaxis.set_ticks_position("bottom")    
+    ax.set_yticks(np.arange(0, max(y_comp_times)+1, 5))
+    ax.legend(loc = 'upper left')
+    
+    plt.savefig("plots/progressive_stack_par.png", bbox_inches='tight')
 
 if __name__ == "__main__":
     main()
