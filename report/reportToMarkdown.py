@@ -2,7 +2,7 @@ import os
 import csv
 
 def main():
-    if not os.path.exists('report.csv'):
+    if not os.path.exists('report_by_file.csv'):
         print("No report.csv found.")
         return
     

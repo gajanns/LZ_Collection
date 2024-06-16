@@ -21,8 +21,8 @@ const std::vector<std::string> algo_names = {"LZW", "LZ77", "Approx.LZ77", "Appr
 std::filesystem::path data_path("data");
 const std::string report_path = "report/";
 
-const std::string report_header = "input,in_size,algorithm,out_size,n_factors,comp_time,mem_usage";
-const std::string report_format = "%s,%zu,%s,%zu,%zu,%zu,%zu";
+std::string report_header = "input,in_size,algorithm,out_size,n_factors,comp_time,mem_usage";
+std::string report_format = "%s,%zu,%s,%zu,%zu,%zu,%zu";
 
 struct ExecutionSetup {
     std::vector<std::string> fin_names; 
@@ -136,6 +136,27 @@ void extract_userinput(ExecutionSetup &exec_setup, int argc, char *argv[]){
     }
 }
 
+void push_stats(Compression::CompressionStatistics &p_stats, std::fstream &p_report_stream, std::string p_in_file, std::string p_algo) {
+    static bool is_header = true;
+    if(is_header) {
+        for(auto field_name: p_stats.m_specialized_stats.m_field_names) {
+            report_header += "," + field_name;
+        }
+        p_report_stream << report_header;
+        is_header = false;
+    }
+
+    char tmp[500];
+    p_report_stream.write("\n", 1);
+    auto size = sprintf(tmp, report_format.c_str(), p_in_file.c_str(), p_stats.m_input_size, p_algo.c_str(), p_stats.m_output_size,
+                        p_stats.m_factor_count, p_stats.m_run_time_milliseconds, p_stats.m_mem_usage);
+    p_report_stream.write(tmp, size);
+    for(auto field_value: p_stats.m_specialized_stats.m_field_values) {
+        std::string field_str = std::to_string(field_value);
+        p_report_stream << "," << field_str;
+    }
+}
+
 Compression::CompressionStatistics compress(Algorithm p_algo, InStreamView &p_in, std::fstream &p_out) {
     Compression::CompressionStatistics stats;
     switch(p_algo) {
@@ -231,10 +252,6 @@ void compress_per_file(ExecutionSetup &exec_setup, std::unique_ptr<std::fstream>
 }
 
 void compress_progressive(ExecutionSetup &exec_setup, std::unique_ptr<std::ifstream> &input_stream, std::unique_ptr<std::fstream> &output_stream, std::unique_ptr<std::fstream> &report_stream) {
-    if(report_stream) {
-        (*report_stream) << report_header;
-    }
-
     auto algo = exec_setup.algorithms[0];
     input_stream -> seekg(0, std::ios::end);
     size_t in_size = input_stream->tellg();
@@ -255,11 +272,7 @@ void compress_progressive(ExecutionSetup &exec_setup, std::unique_ptr<std::ifstr
         output_stream->flush();
 
         if(report_stream != nullptr) {
-            char tmp[500];
-            report_stream->write("\n", 1);
-            auto size = sprintf(tmp, report_format.c_str(), exec_setup.fin_names[0].c_str(), stats.m_input_size, algo_names[algo].c_str(), stats.m_output_size,
-                                stats.m_factor_count, stats.m_run_time_milliseconds, stats.m_mem_usage);
-            report_stream->write(tmp, size);
+            push_stats(stats, *report_stream, exec_setup.fin_names[0], algo_names[algo]);
         }
         std::cout << "Finished" << std::endl;
     }

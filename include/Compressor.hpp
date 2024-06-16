@@ -17,6 +17,11 @@ namespace Compression {
         size_t m_run_time_milliseconds;
         size_t m_mem_usage;
         size_t m_factor_count;
+        
+        struct SpecializedStats {
+            std::vector<std::string> m_field_names;
+            std::vector<size_t> m_field_values;
+        } m_specialized_stats;
 
         void dump() {
             std::cout << "Input size: " << m_input_size << std::endl;

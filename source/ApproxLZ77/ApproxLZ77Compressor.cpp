@@ -7,6 +7,9 @@
 
 
 void ApproxLZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<ApproxLZ77::factor_id> &p_out) {
+    enum {Init_Time, Round_Time, Factor_Time};
+    m_stats.m_specialized_stats.m_field_names = {"init_time", "round_time", "factor_time"};
+    m_stats.m_specialized_stats.m_field_values.resize(3, 0);
 
     std::span<const char8_t> input_span = p_in.slice_ref(0, p_in.size());
     if(input_span.size() == 0) return;
@@ -26,6 +29,7 @@ void ApproxLZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<Appr
 
     auto match_nodes = [&](size_t p_round, bool p_capture_refs = true) {
         const size_t block_size = in_size >> p_round;
+        
         ankerl::unordered_dense::map<size_t, u_int32_t> fp_table;
         auto ref_table = block_table.create_fp_table(fp_table, unmarked_nodes, p_round);
 
@@ -133,13 +137,24 @@ void ApproxLZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<Appr
     
     // Execute Algorithm
     if (max_round - min_round > 6) block_table.precompute_fingerprint(max_round - 3);
+    auto start = std::chrono::high_resolution_clock::now();
     init_nodes(ApproxLZ77::dynamic_init);
+    auto end = std::chrono::high_resolution_clock::now();
+    m_stats.m_specialized_stats.m_field_values[Init_Time] = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+
+    start = std::chrono::high_resolution_clock::now();
     while(round <= max_round) {
         if(process_round()) round++;
         else break;
     }
     block_table.populate_unmarked_chain(unmarked_nodes, chain_ids, round);
+    end = std::chrono::high_resolution_clock::now();
+    m_stats.m_specialized_stats.m_field_values[Round_Time] = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+
+    start = std::chrono::high_resolution_clock::now();
     push_factors();
+    end = std::chrono::high_resolution_clock::now();
+    m_stats.m_specialized_stats.m_field_values[Factor_Time] = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
 }
 
 void ApproxLZ77Compressor::decompress_impl(Coder::Decoder<ApproxLZ77::factor_id> &p_in, OutStreamView &p_out){
