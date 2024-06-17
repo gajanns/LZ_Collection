@@ -10,7 +10,7 @@ def main():
     print("|---------------|---------------|:---------------:|:---------------:|:---------------:|:---------------:|")
     
     
-    report_csv = csv.DictReader(open("report.csv", "r"))
+    report_csv = csv.DictReader(open("report_by_file.csv", "r"))
     
     for row in report_csv:
         print('|', end='')
