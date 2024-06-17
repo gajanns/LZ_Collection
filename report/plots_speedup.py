@@ -97,6 +97,51 @@ def main():
     ax.set_yticks(np.arange(0, max(y_comp_times)+1, 2.5))
     
     plt.savefig("plots/progressive_speedup.png", bbox_inches='tight')
+    
+    
+    fig, ax = plt.subplots(figsize=(8, 6))
+    
+    x_input_sizes = np.arange(0, report_data_appr_par[-1, col_input_size]+0.05, 0.05)
+    y_comp_times = np.full(x_input_sizes.shape, report_data_lz77[-1, col_comp_time]/1000)
+    plt.plot(x_input_sizes, y_comp_times, color=color_palette[6], linewidth=2, linestyle="--")
+    ax.text(
+        x_input_sizes[-1] *1.01,
+        y_comp_times[-1],
+        "LZ77",
+        color=color_palette[6],
+        fontweight="bold",
+        horizontalalignment="left",
+        verticalalignment="center",
+    )
+    
+    
+    x_input_sizes = report_data_appr_par[:, col_input_size]
+    y_init_times = report_data_appr_par[:, col_init_time]/1000
+    y_match_times = report_data_appr_par[:, col_match_time]/1000
+    y_io_times = report_data_appr_par[:, col_io_time]/1000
+    y_comp_times = report_data_appr_par[:, col_comp_time]/1000
+    
+    #Do a stackplot
+    ax.stackplot(x_input_sizes, y_io_times, y_match_times, y_init_times, labels=["IO", "Match", "Init"], colors=[color_palette[5], color_palette[3], color_palette[0]], alpha=0.5)
+    ax.set_title("Composition of Speedup")
+    ax.set_xlabel("Number of Threads")
+    ax.set_ylabel("Computation Time [s]")
+    ax.spines["left"].set_visible(False)
+    ax.yaxis.set_ticks_position("left")
+    ax.xaxis.set_ticks_position("bottom")    
+    ax.spines["right"].set_visible(False)    
+    ax.spines["top"].set_visible(False)    
+    ax.grid(axis='y')
+    ax.grid(axis='x')
+
+    ax.set_xticks(np.arange(0, max(x_input_sizes)+1, 1))
+    ax.spines["bottom"].set_bounds(min(x_input_sizes), max(x_input_sizes))
+    ax.set_xlim(min(x_input_sizes), max(x_input_sizes))
+    ax.xaxis.set_ticks_position("bottom")    
+    ax.set_yticks(np.arange(0, max(y_comp_times)+1, 2.5))
+    ax.legend(loc = 'upper left')
+    
+    plt.savefig("plots/progressive_speedup_stack.png", bbox_inches='tight')
 
 if __name__ == "__main__":
     main()
