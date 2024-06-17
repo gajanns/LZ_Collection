@@ -2,7 +2,7 @@
 
 Simple Collection of Prototypes of LZ-Algorithms:LZW, LZ77, Approx. LZ77 (seq+ par)
 
-## Experiment(Last Update: 12/06)
+## Experiment(Last Update: 17/06)
 
 ### System = Codespace-P16 : Dynamic Granularity = On : Dynamic Init = On
 
@@ -41,7 +41,7 @@ Simple Collection of Prototypes of LZ-Algorithms:LZW, LZ77, Approx. LZ77 (seq+ p
 |Framework          |-          |✔       |✅          |12/03      |
 | -IO               |-          |✔       |✅          |12/03      |
 | -Perf-Measurement |-          |✔       |✅          |09/05      |
-| -Plot             |-          |⟳       |⛔          |13/04      |
+| -Plot             |-          |✔       |⛔          |17/06      |
 |LZ78/LZW           |-          |✔       |✅          |17/04      |
 |exact LZ77         |-          |✔       |✅          |16/05      |
 
@@ -50,12 +50,12 @@ Simple Collection of Prototypes of LZ-Algorithms:LZW, LZ77, Approx. LZ77 (seq+ p
 |Task               |Deadline   |Status  |Tested     |Last Update|
 |-------------------|:---------:|:------:|:---------:|:---------:|
 |Approx. LZ77(seq)  |-          |✔       |✅          |24/05      |
-| -Rabin-Karp       |-          |✔       |✅          |24/05      |
+| -Rabin-Karp       |-          |✔       |✅          |17/06      |
 
 ---
 ### Phase 3:
 |Task               |Deadline   |Status  |Tested     |Last Update|
 |-------------------|:---------:|:------:|:---------:|:---------:|
-|Approx. LZ77(par)  |-          |⟳       |✅          |11/06      |
+|Approx. LZ77(par)  |-          |⟳       |✅          |17/06      |
 
 
