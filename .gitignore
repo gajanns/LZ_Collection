@@ -31,6 +31,12 @@
 *.out
 *.app
 
+# Latex Auxillary files
+*.aux
+*.bbl
+*.blg
+*.synctex.gz
+
 build/
 .vscode/
 

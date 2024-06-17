@@ -1,0 +1,87 @@
+\section{Grundlagen} \label{grundlagen}
+
+Direkt unterhalb der Hauptkapitel ist jeweils Platz für eine kurze inhaltliche Überleitung.
+
+\subsection{Unterabschnitt}
+
+Die Überschriftenstrukturierung ist hierarchisch. Es empfiehlt sich, die Arbeit so zu strukturieren, dass der Text immer auf der untersten Ebene steht und zugleich auf gleichen Hierarchieebenen inhaltlich auf gleicher Ebene verfasste Texte stehen. Kapitelüberschriften sind so zu wählen, dass sie sinnvoll den Inhalt des (Unter)Kapitels als Aussage wiedergeben. Die Kapitelüberschriften sind in den Formatvorlagen namentlich als Überschrift 1, Überschrift 2, usw. hinterlegt.
+
+Eine Untergliederung bis zur dritten Ebene ist für Bachelor- und Masterarbeiten sinnvoll. Es empfiehlt sich, eine vierte Ebene (z.B. 2.1.1.1) zu vermeiden, um die Übersichtlichkeit der Gliederung zu wahren.
+
+Ihr Text sollte unter Einbindung von Grafiken und Tabellen in Absätze gegliedert werden. Dabei ist zu beachten, dass ein Absatz einen thematischen Gedanken erfasst, wobei am Anfang des Absatzes im Regelfall die Kernaussage zu finden ist und von dieser ausgehend durch weitere Erörterungen innerhalb des Absatzes gegliedert wird.
+
+\subsection{Unterabschnitt zwei}
+
+\subsubsection{UnterUnterabschnitt}
+
+\textbf{So wird dick geschrieben} und \textit{so kursiv}. \citet[685]{janiesch2021machine} so wird Autor, Jahr und Seite zitiert. So wird in Klammern zitiert: \citep[685]{janiesch2021machine} bei einer Quelle oder (\cites[685]{janiesch2021machine}[289]{herm2021symbolic}) bei mehreren. So wird eine Internetquelle zitiert: \citet{diewi}. So wird im Dokument referenziert: Kapitel \ref{einleitung}, Gleichung \ref{eq:1} zeigt...
+So nutzen Sie Abkürzungen: \ac{AI}, \ac{BPM}, \ac{DSR} Achten Sie darauf, die Abkürzung in der acronym.tex zu definieren. Im Fließtext verwendete und nicht definierte Abkürzungen (und vice veresa) werden andernfalls nicht gelistet und verursachen eine Fehlermeldung. Tip: Abkürzung bei \textbf{jeder Verwendung} mit \begin{verbatim} 
+    \ac{abkürzung}
+\end{verbatim} definieren. Abkürzung wird dann beim ersten Auftreten automatisch eingeführt und ansonsten als Akronym kompiliert.
+
+\newpage
+So schreiben und nummerieren sie eine Formel.
+
+\begin{equation}
+    \sum_{i=1}^N x_i
+    \label{eq:1}
+\end{equation}
+\newline//
+
+So legen sie eine \textbf{nummerierte} Auflistung an. Substituieren Sie \textit{enumerate} mit \textit{itemize}, um Bulletpoints (\textbullet) zu verwenden.
+
+\begin{enumerate}
+\item Element 1
+\item Element 2
+\end{enumerate}
+
+So fügen sie eine Abbildung ein. Achten sie darauf, dass die Breite der Abbildung \textbf{nicht} die Textbreite übersteigt (width zwischen 0.0 und 1.0). Die Abbildung wird automatisch zentriert.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.3\textwidth]{abbildungen/tud_logo_rgb.jpg}
+    \caption[Kurze Caption für Inhaltsverzeichnis]{Lange Caption unter der Abbildung mit Quelle}
+    \label{fig:my_label}
+\end{figure}
+
+Wichtig ist, Abbildungen immer im Text zu erläutern und im Text auf die Abbildung zu verweisen (siehe Abbildung \ref{fig:my_label}). Dies gilt auch für Tabellen. Bei fremden Abbildungen und Tabellen ist zudem die ursprüngliche Quelle anzugeben (z.B. in Klammern am Ende der Bezeichnung).
+
+So schreibt man einen Algorithmus.
+\BlankLine
+\begin{algorithm}[H]
+ \KwData{this text}
+ \KwResult{how to write algorithm }
+ initialization\;
+ \While{not at end of this document}{
+  read current\;
+  \eIf{understand}{
+   go to next section\;
+   current section becomes this one\;
+   }{
+   go back to the beginning of current section\;
+  }
+ }
+ \caption{How to write algorithms}
+\end{algorithm}
+\BlankLine
+\BlankLine
+So gestaltet man eine Tabelle. Achten sie darauf, dass die Breite der Tabelle die Textbreite übersteigt. Die Tabelle wird automatisch zentriert.
+\begin{table}[H]
+\caption[Kurze Caption für Inhaltsverzeichnis]{Lange Caption über der Tabelle, ggf. mit Quelle}
+\centering
+\begin{tabular}{llr}
+\hline
+Animal    & Description & Price (\$) \\
+\hline
+Gnat      & per gram    & 13.65      \\
+          & each        & 0.01       \\
+Gnu       & stuffed     & 92.50      \\
+Emu       & stuffed     & 33.33      \\
+Armadillo & frozen      & 8.99       \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsubsection{UnterUnterabschnitt zwei}
+
+Ein Abschnitt steht nie allein.

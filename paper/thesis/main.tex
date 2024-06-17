@@ -1,0 +1,201 @@
+\documentclass[12pt,oneside]{article}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%   Zur LaTeX  %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Alle für die Anfertigung der Arbeit benötigten Pakete sind bereits installiert.
+% Änderungen an der Vorlage sowie den Paketen sind mit dem Betreuer abzusprechen.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%   Zusaetzliche Pakete  %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\usepackage{acronym}
+\usepackage{enumerate}
+\usepackage{a4wide}
+\usepackage{fancyhdr}
+\usepackage{graphicx}
+\usepackage{palatino}
+\usepackage{blindtext}
+\usepackage{multirow}
+\usepackage[ruled, longend]{algorithm2e}
+\usepackage{float}
+
+% folgende Zeile auskommentieren für englische Arbeiten
+\usepackage[ngerman]{babel}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[utf8]{inputenc}
+
+%Hervorherbung für Links entfernen
+%\usepackage[bookmarks]{hyperref}
+\usepackage[bookmarks, pdfborder={0 0 0}]{hyperref}
+
+\usepackage[justification=centering]{caption}
+\usepackage{csquotes}
+
+% APA Style für Bibtex
+\usepackage[style=apa,natbib=true,backend=biber]{biblatex}
+
+\DefineBibliographyStrings{german}{
+  bibliography = {Literaturverzeichnis},
+}
+\DefineBibliographyStrings{english}{
+  bibliography = {References},
+}
+\bibliography{literatur}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Definition der Kopfzeile %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\pagestyle{fancy}
+\fancyhf{}
+\cfoot{\thepage}
+\setlength{\headheight}{16pt}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  Definition des Deckblattes und der Titelseite  %%
+%%  Do not edit                                    %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newcommand{\UDOTitle}[9]{
+
+  \thispagestyle{empty}
+  \includegraphics[width=3in]{abbildungen/tud_logo_rgb.jpg}
+  \vspace*{\stretch{1}}
+  \\
+  {\parindent0cm
+  \rule{\linewidth}{.1ex}}
+  \begin{flushright}
+    \vspace*{\stretch{1}}
+    \sffamily\bfseries\Huge
+    #1\\
+    \vspace*{\stretch{1}}
+    \sffamily\bfseries\large
+    #2\\
+    \vspace*{\stretch{1}}
+  \end{flushright}
+  \rule{\linewidth}{.1ex}
+
+  \vspace*{\stretch{1}}
+  \begin{center}
+
+    \vspace*{\stretch{1}}
+    \large #5\\
+
+    \vspace*{\stretch{1}}
+    \large Studiengang: #4 \\[1mm]
+    \large Matrikelnummer: #3\\[1mm]
+    \large Erstgutachter:  #8 \\[1mm]
+    \large Zweitgutachter:  #9 \\[1mm]
+
+    \vspace*{\stretch{1}}
+    \large Bearbeitungszeit: #6 -- #7
+
+    \vspace*{\stretch{2}}
+    \large Lehrstuhl 11\\
+    \large Fakultät für Informatik\\
+  \end{center}
+}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  Beginn des Dokuments  %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+\sloppy
+
+  \UDOTitle
+      {Parallelisierung einer speichereffizienten Approximation der LZ77-Faktorisierung}                            % Titel der Arbeit
+      {Sivarajah, Gajann}                           % Vor- und Nachname des Autors
+      {168246}                                     % Matrikelnummer des Autors
+      {Bachelor Angewandte Informatik}     % Studiengang
+      {Bachelorarbeit}   % Art der Arbeit
+      {30.04.2024}                                  % Tag der Anmeldung
+      {30.08.2024}                                  % Tag der Abgabe
+      {Prof. Dr. Johannes Fischer}                % Name des Erstgutachters
+      {M.Sc. Patrick Dinklage}                                        % Name des Zweitgutachters
+      
+  \clearpage
+
+\lhead{}
+\pagenumbering{Roman} 
+    \setcounter{page}{1}
+
+\tableofcontents
+\clearpage
+
+\addcontentsline{toc}{section}{\listfigurename}
+\listoffigures
+\clearpage
+
+\addcontentsline{toc}{section}{\listtablename}
+\listoftables
+\clearpage
+
+\addcontentsline{toc}{section}{Abkürzungsverzeichnis}
+\input{acronym.tex}
+\clearpage
+
+% Formelverzeichnis können an dieser Stelle sinnvolle Ergänzungen sein.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  Zusammenfassung   %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\markboth{Zusammenfassung}{Zusammenfassung}
+\section*{Zusammenfassung}
+
+Die Zusammenfassung dient dem Leser dazu, einen groben Überblick über die Inhalte zu gewinnen (kurze Problemstellung, Herangehensweise, Lösungsansätze und evtl. der Schlüsselerkenntnisse). Der Umfang sollte ca. eine halbe Seite betragen. Auf der nächsten Seite soll eine Übersetzung der Zusammenfassung als Abstract in englischer Sprache erfolgen.
+
+Allgemeiner Hinweis: Die ``neue'' Rechtschreibung bietet viele alternative Möglichkeiten der Rechtschreib. Es ist demnach egal, ob Sie z.B. Potenzial mit ``z'' oder Potential mit ``t'' schreiben. Auch das Komma kann vor einem erweiterten Infinitiv wahlweise gesetzt oder weggelassen werden. Alternative Schreibweisen bedeuten zugleich aber nicht Beliebigkeit. Sie sollten sich also immer konsequent während der gesamten Arbeit für eine Schreibweise entscheiden. Dieses gilt auch für Fachbegriffe.
+
+\clearpage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  Abstract   %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\markboth{Abstract}{Abstract}
+\section*{Abstract (nur bei Bachelor- und Masterthesis)}
+Zusammenfassung in englischer Sprache.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  Einstellungen  %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\cleardoublepage
+\pagenumbering{arabic}  
+    \setcounter{page}{1}
+\lhead{\nouppercase{\leftmark}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%  Segmentierung  %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%Kapitel mit Seitenumbruch
+\include{kapitel/einleitung}
+\include{kapitel/hauptteil}
+\include{kapitel/zusammenfassung}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Literaturverzeichnis wird 
+%% automatisch eingefügt
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\clearpage
+\lhead{}
+\addcontentsline{toc}{section}{\bibname}
+\printbibliography
+
+\newpage
+\addcontentsline{toc}{section}{Anhang}
+\input{anhang.tex}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Eidesstattliche Erklärung
+%% muss angepasst werden 
+%% in Erklaerung.tex
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\input{Erklaerung.tex}
+
+\end{document}
