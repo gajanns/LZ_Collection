@@ -40,6 +40,7 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
         //ShardedMap<size_t, u_int32_t, ankerl::unordered_dense::map, LeftMostOccurence> fp_table(num_threads, 128);
         std::unique_ptr<ankerl::unordered_dense::map<size_t, u_int32_t>> fp_table[num_threads];
         auto ref_table = block_table.create_fp_table(fp_table, unmarked_nodes, p_round);
+        unmarked_nodes[0].fp.precompute_pop_values();
 
         #pragma omp parallel for
         for(size_t chunk_id = 0; chunk_id < num_chunks; chunk_id++) {

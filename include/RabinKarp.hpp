@@ -1,7 +1,7 @@
-/*##############################################################################*/
-// Reference to Externals:                                                      //
-// - Modulo-Operation taken from https://github.com/pdinklag/fp ( MIT License ) //
-/*##############################################################################*/
+/*###########################################################################################*/
+// Reference to Externals:                                                                   //
+// - Modulo-Operation and Shifting taken from https://github.com/pdinklag/fp ( MIT License ) //
+/*##########################################################################################*/
 
 #pragma once
 
@@ -35,12 +35,21 @@ public:
     static const size_t prime = 2305843009213693951; // 2^61-1
     static inline size_t cur_exp = 0;
     static inline size_t cur_inv_base = 1;
+
+    static inline __uint128_t precomputed_pop_value[256];
     
     RabinKarpFingerprint() = default;
     RabinKarpFingerprint(const NumRange auto& p_data): val(calc_hash_value(p_data, &m_acc_base)){}
     RabinKarpFingerprint(const size_t p_acc_base, const size_t p_hash_value):m_acc_base(p_acc_base),val(p_hash_value){}
     RabinKarpFingerprint(const RabinKarpFingerprint& p_value):m_acc_base(p_value.m_acc_base),val(p_value.val){}
 
+    /**
+     * @brief Efficient Modular Operation (Taken from https://github.com/pdinklag/fp))
+     * 
+     * @param value Value to be processed
+     * @param prime Prime number
+     * @return size_t Result of Modulo-Operation
+     */
     static size_t mod(__uint128_t const value, size_t prime) {
         __uint128_t const v = value + 1;
         size_t const z = ((v >> prime_exp) + v) >> prime_exp;
@@ -137,18 +146,25 @@ public:
         }
         return mod(inv_acc_base, prime);
     }
+
+    /**
+     * @brief Precompute Pop-Values for all possible characters (Excecute before first shift)
+     * 
+     */
+    void precompute_pop_values(){
+        for(size_t i = 0; i < 256; i++){
+            precomputed_pop_value[i] = static_cast<__uint128_t>(prime)*prime - static_cast<__uint128_t>(m_acc_base) * i;
+        }
+    }
     
     /**
-     * @brief Slide Dataphrase to the right
+     * @brief Slide Dataphrase to the right (Taken from https://github.com/pdinklag/fp)
      * 
      * @param p_left Character to drop from left side
      * @param p_right Character to append to right side
     */
     void shift_right(const std::integral auto p_left, const std::integral auto p_right){
-        __uint128_t val_ = val;
-
-        val_ = mod(val_ * base + p_right, prime);
-        val = mod(val_ + prime - mod(static_cast<__uint128_t>(m_acc_base) * p_left, prime), prime);        
+        val = mod(static_cast<__uint128_t>(val) * base + precomputed_pop_value[p_left] + static_cast<__uint128_t>(p_right), prime);
     }
     
     bool operator==(const RabinKarpFingerprint& p_value) const{
