@@ -36,6 +36,13 @@
 *.bbl
 *.blg
 *.synctex.gz
+*.log
+*.fls
+*.fdb_latexmk
+*.loa
+*.lof
+*.thm
+*.toc
 
 build/
 .vscode/
