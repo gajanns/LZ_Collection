@@ -63,9 +63,9 @@ def main():
     report_data_appr_par, filename_appr_par, algorithm_appr_par = read_data("report_progressive_Approx.LZ77Par.csv")
     
     
-    plot_line_graph(fig, ax, report_data_appr_seq, filename_appr_seq, algorithm_appr_seq, color_palette[0])
-    plot_line_graph(fig, ax, report_data_lz77, filename_lz77, algorithm_lz77, color_palette[4])
-    plot_line_graph(fig, ax, report_data_appr_par, filename_appr_par, algorithm_appr_par, color_palette[2])
+    plot_line_graph(fig, ax, report_data_appr_seq, filename_appr_seq, algorithm_appr_seq, color_palette[4])
+    plot_line_graph(fig, ax, report_data_lz77, filename_lz77, algorithm_lz77, color_palette[2])
+    plot_line_graph(fig, ax, report_data_appr_par, filename_appr_par, algorithm_appr_par, color_palette[0])
     
     plot_linear_regression(fig, ax, report_data_appr_seq[:, col_input_size]/(1024*1024), report_data_appr_seq[:, col_comp_time]/1000)
     plot_linear_regression(fig, ax, report_data_lz77[:, col_input_size]/(1024*1024), report_data_lz77[:, col_comp_time]/1000)
@@ -117,7 +117,7 @@ def main():
     ax.spines["bottom"].set_bounds(min(x_input_sizes), max(x_input_sizes))
     ax.set_xlim(min(x_input_sizes), max(x_input_sizes))
     ax.xaxis.set_ticks_position("bottom")    
-    ax.set_yticks(np.arange(0, max(y_comp_times)+1, 1))
+    ax.set_yticks(np.arange(0, max(y_comp_times)+1, 2))
     ax.legend(loc = 'upper left')
     
     plt.savefig("plots/progressive_stack_seq.png", bbox_inches='tight')
@@ -146,7 +146,7 @@ def main():
     ax.spines["bottom"].set_bounds(min(x_input_sizes), max(x_input_sizes))
     ax.set_xlim(min(x_input_sizes), max(x_input_sizes))
     ax.xaxis.set_ticks_position("bottom")    
-    ax.set_yticks(np.arange(0, max(y_comp_times)+0.5, 0.25))
+    ax.set_yticks(np.arange(0, max(y_comp_times)+0.5, 0.5))
     ax.legend(loc = 'upper left')
     
     plt.savefig("plots/progressive_stack_par.png", bbox_inches='tight')

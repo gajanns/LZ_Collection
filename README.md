@@ -8,27 +8,24 @@ Simple Collection of Prototypes of LZ-Algorithms:LZW, LZ77, Approx. LZ77 (seq+ p
 
 |File.Size|Algorithm|Ratio(Out/In)|Runtime[s]|Factors(#/In)|Memory([Byte]/In)|
 |---------------|---------------|:---------------:|:---------------:|:---------------:|:------------:|
-|dna.50MB|LZ77|48.67%|4.08|7.35%|20.00|
-|dna.50MB|Approx.LZ77|45.29%|10.24|11.32%|8.79|
-|dna.50MB|Approx.LZ77Par|45.29%|2.15|11.32%|6.67|
-|dblp.xml.50MB|LZ77|23.77%|3.27|4.64%|20.00|
-|dblp.xml.50MB|Approx.LZ77|28.24%|9.00|7.69%|4.21|
-|dblp.xml.50MB|Approx.LZ77Par|28.24%|1.62|7.69%|3.84|
+|dna.100MB|LZ77|48.31%|8.34|7.03%|20.00|
+|dna.100MB|Approx.LZ77|45.79%|21.06|11.10%|8.81|
+|dna.100MB|Approx.LZ77Par|45.79%|4.32|11.10%|6.47|
+|sources.100MB|LZ77|38.15%|7.55|7.98%|20.00|
+|sources.100MB|Approx.LZ77|41.57%|26.55|10.92%|6.17|
+|sources.100MB|Approx.LZ77Par|41.57%|4.64|10.92%|5.41|
+|english.100MB|LZ77|46.75%|8.87|8.56%|20.00|
+|english.100MB|Approx.LZ77|44.33%|30.53|11.08%|8.78|
+|english.100MB|Approx.LZ77Par|44.33%|5.06|11.08%|5.91|
+|dblp.xml.100MB|LZ77|23.09%|6.88|4.63%|20.00|
+|dblp.xml.100MB|Approx.LZ77|27.28%|18.24|7.06%|4.04|
+|dblp.xml.100MB|Approx.LZ77Par|27.28%|3.29|7.06%|3.85|
+|proteins.100MB|LZ77|69.21%|12.59|40.51%|20.00|
+|proteins.100MB|Approx.LZ77|70.48%|27.47|17.23%|10.78|
+|proteins.100MB|Approx.LZ77Par|70.48%|5.76|17.23%|9.45|
 |dummy.6018B|LZ77|16.85%|0.00|9.70%|20.00|
 |dummy.6018B|Approx.LZ77|20.41%|0.00|11.05%|8.24|
-|dummy.6018B|Approx.LZ77Par|20.41%|0.00|11.05%|7.90|
-|proteins.50MB|LZ77|75.86%|5.67|26.11%|20.00|
-|proteins.50MB|Approx.LZ77|72.29%|13.60|18.36%|16.55|
-|proteins.50MB|Approx.LZ77Par|72.29%|2.79|18.36%|10.09|
-|english.50MB|LZ77|43.60%|4.10|7.63%|20.00|
-|english.50MB|Approx.LZ77|41.38%|13.93|10.77%|5.89|
-|english.50MB|Approx.LZ77Par|41.38%|2.37|10.77%|5.69|
-|sources.50MB|LZ77|39.28%|3.72|7.75%|20.00|
-|sources.50MB|Approx.LZ77|42.79%|12.14|11.89%|6.77|
-|sources.50MB|Approx.LZ77Par|42.79%|2.17|11.89%|5.37|
-|pitches.50MB|LZ77|56.38%|5.26|27.06%|20.00|
-|pitches.50MB|Approx.LZ77|57.41%|12.19|19.62%|9.05|
-|pitches.50MB|Approx.LZ77Par|57.41%|2.42|19.62%|7.98|
+|dummy.6018B|Approx.LZ77Par|20.41%|0.00|11.05%|6.35|
 
 ## Thesis-Plan
 
