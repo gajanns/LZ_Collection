@@ -22,7 +22,8 @@ TEST(RabinKarpTest, ConcatString) {
 TEST(RabinKarpTest, ShiftRight) {
     std::string s{"OneTwo"}, s_ref{"neTwoO"};
     RabinKarpFingerprint fp(s), fp_ref(s_ref), fp_shift = fp;
-    fp_shift.shift_right('O', 'O');
+    fp.precompute_pop_values();
+    fp_shift.shift_right((unsigned char)'O', (unsigned char)'O');
     EXPECT_EQ(fp_ref.val, fp_shift.val);
 }
 

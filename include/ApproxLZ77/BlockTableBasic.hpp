@@ -103,6 +103,7 @@ private:
     const u_int32_t in_ceil_size;
     size_t precomputed_round = 0;
     std::vector<RabinKarpFingerprint> precomputed_fps;
+    std::vector<bool> precomputed_match_flags;
 
     RabinKarpFingerprint extract_precomputed_fp(size_t p_round, size_t p_block_id) {
         if(p_round == precomputed_round) return precomputed_fps[p_block_id];
@@ -115,6 +116,13 @@ private:
         [](RabinKarpFingerprint p_fp, const RabinKarpFingerprint &p_fp_right) {
             return p_fp + p_fp_right;
         });
+    }
+
+    bool can_be_match(size_t p_block_id, size_t p_round) {
+        if(p_round > precomputed_round) return true;
+        size_t start_block_id = p_block_id << (precomputed_round - p_round);
+        size_t end_block_id = start_block_id + (1 << (precomputed_round - p_round));
+        return std::all_of(precomputed_match_flags.begin() + start_block_id, precomputed_match_flags.begin() + end_block_id, [](bool p_flag) { return p_flag; });
     }
 
     auto split_block_node(const BlockNode *p_block_node, size_t p_round) {
@@ -181,6 +189,33 @@ public:
         }
     }
 
+    void precompute_matches(size_t p_round) {
+        const size_t block_size = in_ceil_size >> p_round;
+        precomputed_match_flags.clear();
+        precomputed_fps.clear();
+        
+        std::vector<BlockNode> nodes = init_nodes(p_round);
+        precomputed_match_flags.resize(nodes.size(), false);
+        precomputed_fps.reserve(nodes.size());
+
+        ankerl::unordered_dense::map<size_t, u_int32_t> fp_table;
+        std::vector<u_int32_t> ref_table = create_fp_table(fp_table, nodes, p_round);
+
+        RabinKarpFingerprint test_fp = nodes[0].fp;
+        test_fp.precompute_pop_values();
+        for(size_t pos = 0; pos < in_size - block_size; pos++) {
+            preprocess_matches(pos, test_fp.val, fp_table, ref_table);
+            test_fp.shift_right(input_data[pos], input_data[pos + block_size]);
+        }
+
+        for(size_t node_id = 0; node_id < nodes.size(); node_id++) {
+            precomputed_match_flags[node_id] = ref_table[node_id] < (nodes[node_id].block_id * block_size);
+            precomputed_fps.push_back(nodes[node_id].fp);
+        }
+
+        precomputed_round = p_round;
+    }
+
     /**
      * @brief Fill Fingerprint-Table from current unmarked nodes
      * 
@@ -193,10 +228,16 @@ public:
 
         const size_t block_size = in_ceil_size >> p_cur_round;
         const size_t nodes_size = p_unmarked_nodes.back().block_id * block_size + block_size > in_size ? p_unmarked_nodes.size() - 1 : p_unmarked_nodes.size();
-        
+
         for(size_t i = 1; i < nodes_size; i++) {
-            auto [match_it, insert_success] = p_fp_table.insert({p_unmarked_nodes[i].fp.val, i});
-            ref_table[i] = p_unmarked_nodes[match_it->second].block_id * block_size;
+            auto &node = p_unmarked_nodes[i];
+            if(!can_be_match(node.block_id, p_cur_round)) {
+                ref_table[i] = node.block_id * block_size;
+            }
+            else {
+                auto [match_it, insert_success] = p_fp_table.insert({node.fp.val, i});
+                ref_table[i] = p_unmarked_nodes[match_it->second].block_id * block_size;
+            }
         }
         return ref_table;
     }

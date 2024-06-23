@@ -46,6 +46,7 @@ private:
     const u_int32_t in_ceil_size;
     size_t precomputed_round = 0;
     std::vector<RabinKarpFingerprint> precomputed_fps;
+    std::vector<bool> precomputed_match_flags;
 
     RabinKarpFingerprint extract_precomputed_fp(size_t p_round, size_t p_block_id) {
         if(p_round == precomputed_round) return precomputed_fps[p_block_id];
@@ -58,6 +59,13 @@ private:
         [](RabinKarpFingerprint p_fp, const RabinKarpFingerprint &p_fp_right) {
             return p_fp + p_fp_right;
         });
+    }
+
+    bool can_be_match(size_t p_block_id, size_t p_round) {
+        if(p_round > precomputed_round) return true;
+        size_t start_block_id = p_block_id << (precomputed_round - p_round);
+        size_t end_block_id = start_block_id + (1 << (precomputed_round - p_round));
+        return std::all_of(precomputed_match_flags.begin() + start_block_id, precomputed_match_flags.begin() + end_block_id, [](bool p_flag) { return p_flag; });
     }
 
     auto split_block_node(const BlockNode *p_block_node, size_t p_round) {
@@ -167,6 +175,52 @@ public:
         }
     }
 
+    void precompute_matches(size_t p_round) {
+        const size_t block_size = in_ceil_size >> p_round;
+        const size_t data_per_chunk = (in_size - block_size + ApproxLZ77Par::num_threads - 1) / ApproxLZ77Par::num_threads;
+        const size_t num_chunks = (in_size - block_size + data_per_chunk - 1) / data_per_chunk;
+        precomputed_match_flags.clear();
+        precomputed_fps.clear();
+        
+        std::vector<BlockNode> nodes = init_nodes(p_round);
+        precomputed_match_flags.resize(nodes.size(), false);
+        precomputed_fps.resize(nodes.size());
+
+        std::unique_ptr<ankerl::unordered_dense::map<size_t, u_int32_t>> fp_table[ApproxLZ77Par::num_threads];
+        auto ref_table = create_fp_table(fp_table, nodes, p_round);
+        nodes[0].fp.precompute_pop_values();
+
+        #pragma omp parallel for
+        for(size_t chunk_id = 0; chunk_id < num_chunks; chunk_id++) {
+            const size_t start_pos = chunk_id * data_per_chunk;
+            const size_t end_pos = std::min(start_pos + data_per_chunk, in_size - block_size);
+
+            RabinKarpFingerprint test_fp = [&]() {
+                if(chunk_id == 0) return nodes[0].fp;
+                else if(start_pos < end_pos) {
+                    return RabinKarpFingerprint(std::span<const char8_t>(input_data.data() + start_pos, block_size));
+                }
+                else return RabinKarpFingerprint();
+            }();
+
+            for(size_t pos = start_pos; pos < end_pos; pos++) {
+                preprocess_matches(pos, test_fp.val, fp_table, ref_table);
+                test_fp.shift_right(input_data[pos], input_data[pos + block_size]);
+            }
+        }
+
+        #pragma omp parallel for
+        for(size_t node_id = 0; node_id < nodes.size(); node_id++) {
+            precomputed_fps[node_id] = nodes[node_id].fp;
+        }
+
+        for(size_t node_id = 0; node_id < nodes.size(); node_id++) {
+            precomputed_match_flags[node_id] = ref_table[node_id] < (nodes[node_id].block_id * block_size);
+        }
+
+        precomputed_round = p_round;
+    }
+
     /**
      * @brief Fill Fingerprint-Table from current unmarked nodes
      * 
@@ -185,7 +239,13 @@ public:
         {
             #pragma omp for
             for(size_t i = 1; i < nodes_size; i++) {
-                flag_table[i] = p_unmarked_nodes[i].fp.val & ApproxLZ77Par::num_thread_mask;
+                if(!can_be_match(p_unmarked_nodes[i].block_id, p_cur_round)) {
+                    ref_table[i] = p_unmarked_nodes[i].block_id * block_size;
+                    flag_table[i] = ApproxLZ77Par::num_threads;
+                }
+                else {
+                    flag_table[i] = p_unmarked_nodes[i].fp.val & ApproxLZ77Par::num_thread_mask;
+                }
             }
 
             ankerl::unordered_dense::map<size_t, u_int32_t> t_fp_table;

@@ -136,7 +136,7 @@ void ApproxLZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<Appr
 
     
     // Execute Algorithm
-    if (max_round - min_round > 6) block_table.precompute_fingerprint(max_round - 3);
+    if (max_round - min_round > 6) block_table.precompute_matches(max_round - 2);
     auto start = std::chrono::high_resolution_clock::now();
     init_nodes(ApproxLZ77::dynamic_init);
     auto end = std::chrono::high_resolution_clock::now();
