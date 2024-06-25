@@ -129,6 +129,8 @@ namespace ApproxLZ77 {
         const size_t min_block_size = 1;
     #endif
 
+    const bool precompute = true;
+
     /**
      * @brief Representation of Factor in Approximate LZ77-Algorithm
      * 
