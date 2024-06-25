@@ -51,9 +51,9 @@ private:
     RabinKarpFingerprint extract_precomputed_fp(size_t p_round, size_t p_block_id) {
         if(p_round == precomputed_round) return precomputed_fps[p_block_id];
 
-        size_t start_block_id = p_block_id << (precomputed_round - p_round);
-        size_t num_chunk = 1 << (precomputed_round - p_round);
-        size_t end_block_id = std::min(start_block_id + num_chunk, precomputed_fps.size());
+        const size_t start_block_id = p_block_id << (precomputed_round - p_round);
+        const size_t num_chunk = 1 << (precomputed_round - p_round);
+        const size_t end_block_id = std::min(start_block_id + num_chunk, precomputed_fps.size());
 
         return std::accumulate(precomputed_fps.begin() + start_block_id, precomputed_fps.begin() + end_block_id, RabinKarpFingerprint(), 
         [](RabinKarpFingerprint p_fp, const RabinKarpFingerprint &p_fp_right) {
@@ -63,8 +63,8 @@ private:
 
     bool can_be_match(size_t p_block_id, size_t p_round) {
         if(p_round > precomputed_round) return true;
-        size_t start_block_id = p_block_id << (precomputed_round - p_round);
-        size_t end_block_id = start_block_id + (1 << (precomputed_round - p_round));
+        const size_t start_block_id = p_block_id << (precomputed_round - p_round);
+        const size_t end_block_id = start_block_id + (1 << (precomputed_round - p_round));
         return std::all_of(precomputed_match_flags.begin() + start_block_id, precomputed_match_flags.begin() + end_block_id, [](bool p_flag) { return p_flag; });
     }
 
@@ -156,25 +156,10 @@ public:
     }
 
     /**
-     * @brief Precompute Fingerprint of all blocks for a given round
+     * @brief Precompute matches and fingerprints for a given round
      * 
-     * @param p_round The round to precompute the fingerprints for
-    */
-    void precompute_fingerprint(size_t p_round) {
-        precomputed_round = p_round;
-        const size_t block_size = in_ceil_size >> p_round;
-        const size_t num_blocks = (in_size + block_size - 1) / block_size;
-
-        precomputed_fps.resize(num_blocks);
-
-        #pragma omp parallel for
-        for(size_t i = 0; i < num_blocks; i++) {
-            const size_t start = i * block_size;
-            const size_t end = std::min(start + block_size, input_data.size());
-            precomputed_fps[i] = RabinKarpFingerprint(std::span(input_data.begin() + start, input_data.begin() + end));
-        }
-    }
-
+     * @param p_round The round to precompute matches for
+     */
     void precompute_matches(size_t p_round) {
         const size_t block_size = in_ceil_size >> p_round;
         const size_t data_per_chunk = (in_size - block_size + ApproxLZ77Par::num_threads - 1) / ApproxLZ77Par::num_threads;
@@ -186,7 +171,7 @@ public:
         precomputed_match_flags.resize(nodes.size(), false);
         precomputed_fps.resize(nodes.size());
 
-        std::unique_ptr<ankerl::unordered_dense::map<size_t, u_int32_t>> fp_table[ApproxLZ77Par::num_threads];
+        std::vector<std::unique_ptr<ankerl::unordered_dense::map<size_t, u_int32_t>>> fp_table(ApproxLZ77Par::num_threads);
         auto ref_table = create_fp_table(fp_table, nodes, p_round);
         nodes[0].fp.precompute_pop_values();
 
@@ -228,7 +213,8 @@ public:
      * @param p_unmarked_nodes The current unmarked nodes
      * @param p_cur_round The current round of the algorithm
     */
-    auto create_fp_table(std::unique_ptr<ankerl::unordered_dense::map<size_t, u_int32_t>> p_fp_table[], const BlockNodeRange auto& p_unmarked_nodes, size_t p_cur_round) {
+    template<FPTable FPTableSeq>
+    auto create_fp_table(std::vector<std::unique_ptr<FPTableSeq>> &p_fp_table, const BlockNodeRange auto& p_unmarked_nodes, size_t p_cur_round) {
         const size_t block_size = in_ceil_size >> p_cur_round;
         const size_t nodes_size = p_unmarked_nodes.back().block_id * block_size + block_size > in_size ? p_unmarked_nodes.size() - 1 : p_unmarked_nodes.size();
 
@@ -248,14 +234,14 @@ public:
                 }
             }
 
-            ankerl::unordered_dense::map<size_t, u_int32_t> t_fp_table;
+            FPTableSeq t_fp_table;
             u_int32_t chunk_id = omp_get_thread_num();
             for(size_t i = 1; i < nodes_size; i++) {
                 if(flag_table[i] != chunk_id) continue;
                 auto [match_it, insert_success] = t_fp_table.insert(std::pair(p_unmarked_nodes[i].fp.val, i));
                 ref_table[i] = p_unmarked_nodes[match_it->second].block_id * block_size;
             }
-            p_fp_table[chunk_id] = std::make_unique<ankerl::unordered_dense::map<size_t, u_int32_t>>(std::move(t_fp_table));
+            p_fp_table[chunk_id] = std::make_unique<FPTableSeq>(std::move(t_fp_table));
         }
 
         return ref_table;
@@ -269,7 +255,7 @@ public:
      * @param p_cur_nodes The current unmarked nodes(Out)
      * @param p_diff_round Numer of rounds to move back
     */
-    void previous_nodes(std::vector<BlockNode> &p_cur_nodes, size_t p_diff_round) {
+    void previous_nodes(BlockNodeRange auto &p_cur_nodes, size_t p_diff_round) {
         const size_t num_nodes_pack = 1 << p_diff_round;
         
         #pragma omp parallel for ordered
@@ -307,8 +293,8 @@ public:
 
         #pragma omp parallel for
         for(size_t chunk_id = 0; chunk_id < num_chunks; chunk_id++) {
-            size_t start_pos = chunk_id * nodes_per_chunk;
-            size_t end_pos = std::min(start_pos + nodes_per_chunk, p_prev_nodes.size());
+            const size_t start_pos = chunk_id * nodes_per_chunk;
+            const size_t end_pos = std::min(start_pos + nodes_per_chunk, p_prev_nodes.size());
             
             for(size_t i = start_pos; i < end_pos; i+=2) {
                 auto *node = &p_prev_nodes[i];
@@ -342,8 +328,8 @@ public:
         #pragma omp parallel for
         for(size_t chunk_id = 0; chunk_id < num_chunks; chunk_id++)
         {            
-            size_t start_pos = chunk_id * nodes_per_chunk;
-            size_t end_pos = std::min(start_pos + nodes_per_chunk, p_prev_nodes.size());
+            const size_t start_pos = chunk_id * nodes_per_chunk;
+            const size_t end_pos = std::min(start_pos + nodes_per_chunk, p_prev_nodes.size());
 
             std::span<BlockNode> nodes_space(next_unmarked_nodes.begin() + node_sizes[chunk_id], next_unmarked_nodes.begin() + node_sizes[chunk_id + 1]);
             std::span<CherryNode> chain_space(p_chain_ids.begin() + chain_init_size + chain_sizes[chunk_id], p_chain_ids.begin() + chain_init_size + chain_sizes[chunk_id + 1]);
@@ -360,7 +346,8 @@ public:
      * @param p_fp Fingerprint of Sliding Window to check against
      * @param p_fp_table Fingerprint Table of unmarked blocks
      */
-    void preprocess_matches(u_int32_t p_pos, size_t p_fp, std::unique_ptr<ankerl::unordered_dense::map<size_t, u_int32_t>> p_fp_table[], std::vector<u_int32_t> &p_ref_table) {
+    template<FPTable FPTableSeq>
+    void preprocess_matches(u_int32_t p_pos, size_t p_fp, const std::vector<std::unique_ptr<FPTableSeq>> &p_fp_table, std::vector<u_int32_t> &p_ref_table) {
         auto &t_fp_table = *p_fp_table[p_fp & ApproxLZ77Par::num_thread_mask];
         auto match_it = t_fp_table.find(p_fp);
         if(match_it != t_fp_table.end() && p_ref_table[match_it->second] > p_pos) p_ref_table[match_it->second] = p_pos;
@@ -375,13 +362,13 @@ public:
      * @param p_fp_table Fingerprint Table of unmarked blocks
      * @param p_round Current Round
      */
-    void postprocess_matches(std::vector<BlockNode> &p_unmarked_nodes, std::vector<u_int32_t> &p_ref_table, size_t p_round) {
+    void postprocess_matches(BlockNodeRange auto &p_unmarked_nodes, const std::vector<u_int32_t> &p_ref_table, size_t p_round) {
         const size_t block_size = in_ceil_size >> p_round;
+        const size_t nodes_size = p_unmarked_nodes.back().block_id * block_size + block_size > in_size ? p_unmarked_nodes.size() - 1 : p_unmarked_nodes.size();
 
         #pragma omp parallel for
-        for(size_t i = 1; i < p_unmarked_nodes.size(); i++) {
+        for(size_t i = 1; i < nodes_size; i++) {
             auto &node = p_unmarked_nodes[i];
-            if(node.block_id * block_size + block_size > in_size) [[unlikely]] continue;
             if(p_ref_table[i] < node.block_id * block_size) node.chain_info |= block_size;
         }
     }
@@ -394,7 +381,7 @@ public:
      * @param p_round Current Round
      * @param p_marked_refs Sequence of raw reference factors
      */
-    void postprocess_matches(std::vector<BlockNode> &p_unmarked_nodes, std::vector<u_int32_t> &p_ref_table, size_t p_round, std::vector<BlockRef> &p_marked_refs) {
+    void postprocess_matches(BlockNodeRange auto &p_unmarked_nodes, const std::vector<u_int32_t> &p_ref_table, size_t p_round, std::vector<BlockRef> &p_marked_refs) {
         const size_t block_size = in_ceil_size >> p_round;
  
         const size_t nodes_per_chunk = (p_unmarked_nodes.size() + ApproxLZ77Par::num_threads - 1) / ApproxLZ77Par::num_threads;
@@ -427,7 +414,7 @@ public:
      * @param p_chain_ids The set of CherryNodes to populate
      * @param p_round The current/last round of the algorithm
     */
-    void populate_unmarked_chain(std::vector<BlockNode> &p_unmarked_nodes, std::vector<CherryNode> &p_chain_ids, size_t p_round) {
+    void populate_unmarked_chain(const BlockNodeRange auto &p_unmarked_nodes, std::vector<CherryNode> &p_chain_ids, size_t p_round) {
         const u_int32_t block_size = in_ceil_size >> p_round;
         const u_int32_t init_size = p_chain_ids.size();
         p_chain_ids.resize(init_size + p_unmarked_nodes.size());
