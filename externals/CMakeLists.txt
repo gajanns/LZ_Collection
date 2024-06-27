@@ -1,8 +1,9 @@
-# Memory-Tracking Library written by Timo Bingmann and Lorenz Hübschle
+# Fork of written by ByteHamster form Memory-Tracking Library written by Timo Bingmann and Lorenz Hübschle : MIT License
 include(FetchContent)
 FetchContent_Declare(
   malloc_count
-  GIT_REPOSITORY https://github.com/bingmann/malloc_count.git
+  GIT_REPOSITORY https://github.com/ByteHamster-etc/malloc_count.git
+  GIT_TAG aligned_alloc
   SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/malloc_count
 )
 FetchContent_MakeAvailable(malloc_count)
