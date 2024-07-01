@@ -34,7 +34,7 @@ namespace DebugCoder
             return m_bytes_written;
         }
 
-        void flush() {
+        void flush_impl() {
             m_out->flush();
         }
     };

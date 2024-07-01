@@ -66,11 +66,40 @@
             "request": "launch",
             "program": "${workspaceFolder}/build/source/LZ_Collection",
             "args": [
-                "all",
+                "data/english.100MB",
                 "dummy_res",
-                "all",
+                "Approx.LZ77",
                 "-c",
                 "-b"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "Decompress Approx.LZ77",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/build/source/LZ_Collection",
+            "args": [
+                "dummy_res",
+                "dummy_original",
+                "Approx.LZ77",
+                "-d"
             ],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

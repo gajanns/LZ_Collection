@@ -61,14 +61,16 @@ namespace Compression {
 
                 compress_impl(p_in, p_out);
 
+                auto end = std::chrono::high_resolution_clock::now();
+                m_stats.m_run_time_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+                
                 p_out.flush();
                 m_stats.m_input_size = p_in.size();
                 m_stats.m_output_size = p_out.bytes_written();
                 m_stats.m_factor_count = p_out.factors_written();
                 p_in.reset();
                 
-                auto end = std::chrono::high_resolution_clock::now();
-                m_stats.m_run_time_milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+                
                 #ifdef PERF
                 MemoryTracker::stop_mem_record();
                 m_stats.m_mem_usage = MemoryTracker::peak_mem_usage;

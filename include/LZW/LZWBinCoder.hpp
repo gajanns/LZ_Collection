@@ -35,7 +35,7 @@ public:
         return m_bytes_written;
     }
 
-    void flush() {
+    void flush_impl() {
         if(m_bit_counter) {m_bitout.flush();m_bytes_written++;}
     }
 };
