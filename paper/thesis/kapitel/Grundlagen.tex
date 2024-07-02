@@ -18,11 +18,43 @@ der Form $S[1..k]$ mit $k\leq n$ wird als Präfix von $S$ bezeichnet.
 
 \subsection{Faktorisierung}
 Ein charakteristisches Merkmal für die Klasse von Lempel-Ziv-Kompressionsverfahren ist die Repräsentation der Ausgabe in Form einer Faktorisierung. Für eine Eingabe $S=e_1...e_n$ 
-wird eine Faktorisierung $S=f_1...f_z$ mit $z\leq n$ derart erzeugt, dass die Faktoren $S$ in eine equivalente Folge von nichtleeren Teilfolgen zerlegt werden. Hier ist jeder Faktor
+wird eine Faktorisierung $F=f_1...f_z$ mit $z\leq n$ derart erzeugt, dass die Faktoren $S$ in eine equivalente Folge von nichtleeren Teilfolgen zerlegen. Hier ist jeder Faktor
 $f_i$ mit $1\leq i\leq z$ als Präfix von $S[|f_1...f_i-1|+1..n]$ definiert, der bereits in $S[1..|f_1...f_i|]$ vorkommt oder als einzelnes Zeichen ohne vorheriges Vorkommen. Die im 
 Folgenden betrachteten Algorithmen können speziell der Klasse der LZ77-Kompressionsverfahren zugeordnet werden, dessen Faktoren im Schema des Lempel-Ziv-Storer-Szymanski repräsentiert
 werden sollen. Zur Darstellung von Referenzen wird das Tupel $(len, pos)$ verwendet, wobei $pos$ die Position des vorherigen Vorkommens und $len>0$ die Länge des Faktors beschreibt. 
 Einzelne Zeichen können wiederum durch das Tupel $(0, e)$ mit $e\in \Sigma$ dargestellt werden.
+
+\subsection{Dekompression}
+Die Dekompression beschreibt den Umkehrprozess der Kompression und erlaubt im Falle eine verlustfreien Kompression die Rekonstruktion der ursprünglichen Datenfolge. Im Falle von 
+Verfahren der LZ77-Familie, kann die Dekompression durch die folgende Abbildung definiert werden, 
+\begin{equation}
+    DECOMP_{LZ77}: F(1..z) \rightarrow S(1..n).
+\end{equation}
+
+\begin{algorithm}
+\centering
+\caption{DECOMP$_{LZ77}$} \label{alg:decomp}
+\algorithmicrequire $F=f_1...f_z$
+\algorithmicensure $S=e_1...e_n$
+\begin{algorithmic}
+    \STATE $S \gets \emptyset$
+    \FOR{$i=1$ to $z$}
+        \STATE [len, ref] $\gets f_i$
+        \IF{len = 0} 
+            \STATE $S \gets S + ref$
+        \ELSE
+            \FOR{$j=0$ to $len-1$}
+                \STATE $S \gets S + S[ref + j]$
+            \ENDFOR
+        \ENDIF
+    \ENDFOR
+    \RETURN $S$
+\end{algorithmic}
+\end{algorithm}
+
+Der dargestellte Algorithmus \ref{alg:decomp} beschreibt eine mögliche Implementierung der Dekompression für eine Faktorisierung $F=f_1...f_z$ zu der Eingabe $S=e_1...e_n$.
+Der beschriebene Algorithmus iteriert durch alle Faktoren und fügt die referenzierten Zeichen einzeln in die Ausgabe $S$ ein. Damit kann die Laufzeit des Algorithmus auf $O(n)$
+geschätzt werden.
 
 \subsection{Binäre (De-)Kodierung}
 Die Abbildung $Bin_{IO}: \Sigma^* \rightarrow N$ gibt die Anzahl der Bits für die Kodierung einer beliebigen Zeichenfolge an. Im Rahmen dieser Arbeit gehen wir davon aus, dass die 

@@ -146,7 +146,7 @@ def main():
     ax.spines["bottom"].set_bounds(min(x_input_sizes), max(x_input_sizes))
     ax.set_xlim(min(x_input_sizes), max(x_input_sizes))
     ax.xaxis.set_ticks_position("bottom")    
-    ax.set_yticks(np.arange(0, max(y_comp_times)+0.5, 0.5))
+    ax.set_yticks(np.arange(0, max(y_comp_times)+0.5, 0.25))
     ax.legend(loc = 'upper left')
     
     plt.savefig("plots/progressive_stack_par.png", bbox_inches='tight')
