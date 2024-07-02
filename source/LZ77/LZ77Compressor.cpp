@@ -24,7 +24,7 @@ void LZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<LZ77::fact
     size_t k = 0;
     while(k < input_span.size()) {
 
-        size_t lcp_psv=0, lcp_nsv=0;
+        u_int32_t lcp_psv=0, lcp_nsv=0;
         if(psv[k] != -1) {
             while(k+lcp_psv < input_span.size() && input_span[k+lcp_psv] == input_span[psv[k]+lcp_psv]) lcp_psv++;
         }
@@ -32,12 +32,12 @@ void LZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<LZ77::fact
             while(k+lcp_nsv < input_span.size() && input_span[k+lcp_nsv] == input_span[nsv[k]+lcp_nsv]) lcp_nsv++;
         }
 
-        size_t lcp = std::max(lcp_psv, lcp_nsv);
+        u_int32_t lcp = std::max(lcp_psv, lcp_nsv);
         if(lcp < LZ77::min_ref_size) {
             p_out.encode(LZ77::factor_id{.value = input_span[k++], .length = 0});
         }
         else {
-            size_t pos = lcp_psv >= lcp_nsv ? psv[k] : nsv[k];
+            u_int32_t pos = lcp_psv >= lcp_nsv ? psv[k] : nsv[k];
             p_out.encode(LZ77::factor_id{.value = pos, .length = lcp});
             k += lcp;
         }
@@ -57,7 +57,7 @@ void LZ77Compressor::decompress_impl(Coder::Decoder<LZ77::factor_id> &p_in, OutS
         }
         else {
 
-            auto data = p_out.slice_val(std::get<size_t>(id.value), id.length);            
+            auto data = p_out.slice_val(std::get<u_int32_t>(id.value), id.length);            
             for(int i = id.length; i>0;){
                 if(i >= data.size()){
                     p_out.write(data);

@@ -35,7 +35,7 @@ public:
         }
         else {
             if(m_bitout.writeFrom(1, 1) != 1 ||
-                m_bitout.writeFrom(std::get<size_t>(p_value.value), offset_bit_size) != offset_bit_size ||
+                m_bitout.writeFrom(std::get<u_int32_t>(p_value.value), offset_bit_size) != offset_bit_size ||
                 m_bitout.writeFrom(p_value.log_length, length_bit_size) != length_bit_size) {
                  return 0;
             }
@@ -85,7 +85,7 @@ public:
             m_bit_counter += 9;
         }
         else {
-            size_t offset;
+            u_int32_t offset;
             if(m_bitin.readInto(offset,offset_bit_size) !=offset_bit_size ||
                 m_bitin.readInto(p_value.log_length, length_bit_size) != length_bit_size) {
                 return 0;

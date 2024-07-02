@@ -155,7 +155,7 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
 
         for(auto [it_ref, cur_pos] = std::pair{marked_refs.begin(), size_t{0}}; auto log_size : factor_log_sizes) {
             if(it_ref != marked_refs.end() && it_ref->block_position == cur_pos) {
-                p_out.encode(ApproxLZ77::factor_id{.value = it_ref->ref_position, .log_length = static_cast<size_t>(log_size+1)});
+                p_out.encode(ApproxLZ77::factor_id{.value = it_ref->ref_position, .log_length = static_cast<u_int8_t>(log_size+1)});
                 cur_pos += 1 << log_size;
                 it_ref++;
             }
@@ -204,7 +204,7 @@ void ApproxLZ77ParCompressor::decompress_impl(Coder::Decoder<ApproxLZ77::factor_
         }
         else {
             size_t length = 1<<(id.log_length-1);
-            auto data = p_out.slice_val(std::get<size_t>(id.value), length);            
+            auto data = p_out.slice_val(std::get<u_int32_t>(id.value), length);            
             for(int i = length; i>0;) {
                 if(i >= data.size()){
                     p_out.write(data);

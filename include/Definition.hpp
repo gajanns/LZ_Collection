@@ -75,8 +75,8 @@ namespace LZ77
      * 
      */
     struct factor_id{
-        std::variant<char8_t, size_t> value;
-        size_t length;
+        std::variant<char8_t, u_int32_t> value;
+        u_int32_t length;
 
         bool operator>>(std::u8string &p_out) {
 
@@ -87,7 +87,7 @@ namespace LZ77
                 ss << reinterpret_cast<char&>(std::get<char8_t>(value));
             }
             else {
-                ss << std::get<size_t>(value);
+                ss << std::get<u_int32_t>(value);
             }
             std::string tmp = ss.str();
             p_out += std::u8string{tmp.begin(), tmp.end()};
@@ -108,7 +108,7 @@ namespace LZ77
             }
             else {
                 try {
-                    value = std::stoul(std::string{p_in.begin()+pos+1, p_in.end()});
+                    value = static_cast<u_int32_t>(std::stoul(std::string{p_in.begin()+pos+1, p_in.end()}));
                 }
                 catch(std::invalid_argument &e) {
                     return false;
@@ -136,12 +136,12 @@ namespace ApproxLZ77 {
      * 
      */
     struct factor_id{
-        std::variant<char8_t, size_t> value;
-        size_t log_length; // if(0) => length = 0, else => 2^(log_length-1)
+        std::variant<char8_t, u_int32_t> value;
+        u_int8_t log_length; // if(0) => length = 0, else => 2^(log_length-1)
 
         bool operator>>(std::u8string &p_out) {
 
-            size_t length = log_length ? 1<<(log_length-1) : 0;    
+            u_int32_t length = log_length ? 1<<(log_length-1) : 0;    
             std::stringstream ss;
             ss << length << ",";
         
@@ -149,7 +149,7 @@ namespace ApproxLZ77 {
                 ss << reinterpret_cast<char&>(std::get<char8_t>(value));
             }
             else {
-                ss << std::get<size_t>(value);
+                ss << std::get<u_int32_t>(value);
             }
             std::string tmp = ss.str();
             p_out += std::u8string{tmp.begin(), tmp.end()};
@@ -163,7 +163,7 @@ namespace ApproxLZ77 {
                 return false;
             }
 
-            size_t length = std::stoul(std::string{p_in.begin(), p_in.begin()+pos});
+            u_int32_t length = std::stoul(std::string{p_in.begin(), p_in.begin()+pos});
             log_length = length ? std::bit_width(length) : 0;
             
             if(log_length == 0) {
@@ -171,7 +171,7 @@ namespace ApproxLZ77 {
             }
             else {
                 try {
-                    value = std::stoul(std::string{p_in.begin()+pos+1, p_in.end()});
+                    value = static_cast<u_int32_t>(std::stoul(std::string{p_in.begin()+pos+1, p_in.end()}));
                 }
                 catch(std::invalid_argument &e) {
                     return false;
