@@ -40,24 +40,27 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
         //ShardedMap<size_t, u_int32_t, ankerl::unordered_dense::map, LeftMostOccurence> fp_table(num_threads, 128);
         std::vector<std::unique_ptr<ankerl::unordered_dense::map<size_t, u_int32_t>>> fp_table(num_threads);
         auto ref_table = block_table.create_fp_table(fp_table, unmarked_nodes, p_round);
-        unmarked_nodes[0].fp.precompute_pop_values();
+        const double fp_ratio = static_cast<double>(fp_table.size()) / unmarked_nodes.size();
+        
+        if(fp_ratio > ApproxLZ77::min_fp_ratio) {
+            unmarked_nodes[0].fp.precompute_pop_values();
+            #pragma omp parallel for
+            for(size_t chunk_id = 0; chunk_id < num_chunks; chunk_id++) {
+                const size_t start_pos = chunk_id * data_per_chunk;
+                const size_t end_pos = std::min(start_pos + data_per_chunk, input_span.size() - block_size);
 
-        #pragma omp parallel for
-        for(size_t chunk_id = 0; chunk_id < num_chunks; chunk_id++) {
-            const size_t start_pos = chunk_id * data_per_chunk;
-            const size_t end_pos = std::min(start_pos + data_per_chunk, input_span.size() - block_size);
+                RabinKarpFingerprint test_fp = [&]() {
+                    if(chunk_id == 0) return unmarked_nodes[0].fp;
+                    else if(start_pos < end_pos) {
+                        return RabinKarpFingerprint(std::span<const char8_t>(input_span.data() + start_pos, block_size));
+                    }
+                    else return RabinKarpFingerprint();
+                }();
 
-            RabinKarpFingerprint test_fp = [&]() {
-                if(chunk_id == 0) return unmarked_nodes[0].fp;
-                else if(start_pos < end_pos) {
-                    return RabinKarpFingerprint(std::span<const char8_t>(input_span.data() + start_pos, block_size));
+                for(size_t pos = start_pos; pos < end_pos; pos++) {
+                    block_table.preprocess_matches(pos, test_fp.val, fp_table, ref_table);
+                    test_fp.shift_right(input_span[pos], input_span[pos + block_size]);
                 }
-                else return RabinKarpFingerprint();
-            }();
-
-            for(size_t pos = start_pos; pos < end_pos; pos++) {
-                block_table.preprocess_matches(pos, test_fp.val, fp_table, ref_table);
-                test_fp.shift_right(input_span[pos], input_span[pos + block_size]);
             }
         }
 

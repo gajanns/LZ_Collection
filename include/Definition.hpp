@@ -122,6 +122,7 @@ namespace LZ77
 namespace ApproxLZ77 {
     const bool dynamic_init = true;
     const size_t min_round = 1;
+    const double min_fp_ratio = 0.03;
 
     #if DYNAMIC_GRANULARITY == true
        inline size_t min_block_size = 1;
