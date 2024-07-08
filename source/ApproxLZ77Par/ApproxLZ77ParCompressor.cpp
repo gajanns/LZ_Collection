@@ -40,7 +40,8 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
         //ShardedMap<size_t, u_int32_t, ankerl::unordered_dense::map, LeftMostOccurence> fp_table(num_threads, 128);
         std::vector<std::unique_ptr<ankerl::unordered_dense::map<size_t, u_int32_t>>> fp_table(num_threads);
         auto ref_table = block_table.create_fp_table(fp_table, unmarked_nodes, p_round);
-        const double fp_ratio = static_cast<double>(fp_table.size()) / unmarked_nodes.size();
+        const size_t fp_num = std::accumulate(fp_table.begin(), fp_table.end(), 0, [](size_t acc, const auto &map) { return acc + map->size(); });
+        const double fp_ratio = static_cast<double>(fp_num) / unmarked_nodes.size();
         
         if(fp_ratio > ApproxLZ77::min_fp_ratio) {
             unmarked_nodes[0].fp.precompute_pop_values();
