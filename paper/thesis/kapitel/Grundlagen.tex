@@ -6,7 +6,7 @@ Zunächst stellen wir die verwendete Terminologie und relevante Konzepte bzw. Ph
 
 \subsection{Verlustfreie Kompression}
 Der Prozess der Kompression überführt eine Repräsentation einer finiten Datenmenge in eine möglichst kompaktere Form. Eine verlustfreie Kompression ist gegeben, falls die Abbildung
-zwischen der ursprünglichen und komprimierten Datenmenge bijektiv ist. Die Korrektheit einer verlustfreien Kompression kann daher durch die Angabe einer Dekompressionsfunktion 
+zwischen der ursprünglichen und komprimierten Repräsentation bijektiv ist. Die Korrektheit einer verlustfreien Kompression kann daher durch die Angabe einer Dekompressionsfunktion 
 nachgewiesen werden. Ist diese Vorraussetzung nicht gegeben, so handelt es sich um eine verlustbehaftete Kompression, da eine Rekonstruktion der ursprünglichen Datenmenge nicht 
 garantiert werden kann.
 
@@ -56,6 +56,21 @@ Der dargestellte Algorithmus \ref{alg:decomp} beschreibt eine mögliche Implemen
 Der beschriebene Algorithmus iteriert durch alle Faktoren und fügt die referenzierten Zeichen einzeln in die Ausgabe $S$ ein. Damit kann die Laufzeit des Algorithmus auf $O(n)$
 geschätzt werden.
 
+\subsection{Verlustbehaftete Kompression}
+Im Rahmen dieser Arbeit werden einen Approximationsalgorithmus betrachten, der aufgrund der verwendeten String-Matching-Technik eine fehlerhafte Faktorisierung mit einer 
+beschränkten Wahrscheinlichkeit erzeugen kann. Die Korrektheit der Dekompression kann intern und extern durch explizite Vergleiche der Zeichenfolgen erkannt werden. Da der
+Kompressionsprozess in diesem Fall mit anderen Parametern wiederholt werden kann, können wir einen verlustfreien Las-Vegas-Algorithmus konstruieren.
+
+\begin{figure}
+    \centering
+    \caption{Las-Vegas-Algorithmus}
+    \label{fig:lasvegas}
+    \includegraphics[scale=0.25]{bilder/lasvegas_algorithm.png}
+\end{figure}
+
+In Abbildung \ref{fig:lasvegas} wird die beschriebene Schleife illustriert. Der Algorithmus wird solange wiederholt, bis eine korrekte Faktorisierung erzeugt wurde. Dass die
+Anzahl der Wiederholungen beschränkt ist, werden wir in der Analyse des Approximationsalgorithmus und der praktischen Evaluation zeigen.
+
 \subsection{Binäre (De-)Kodierung}
 Die Abbildung $Bin_{IO}: \Sigma^* \rightarrow N$ gibt die Anzahl der Bits für die Kodierung einer beliebigen Zeichenfolge an. Im Rahmen dieser Arbeit gehen wir davon aus, dass die 
 Eingabe $S$ in binärer Form vorliegt und auf dem Alphabet $\Sigma=\{1,...,255\}$ erzeugt wurde. Jedes Zeichen wird durch 8 Bits, oder 1 Byte, dargestellt und erlaubt einen 
@@ -69,7 +84,7 @@ durch $Bin_{IO}(f_i)$ Bits kodiert. Die binäre Ausgabegröße ergibt sich aus d
 \begin{equation}
     Z_{Bin} = \sum_{i=1}^{z} Bin_{IO}(f_i).
 \end{equation}
-, wobei die Anzahl der Bits für die Kodierung der Faktoren $f_i$ durch den Kompressionsalgorithmus und der Kodierungsstrategie bestimmt wird.
+, wobei die Anzahl der Bits für die Kodierung der Faktoren $f_i$ durch den Kompressionsalgorithmus und der Kodierungsstrategie bestimmt wird. 
 
 \subsection{Metriken}
 Die Qualität einer Kompression kann durch verschiedene Metriken quantifiziert werden. Zum Einen beschreibt die Kompressionsrate $CR$ den Grad der Kompression und ist durch den

@@ -1,0 +1,8 @@
+\chapter{Kompressionsalgorithmen}
+
+\section{(exakte) LZ77-Kompression}
+Die resultierende Faktorisierung aus der exakten LZ77-Kompression wird im Folgenden als Referenz für die Evaluation der Ergebnisse anderer Algorithmen verwendet.
+Zusätzlich zu der bereits beschriebenen Struktur von Faktorisierung nach dem Lempel-Ziv-Schema erfüllen referierende Faktoren die Eigenschaft, dass sie stets
+die längste Zeichenfolge referenzieren, die ein vorheriges Vorkommen hat. Der Algorithmus hat hat damit einen Greedy-Charakter. Im Rahmen der Evaluation nutzen 
+wir Implementierung des Algorithmus, welcher auf der Erzeugung eines Suffixarray basiert. Für eine Eingabe der Länge $n$ kann die Laufzeit des Algorithmus auf
+$O(n)$ geschätzt werden. Der eingespannter Speicher kann auch auf $O(n)$ geschätzt werden, wobei in der Praxis ein großer konstanter Faktor zu erwarten ist.
