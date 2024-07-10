@@ -26,14 +26,14 @@ void ApproxLZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<Appr
     size_t max_block_log_size;
     size_t round = min_round;
 
-    auto match_nodes = [&](size_t p_round, bool p_capture_refs = true) {
+    auto match_nodes = [&](size_t p_round, bool p_simulate = false) {
         const size_t block_size = in_size >> p_round;
         
         ankerl::unordered_dense::map<size_t, u_int32_t> fp_table;
         auto ref_table = block_table.create_fp_table(fp_table, unmarked_nodes, p_round);
         double fp_ratio = static_cast<double>(fp_table.size()) / unmarked_nodes.size();
 
-        if(fp_ratio > ApproxLZ77::min_fp_ratio) {
+        if(p_simulate || fp_ratio > ApproxLZ77::min_fp_ratio) {
             RabinKarpFingerprint test_fp = unmarked_nodes[0].fp;
             test_fp.precompute_pop_values();
             for(u_int32_t pos = 0; pos < input_span.size() - block_size; pos++) {
@@ -42,7 +42,7 @@ void ApproxLZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<Appr
             }
         }
 
-        block_table.postprocess_matches(unmarked_nodes, ref_table, p_round, p_capture_refs ? &marked_refs : nullptr);
+        block_table.postprocess_matches(unmarked_nodes, ref_table, p_round, p_simulate ? nullptr : &marked_refs);
 
         return 1;
     };
@@ -55,7 +55,7 @@ void ApproxLZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<Appr
                 const size_t probe_block_size = in_size >> probe_round;
 
                 unmarked_nodes = block_table.init_nodes(probe_round);
-                match_nodes(probe_round, false);
+                match_nodes(probe_round, true);
                 size_t max_consecutive = 0, cur_consecutive = 0;
                 for(auto &node : unmarked_nodes | std::views::drop(1)) {
                     if(node.chain_info & probe_block_size) {

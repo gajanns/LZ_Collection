@@ -32,7 +32,7 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
     size_t max_block_log_size;
     size_t round = min_round;
 
-    auto match_nodes = [&](size_t p_round, bool p_capture_refs = true) {
+    auto match_nodes = [&](size_t p_round, bool p_simulate = false) {
         const size_t block_size = in_size >> p_round;        
         const size_t data_per_chunk = (input_span.size() - block_size + num_threads - 1) / num_threads;
         const size_t num_chunks = (input_span.size() - block_size + data_per_chunk - 1) / data_per_chunk;
@@ -43,7 +43,7 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
         const size_t fp_num = std::accumulate(fp_table.begin(), fp_table.end(), 0, [](size_t acc, const auto &map) { return acc + map->size(); });
         const double fp_ratio = static_cast<double>(fp_num) / unmarked_nodes.size();
         
-        if(fp_ratio > ApproxLZ77::min_fp_ratio) {
+        if(p_simulate || fp_ratio > ApproxLZ77::min_fp_ratio) {
             unmarked_nodes[0].fp.precompute_pop_values();
             #pragma omp parallel for
             for(size_t chunk_id = 0; chunk_id < num_chunks; chunk_id++) {
@@ -65,7 +65,7 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
             }
         }
 
-        if(p_capture_refs) block_table.postprocess_matches(unmarked_nodes, ref_table, p_round, marked_refs);
+        if(!p_simulate) block_table.postprocess_matches(unmarked_nodes, ref_table, p_round, marked_refs);
         else block_table.postprocess_matches(unmarked_nodes, ref_table, p_round);
         return 1;
     };
@@ -78,7 +78,7 @@ void ApproxLZ77ParCompressor::compress_impl(InStreamView &p_in, Coder::Encoder<A
                 const size_t probe_block_size = in_size >> probe_round;
 
                 unmarked_nodes = block_table.init_nodes(probe_round);
-                match_nodes(probe_round, false);
+                match_nodes(probe_round, true);
                 size_t max_consecutive = 0, cur_consecutive = 0;
                 for(auto &node : unmarked_nodes | std::views::drop(1)) {
                     if(node.chain_info & probe_block_size) {
