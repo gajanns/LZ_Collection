@@ -39,7 +39,7 @@ Verfahren der LZ77-Familie, kann die Dekompression durch die folgende Abbildung 
 \begin{algorithmic}
     \STATE $S \gets \emptyset$
     \FOR{$i=1$ to $z$}
-        \STATE [len, ref] $\gets f_i$
+        \STATE (len, ref) $\gets f_i$
         \IF{len = 0} 
             \STATE $S \gets S + ref$
         \ELSE
@@ -65,7 +65,7 @@ Kompressionsprozess in diesem Fall mit anderen Parametern wiederholt werden kann
     \centering
     \caption{Las-Vegas-Algorithmus}
     \label{fig:lasvegas}
-    \includegraphics[scale=0.25]{bilder/lasvegas_algorithm.png}
+    \includegraphics[scale=0.25]{Images/lasvegas_algorithm.png}
 \end{figure}
 
 In Abbildung \ref{fig:lasvegas} wird die beschriebene Schleife illustriert. Der Algorithmus wird solange wiederholt, bis eine korrekte Faktorisierung erzeugt wurde. Dass die

@@ -1,0 +1,60 @@
+\chapter{Kompressionsalgorithmen}
+
+\section{(exakte) LZ77-Kompression}
+Der im Folgenden beschriebene Algorithmus für die Generierung einer exakten LZ77-Faktorisierung dient als Referenz für die Evaluation der approximativen Algorithmen.
+
+\subsection{Konzept}
+Wie bereits in Kapitel xx beschrieben, erzeugen Algorithmen der LZ77 - Familie eine Faktorisierung einer Eingabezeichenfolge $S$, wobei die Faktoren entweder Referenzen
+zu vorherigen Zeichenfolgen oder einzelne Zeichen sein können. Im Rahmen der exakten LZ77 - Faktorisierung wird ein Greedy - Ansatz verwendet, um von links nach rechts 
+stets die längste Zeichenfolge zu referenzieren, die bereits links von der aktuellen Position vorkommt.
+\begin{algorithm}
+\centering
+\caption{COMP$_{LZ77}$} \label{alg:complz77}
+\algorithmicrequire $S=e_1...e_n$
+\algorithmicensure $F=f_1...f_z$
+\begin{algorithmic}
+    \STATE $SA \gets SuffixArray(S)$
+    \STATE $(NSV, PSV) \gets (NSVArray(S, SA), PSVArray(S, SA))$
+    \STATE $F \gets \emptyset$
+    \STATE $k \gets 1$
+    \WHILE{$k \leq n$}
+    \STATE $(len, ref) \gets (0, 0)$
+    \STATE $l_{nsv} \gets LCP(S(NSV[k]..n), S(k..n))$
+    \STATE $l_{psv} \gets LCP(S(PSV[k]..n), S(k..n))$
+    \IF{$l_{nsv} > l_{psv}$}
+        \STATE $(len, ref) \gets (l_{nsv}, NSV[k])$
+    \ELSIF{$l_{nsv} < l_{psv}$}
+        \STATE $(len, ref) \gets (l_{psv}, PSV[k])$
+    \ELSE
+        \STATE $(len, ref) \gets (0, S[k])$
+    \ENDIF
+    \STATE $F \gets F + (len, ref)$
+    \STATE $k \gets k + len + 1$
+    \ENDWHILE
+    \RETURN $F$
+\end{algorithmic}
+\end{algorithm}
+In \ref{alg:complz77} wird der Algorithmus zur Generierung einer exakten LZ77-Faktorisierung beschrieben. Der Algorithmus erzeugt zunächst ein SuffixArray, welches allen
+Suffixen der Eingabe eine lexikographische Ordnung zuweist. Mithilfe der loxikographischen Ordnung können Kandidaten für Referenzen effizient gefunden werden. Hierfür 
+werden mit Hilfe des SuffixArrays zwei Arrays, das Next Smaller Value(NSV) und das Previous Smaller Value(PSV) erzeugt. Sei die aktuelle Position in der Eingabe $k$, so
+muss aufgrund von positionellen und lexikographischen Einschränkungen die Position $ref$ der längsten vorherigen Referenz $NSV[k]$ oder $PSV[k]$ sein. Die maximale
+Länge der übereinstimmenden Präfixe zwischen $S(NSV[k]..n)$ und $S(k..n)$ bzw. $S(PSV[k]..n)$ und $S(k..n)$ wird durch die Funktion $LCP$ berechnet. Das Ergebnis
+dieser Berechnung bestimmt den Faktor $(len, ref)$, welcher in der Eingabe an Position $k$ beginnt. Der Algorithmus terminiert, wenn die gesamte Eingabe abgearbeitet wurde.
+
+\subsection{Theoretisches Laufzeit- und Speicherverhalten}
+Die Berechnung des SuffixArrays und die folgende Berechnung der NSV- und PSV-Arrays können mithilfe von Algorithmen aus der Literatur(siehe xx) in $O(n)$ Laufzeit 
+durchgeführt werden. In der abschließenden Schleife repräsentiert die $k$-te Iteration den $k$-ten Faktor, wobei die Iteration für die Berechnung der Faktorlänge
+$O(|f_k|)$ Laufzeit benötigt. Damit ergibt sich eine Gesamtlaufzeit von $O(n +\underbrace{\sum_{i=1}^{z} |f_i|}_{n}) = O(n)$ für die Generierung der exakten LZ77-Faktorisierung.
+\section{Approximation der LZ77-Faktorisierung(Approx. LZ77)}
+\subsection{Konzept}
+\subsection{Theoretisches Laufzeit- und Speicherverhalten}
+
+\section{Parallelisierung von Approx. LZ77(Approx. LZ77Par)}
+\subsection{Konzept}
+\subsection{Theoretisches Laufzeit- und Speicherverhalten}
+
+\section{Praktische Optimierungen}
+\subsection{Dynamische Endrunde(DynEnd) - Laufzeit vs. Qualität*}
+\subsection{Dynamische Startrunde(DynStart) - Laufzeit vs. Speicher}
+\subsection{Vorberechnete Runde(PreMatching) - Laufzeit vs. Speicher}
+\subsection{Minimale Tabellengröße(ScanSkip) - Laufzeit vs. Qualität}

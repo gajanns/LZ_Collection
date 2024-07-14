@@ -4,29 +4,29 @@
 \include{header}
 \begin{document}
 \selectlanguage{german}
-\include{kapitel/titelseite}
+\include{Chapters/titelseite}
 \blankpage
 \pagenumbering{roman}
 \tableofcontents
 \cleardoublepage
 \pagenumbering{arabic}
 % Kapitel
-\include{kapitel/einleitung}
-\include{kapitel/Grundlagen}
-\include{kapitel/Kompressionsalgorithmen}
-\include{kapitel/Experiment}
+\include{Chapters/einleitung}
+\include{Chapters/Grundlagen}
+\include{Chapters/Algorithmen}
+\include{Chapters/Evaluation}
 % Anhang
 \appendix
-\include{kapitel/anhang}
+\include{Chapters/anhang}
 % Literaturverzeichnis
 \bibliographystyle{gerplain}
-\bibliography{literatur/diplom}
+\bibliography{References/diplom}
 \addcontentsline{toc}{chapter}{\bibname}
 % Erklaerung
 \thispagestyle{myheadings}
 \markboth{}{ERKLÄRUNG}
 \addcontentsline{toc}{chapter}{Erklärung}
-\include{kapitel/erklaerung}
+\include{Chapters/erklaerung}
 \cleardoublepage
 \end{document}
 
