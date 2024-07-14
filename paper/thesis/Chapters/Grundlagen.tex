@@ -2,6 +2,27 @@
 
 Zunächst stellen wir die verwendete Terminologie und relevante Konzepte bzw. Phänomene dar.
 
+\section{Eingabe}
+Unsere Eingabe sei durch eine $n$-elementige Zeichenfolge $S=e_1...e_n$ über dem beschränkten numerischen Alphabet $\Sigma$ mit $e_i\in \Sigma$ $\forall i=1,...,n$ gegeben. Für jede
+beliebige Zeichenfolge $S$ wird mit $|S|$ dessen Länge, hier $n$, bezeichnet. Der Ausdruck $S[i..j]\in \Sigma^{j-i+1}$ mit $1\leq i\leq j\leq n$ beschreibt die Teilfolge $e_i...e_j$,
+wobei im Falle, dass $i=j$ ist, das einzelne Zeichen $e_i$ referenziert wird. Alternativ kann ein einzelnes Zeichen $e_i$ auch durch $S[i]$ referenziert werden. Eine Teilfolge 
+der Form $S[1..k]$ mit $1\leq k\leq n$ wird als Präfix von $S$ bezeichnet. Im Gegensatz dazu wird eine Teilfolge der Form $S[k..n]$ als Suffix von $S$ bezeichnet. Für zwei Teilfolgen
+$S_1$ und $S_2$ beschreibt der Ausdruck $S_1+S_2$ die Konkatenation der beiden Teilfolgen.
+
+\section{Ausgabe $\rightarrow$ Faktorisierung}
+Ein charakteristisches Merkmal der Familie der Lempel-Ziv-Kompressionsverfahren ist die Repräsentation der Ausgabe in Form einer Faktorisierung. Für eine Eingabe $S=e_1...e_n$ 
+wird eine Faktorisierung $F=f_1...f_z$ mit $z\leq n$ derart erzeugt, dass die Eingabe $S$ durch die Faktorisierung in eine equivalente Folge von nichtleeren Teilfolgen zerlegt werden. Dabei
+ist jeder Faktor $f_i$ mit $1\leq i\leq z$ als Präfix von $S[|f_1...f_i-1|+1..n]$ definiert, der bereits in $S[1..|f_1...f_i|]$ vorkommt oder als einzelnes Zeichen ohne vorheriges Vorkommen.
+Die im Folgenden betrachteten Algorithmen können speziell der Klasse der LZ77-Kompressionsverfahren zugeordnet werden, dessen Faktoren im Schema des Lempel-Ziv-Storer-Szymanski repräsentiert
+werden sollen. 
+
+\begin{equation} \label{eq:faktor}
+    F = f_1...f_z \text{ mit } f_i = \begin{cases} (Length, Position) & \text{falls Referenz} \\ (0, Zeichen) & \text{sonst} \end{cases}
+\end{equation}
+
+Zur Darstellung von Referenzen wird das Tupel aus der Position des vorherigen Vorkommens und der Länge des Faktors genutzt. Einzelne Zeichen können wiederum durch das Tupel aus dem Platzhalter 0 und dem
+entsprechenden Zeichen dargestellt werden. Das in \ref{eq:faktor} definierte Format beschreibt die gewünschte Ausgabe der im Folgenden betrachteten Algorithmen.
+
 \section{Kompression} \label{comp}
 
 \subsection{Verlustfreie Kompression}
@@ -9,20 +30,6 @@ Der Prozess der Kompression überführt eine Repräsentation einer finiten Daten
 zwischen der ursprünglichen und komprimierten Repräsentation bijektiv ist. Die Korrektheit einer verlustfreien Kompression kann daher durch die Angabe einer Dekompressionsfunktion 
 nachgewiesen werden. Ist diese Vorraussetzung nicht gegeben, so handelt es sich um eine verlustbehaftete Kompression, da eine Rekonstruktion der ursprünglichen Datenmenge nicht 
 garantiert werden kann.
-
-\subsection{Eingabe}
-Unsere Eingabe sei durch eine $n$-elementige Zeichenfolge $S=e_1...e_n$ über dem numerischen Alphabet $\Sigma$ mit $e_i\in \Sigma$ $\forall i=1,...,n$ gegeben. Für jede
-beliebige Zeichenfolge $S$ wird mit $|S|$ dessen Länge $n$ bezeichnet. Der Ausdruck $S[i..j]\in \Sigma^{j-i+1}$ mit $1\leq i\leq j\leq n$ beschreibt die Teilfolge $e_i...e_j$ ,
-wobei im Falle, dass $i=j$ ist, das einzelne Zeichen $e_i$ referenziert wird. Alternativ kann ein einzelnes Zeichen $e_i$ auch durch $S[i]$ referenziert werden. Eine Teilfolge 
-der Form $S[1..k]$ mit $k\leq n$ wird als Präfix von $S$ bezeichnet.
-
-\subsection{Faktorisierung}
-Ein charakteristisches Merkmal für die Klasse von Lempel-Ziv-Kompressionsverfahren ist die Repräsentation der Ausgabe in Form einer Faktorisierung. Für eine Eingabe $S=e_1...e_n$ 
-wird eine Faktorisierung $F=f_1...f_z$ mit $z\leq n$ derart erzeugt, dass die Faktoren $S$ in eine equivalente Folge von nichtleeren Teilfolgen zerlegen. Hier ist jeder Faktor
-$f_i$ mit $1\leq i\leq z$ als Präfix von $S[|f_1...f_i-1|+1..n]$ definiert, der bereits in $S[1..|f_1...f_i|]$ vorkommt oder als einzelnes Zeichen ohne vorheriges Vorkommen. Die im 
-Folgenden betrachteten Algorithmen können speziell der Klasse der LZ77-Kompressionsverfahren zugeordnet werden, dessen Faktoren im Schema des Lempel-Ziv-Storer-Szymanski repräsentiert
-werden sollen. Zur Darstellung von Referenzen wird das Tupel $(len, pos)$ verwendet, wobei $pos$ die Position des vorherigen Vorkommens und $len>0$ die Länge des Faktors beschreibt. 
-Einzelne Zeichen können wiederum durch das Tupel $(0, e)$ mit $e\in \Sigma$ dargestellt werden.
 
 \subsection{Dekompression}
 Die Dekompression beschreibt den Umkehrprozess der Kompression und erlaubt im Falle eine verlustfreien Kompression die Rekonstruktion der ursprünglichen Datenfolge. Im Falle von 
@@ -56,9 +63,34 @@ Der dargestellte Algorithmus \ref{alg:decomp} beschreibt eine mögliche Implemen
 Der beschriebene Algorithmus iteriert durch alle Faktoren und fügt die referenzierten Zeichen einzeln in die Ausgabe $S$ ein. Damit kann die Laufzeit des Algorithmus auf $O(n)$
 geschätzt werden.
 
+\subsection{String-Matching $\rightarrow$ Rabin-Karp}
+Im Rahmen des approximativen Algorithmus, welcher in dieser Arbeit beschrieben wird, werden Vergleiche von Zeichenfolgen mithilfe des Rabin-Karp-Fingerprints(RFP) durchgeführt. Sei
+$p\in \mathbb{P}$ eine Primzahl und $b\in \mathbb{N}$ eine Basis, so kann der RFP einer Zeichenfolge $S$ der Länge $n$ durch den Ausdruck
+\begin{equation}
+    \begin{split}
+    RFP(S) &= \sum_{i=1}^{n} S[i]b^{n-i} \mod p \\
+    &\in \{0,...,p-1\}
+    \end{split}
+\end{equation}
+berechnet werden. Hierbei wird eine Zeichenfolge beliebiger Länge in eine Zahl aus dem Intervall $[0,p-1]$ abgebildet. Der RFP erlaubt es, die Gleichheit zweier Zeichenfolgen zu widerlegen
+im Falle von unterschiedlichen Fingerprints. Im Falle von gleichen Fingerprints, kann die Gleichheit der Zeichenfolgen jedoch nicht garantiert werden. Die Wahrscheinlichkeit einer Kollision 
+dieser Art bei Zeichenfolgen gleicher Größe ist jedoch beschränkt und praktisch gering. Insbesondere kann die Wahrscheinlichkeit durch die passende Wahl von $p$ und $b$ minimiert werden.
+
+Rabin-Karp-Fingerprints erlauben verschiedene Operationen auf Zeichenfolgen, die im Rahmen der approximativen LZ77-Faktorisierung effizient genutzt werden können. Zum Einen kann ein
+beschränktes Fenster $S_{W} = S(j..j+w)$ der Länge $w<n$ leicht verschoben werden. Sei $RFP(S_{W})$ der Fingerabdruck des Fensters, so kann der Fingerabdruck
+durch die Verschiebung um ein Zeichen nach rechts durch den Ausdruck,
+\begin{equation}
+    RFP(S(j+1..j+w+1)) = (RFP(S_W) - S[j]b^{w-1})b + S[j+w+1] \mod p,
+\end{equation}
+beschrieben. Desweiteren seien zwei Teilfolgen $S_1$ und $S_2$ der gleichen Länge $n$ gegeben. Der RFP der Konkatenation $S_1+S_2$ der beiden Teilfolgen kann durch den Ausdruck,
+\begin{equation} \label{eq:concat}
+    RFP(S_1 + S_2) = (RFP(S_1)b^n + RFP(S_2)) \mod p,
+\end{equation}
+berechnet werden. Ähnlich zur Konkatenation von Zeichenfolgen ist die Operation \ref{eq:concat} ebenfalls assoziativ, jedoch nicht kommutativ.
+
 \subsection{Verlustbehaftete Kompression}
-Im Rahmen dieser Arbeit werden einen Approximationsalgorithmus betrachten, der aufgrund der verwendeten String-Matching-Technik eine fehlerhafte Faktorisierung mit einer 
-beschränkten Wahrscheinlichkeit erzeugen kann. Die Korrektheit der Dekompression kann intern und extern durch explizite Vergleiche der Zeichenfolgen erkannt werden. Da der
+Im Rahmen dieser Arbeit werden wir einen Approximationsalgorithmus betrachten, der aufgrund der verwendeten RFP-Technik für Vergleiche von Zeichenfolgen eine fehlerhafte Faktorisierung mit 
+einer beschränkten Wahrscheinlichkeit erzeugen kann. Die Korrektheit der Dekompression kann intern und extern durch explizite Vergleiche der Zeichenfolgen erkannt werden. Da der
 Kompressionsprozess in diesem Fall mit anderen Parametern wiederholt werden kann, können wir einen verlustfreien Las-Vegas-Algorithmus konstruieren.
 
 \begin{figure}
@@ -68,7 +100,7 @@ Kompressionsprozess in diesem Fall mit anderen Parametern wiederholt werden kann
     \includegraphics[scale=0.25]{Images/lasvegas_algorithm.png}
 \end{figure}
 
-In Abbildung \ref{fig:lasvegas} wird die beschriebene Schleife illustriert. Der Algorithmus wird solange wiederholt, bis eine korrekte Faktorisierung erzeugt wurde. Dass die
+In Abbildung \ref{fig:lasvegas} wird eine Regelsteuerung illustriert. Der Algorithmus wird solange wiederholt, bis eine korrekte Faktorisierung erzeugt wurde. Dass die
 Anzahl der Wiederholungen beschränkt ist, werden wir in der Analyse des Approximationsalgorithmus und der praktischen Evaluation zeigen.
 
 \subsection{Binäre (De-)Kodierung}
@@ -110,9 +142,12 @@ Speicherzugriffen zustoßen. Ein parallel modellierter Algorithmus muss explizit
 
 \subsection{Metriken}
 Das Ziel der Parallelisierung eines Algorithmus liegt hauptsächlich in einer Verbesserung der Laufzeit, insbesondere unter Berücksichtigung von Ressourcenkonflikten. Die zeitliche
-Beschleunigung der Laufzeit kann durch den Speedup $SP$ bemessen werden. Für eine Eingabe $S$ der Länge n brauche ein sequenzieller Durchlauf $T(n, p=1)$ Zeit, während ein paralleler
+Beschleunigung der Laufzeit kann durch den Speedup $SP$ bemessen werden. Für eine Eingabe $S$ der Länge $n$ brauche ein sequenzieller Durchlauf $T(n, p=1)$ Zeit, während ein paralleler
 Algorithmus mit $P$ Prozessoren $T(n,p=P)$ an Zeit benötigt. Der Speedup ist dabei definiert durch
 \begin{equation}
     SP(n,P) = \frac{T(n,1)}{T(n,P)}.
 \end{equation}
+Ein idealer Speedup ist gegeben durch $SP(n,P)=P$. Verschiedene Effekte im Rahmen des Speicherzugriffs, der Synchronisation und der Kommunikation über mehrere Prozessoren können jedoch
+die Effizienz der Parallelisierung stark beeinträchtigen. Insbesondere können sequenzielle Abschnitte im Algorithmus aufgrund des Amdahlschen Gesetzes eine obere Schranke für den
+Speedup setzen.
 
