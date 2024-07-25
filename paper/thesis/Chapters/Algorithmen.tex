@@ -50,14 +50,92 @@ angemerkt werden, dass die Linearität des Speicherbedarfs einen hohen konstante
 
 \section{Approximation der LZ77-Faktorisierung(Approx. LZ77)}
 \subsection{Konzept}
+Eine Approximation der LZ77-Faktorisierung ist ein Algorithmus, der ebenfalls eine Faktorisierung einer Eingabe $S$ derart erzeugt, dass 
+eine verlustfreie Dekrompression mit \ref{alg:decomp} möglich ist. Im Gegensatz zur exakten LZ77-Faktorisierung wird jedoch kein Greedy-Ansatz verwendet, um die längsten Referenzen
+zu finden. Stattdessen wird eine Approximation der optimalen Faktorisierung erzeugt, die einen Tradeoff zwischen der Qualität und der Performanz des Algorithmus darstellt.
+In dieser Arbeit wird die erste Phase des approximativen LZ77-Algorithmus, im Folgenden Approx. LZ77 genannt, herangezogen. Das Ergebnis von Approx. LZ77 ist eine Faktorisierung, in der
+Faktoren nur Zweierpotenzen als Länge haben. Im Folgenden gehen wir davon aus, dass die Länge unserer Eingabe eine Zweierpotenz ist. In der Praxis kann eine abweichende Länge durch
+entsprechendes Padding erreicht werden.
+Der Algorithmus teilt ihren Ablauf in Runden ein, wobei in jeder Runde die noch unverarbeitete Zeichenfolge in Blöcke gleicher Größe eingeteilt werden. In der ersten Runde entspricht
+die Blockgröße der Hälfte der Eingabelänge und wird sukzessive halbiert, bis die Zeichenfolge vollständig verarbeitet oder die Blockgröße 1 erreicht wurde. In jeder Runde werden für die
+erzeugten Blöcke Referenzen gesucht. Im Erfolgsfall wird ein entsprechender Faktor extrahiert und die Zeichenfolge gilt als verarbeitet.
+\begin{algorithm}
+\centering
+\caption{COMP$_{ApproxLZ77}$} \label{alg:compapproxlz77}
+\algorithmicrequire $S=e_1...e_n$
+\algorithmicensure $F=f_1...f_z$
+\begin{algorithmic}
+    \STATE $F \gets \emptyset$
+    \STATE $r \gets 1$
+    \STATE $Blocks[1..2^r] \gets InitNodes(S, 2^r)$ \algorithmiccomment{Split S into $2^r$ equal blocks}
+    \WHILE{$r \leq log_2(|S|)$}
+    \STATE $(markedBlock, refPos)[1..z_r] \gets MatchNodes(r, S, blocks)$
+    \FOR{$i \gets 1$ \TO $z_r$}
+        \STATE $F \gets InsertFactor(F, (length=\frac{|S|}{2^r}, ref=refPos[i]), markedBlock[i])$
+    \ENDFOR
+    \STATE $blocks \gets NextNodes(blocks\setminus markedBlock[1..z_r])$ \algorithmiccomment{Halve unmarked blocks}
+    \STATE $r \gets r+1$
+    \ENDWHILE
+    \RETURN $F$
+\end{algorithmic}
+\end{algorithm}
+In \ref{alg:compapproxlz77} wird der Ablauf des Algorithmus illustriert. In der initialen Runde $r$ wird die Eingabe in der Routine InitNodes zunächst in $2^r$ Blöcke gleicher Größe eingeteilt.
+Die erzeugten Bläcke repräsentieren die komplette Eingabe und werden in mehreren Runden einer Schleife verarbeitet. In der MatchNodes-Routine wird die Eingabe $S$ auf Referenzen, also
+früher Vorkommen der Blöcke, durchsucht. Im Falle eines Treffers, werden referenzierte BLöcke markiert und die Position der Referenz abgespeichert. Die Routine gibt die Menge der 
+markierten Blöcke und dessen Referenzpositionen aus. In der Runde $r$ besitzen gefundene Referenzen bzw. Faktoren eine Länge von $\frac{|S|}{2^r}$, jeder markierte Block dem Faktor 
+$(\frac{|S|}{2^r}, Referenzposition)$ entspricht. Schließlich werden die markierten Blöcke aus der Menge der zu verarbeitenden Blöcke entfernt, die verbleibenden Blöcke halbiert und die nächste 
+Runde gestartet. Da eine Blöckgröße von 1 nicht unterschritten werden kann, terminiert der Algorithmus spätestens nach $log_2(|S|)$ Runden. Für die Extraktion von Referenzen wird die Technik des 
+Rabin-Karp-Fingerprints verwendet. Dabie wird jedem Block, der eine Zeichenfolge repräsentiert, ein Hashwert zugewiesen und in einer Hashtabelle abgespeichert. Im Anschluss kann ein einfacher
+Durchgang der Eingabe mithilfe eines Rolling-Hashes und der Hashtabelle die Referenzen in linearer Zeit finden.
 \subsection{Theoretisches Laufzeit- und Speicherverhalten}
+Die Laufzeit des Algorithmus wird durch die Anzahl der Runden und der Extraktion von Referenzen in jeder Runde bestimmt. Die Anzahl der Runden beträgt maximal $log_2(|S|)=log_2(n)$, wobei in jeder Runde
+ein einfacher Durchgang der Eingabe $S$ notwendig ist, um ggf. Referenzen zu finden. Damit kann die Laufzeit des Algorithmus mit $O(n \log n)$ abgeschätzt werden. 
 
 \section{Parallelisierung von Approx. LZ77(Approx. LZ77Par)}
 \subsection{Konzept}
 \subsection{Theoretisches Laufzeit- und Speicherverhalten}
+Eine theoretische Laufzeit von $O(\frac{n \log n}{p})$ kann erreicht werden, wobei $p$ die Anzahl der Prozessoren ist. Der Speicherbedarf des Algorithmus beträgt $O(z)$. Dies stellt jedoch eine
+ideale Abschätzung dar, die in der Praxis nicht erreicht werden kann. Insbesondere die Interaktion mit dem Speicher und die Kommunikation zwischen den Prozessoren führen zu einer oberen Schranke
+des Speedups.
 
 \section{Praktische Optimierungen}
+Im Folgenden betrachten wir optionale Optimierungen, die die durchschnittliche Laufzeit von Approx. LZ77 verbessern können auf Kosten von anderen Metriken. Jede einzelne Technik ist unabhängig von
+den anderen nutzbar, wobei eine positive Korrelation zu erwarten ist.
+
 \subsection{Dynamische Endrunde(DynEnd) - Laufzeit vs. Qualität*}
+Sei eine Kodierung $K$ für die Übersetzung der erzeugten Faktorenfolge $F$ gegeben. Der Wert,
+\begin{equation}
+    Min^{Ref}_{Bin}=min\{|K(f)| | f \in F ,f \text{ ist Referenz}\}
+\end{equation}
+gibt die minimale Anzahl an Bits an, die für die Kodierung einer Referenz benötigt wird. Analog dazu beschreibt
+\begin{equation}
+    Max^{Lit}_{Bin}=max\{|K(f)| | f \in F, f \text{ ist Zeichen}\}
+\end{equation}
+die maximale Anzahl an Bits, die für die Kodierung eines einzelnen Zeichens benötigt wird. Sei $f_{ref}$ ein beliebiger referenzierender Faktor, welcher 
+$|f_{ref}|\leq\frac{Min^{Ref}_{Bin}}{Max^{Lit}_{Bin}}$ Zeichen referenziert. Die referenzierte Zeichenfolge von $f_{ref}$ wird im Folgenden als $S_{ref}$ mit $|S_{ref}|=|f_{ref}|$ bezeichnet.
+Dann gilt für die Länge der kodierten Repräsentation von $f_{ref}$:
+\begin{equation}
+\begin{split}
+    |K(f_{ref})| & \geq Min^{Ref}_{Bin}\\
+    & \geq |f_{ref}| \cdot Max^{Lit}_{Bin}\\
+    & \geq \sum_{i=1}^{|f_{ref}|} |K((0, S_{ref}(i)))|.
+\end{split}
+\end{equation}
+Es folgt, dass ein referenzierender Faktor, dessen Länge eine obere Schranke von $\frac{Min^{Ref}_{Bin}}{Max^{Lit}_{Bin}}$ Zeichen nicht überschreitet, nicht effizient kodiert werden kann.
+Stattdessen sollten die referenzierten Zeichen einzeln kodiert werden. Die Technik der dynamischen Endrunde greift diese Idee auf, indem Referenzen unterhalb einer Grenzlänge nicht berechnet
+werden. Gibt uns die Kodierung eine Grenzlänge $l^{ref}_{min}$ vor, so kann der Algorithmus in Runde $r = \lceil log_2{|S|}-log_2{l^{ref}_{min}} \rceil$ terminieren. Da potenziell 
+referenzierende Faktoren aufgebrochen werden, kann die Qualität der Faktorisierung sinken, wobei das binäre Endprodukt kleiner wird. Es ergibt sich also eine steigende Faktorrate bei
+sinkender Kompressionsrate.
+\begin{equation}
+    CR^{Approx.LZ77}_{DynEnd} \leq CR^{Approx.LZ77}
+\end{equation}
+\begin{equation}
+    FR^{Approx.LZ77}_{DynEnd} \geq FR^{Approx.LZ77}
+\end{equation}
+
 \subsection{Dynamische Startrunde(DynStart) - Laufzeit vs. Speicher}
+
+
 \subsection{Vorberechnete Runde(PreMatching) - Laufzeit vs. Speicher}
+
 \subsection{Minimale Tabellengröße(ScanSkip) - Laufzeit vs. Qualität}

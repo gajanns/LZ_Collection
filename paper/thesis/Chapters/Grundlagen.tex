@@ -104,25 +104,27 @@ In Abbildung \ref{fig:lasvegas} wird eine Regelsteuerung illustriert. Der Algori
 Anzahl der Wiederholungen beschränkt ist, werden wir in der Analyse des Approximationsalgorithmus und der praktischen Evaluation zeigen.
 
 \subsection{Binäre (De-)Kodierung}
-Die Abbildung $Bin_{IO}: \Sigma^* \rightarrow N$ gibt die Anzahl der Bits für die Kodierung einer beliebigen Zeichenfolge an. Im Rahmen dieser Arbeit gehen wir davon aus, dass die 
-Eingabe $S$ in binärer Form vorliegt und auf dem Alphabet $\Sigma=\{1,...,255\}$ erzeugt wurde. Jedes Zeichen wird durch 8 Bits, oder 1 Byte, dargestellt und erlaubt einen 
-Offline-Zugriff. Die gesamte binäre Eingabegröße sei damit gegeben durch 
+Die Kodierung $K_{IN}: \Sigma^* \rightarrow \{0,1\}^*$ überführt unsere Eingabe aus dem Alphabet $\Sigma$ in eine binäre Repräsentation.
+Die Umkehrabbildung $K^{-1}_{IN}: \{0,1\}^* \rightarrow \Sigma^*$ definiert die Dekodierung und überführt eine binäre Repräsentation in eine Zeichenfolge
+aus dem Alphabet $\Sigma$. Im Rahmen dieser Arbeit gehen wir davon aus, dass unsere Eingabe $S$ über dem Alphabet $\Sigma=\{1,...,255\}$ erzeugt wurde und 
+jedes Zeichen durch 8 Bits, oder 1 Byte, dargestellt wird. Für die Länge, $|S|_{Bin}$, der binären Repräsentation folgt,
+\begin{equation}
+    |S|_{Bin} = |K_{IN}(S)| = 8*|S|.
+\end{equation}
 
+Die eingelesene Eingabefolge wird durch den Kompressionsalgorithmus in die Faktorfolge $F=f_1...f_z$ überführt. Die bijektive Abbildung $K_{OUT}: F \rightarrow \{0,1\}^*$
+definiert die Kodierung der Faktoren in eine binäre Repräsentation. Analog dazu wird die Dekodierung $K^{-1}_{OUT}: \{0,1\}^* \rightarrow F$ definiert. Im Gegensatz zur Eingabe, 
+werden wir keine Kodierung bzw. Dekodierung der Faktoren vorgeben, da diese durch den Kompressionsalgorithmus nicht beschränkt wird. Für eine beliebige lineare Kodierung $K_{OUT}$ ergibt 
+sich die binäre Ausgabegröße $|F|_{Bin}$ durch
 \begin{equation}
-    N_{Bin} = \sum_{i=1}^{|S|} Bin_{IO}(S[i]) = 8*|S|.
+    |F|_{Bin} = \sum_{i=1}^{z} |K(f_i)|.
 \end{equation}
-Die eingelesene Eingabefolge wird durch den Kompressionsalgorithmus in die Faktorfolge $S=f_1...f_z$ überführt. Jeder Faktor $f_i$, der Form $(len, pos)$ oder $(0, e)$, werde 
-durch $Bin_{IO}(f_i)$ Bits kodiert. Die binäre Ausgabegröße ergibt sich aus dem Ausdruck
-\begin{equation}
-    Z_{Bin} = \sum_{i=1}^{z} Bin_{IO}(f_i).
-\end{equation}
-, wobei die Anzahl der Bits für die Kodierung der Faktoren $f_i$ durch den Kompressionsalgorithmus und der Kodierungsstrategie bestimmt wird. 
 
 \subsection{Metriken}
 Die Qualität einer Kompression kann durch verschiedene Metriken quantifiziert werden. Zum Einen beschreibt die Kompressionsrate $CR$ den Grad der Kompression und ist durch den
 Ausdruck, 
 \begin{equation}
-    CR = \frac{Z_{Bin}}{N_{Bin}}
+    CR = \frac{|F|_{Bin}}{|S|_{Bin}}
 \end{equation}
 , definiert.
 Da die Kodierung der Faktoren nicht eindeutig aus der Wahl des Kompressionsalgorithmus eingegrenzt wird, ist stattdessen die Anzahl der erzeugten Faktoren ein
