@@ -93,6 +93,7 @@ ein einfacher Durchgang der Eingabe $S$ notwendig ist, um ggf. Referenzen zu fin
 
 \section{Parallelisierung von Approx. LZ77(Approx. LZ77Par)}
 \subsection{Konzept}
+ToDo: ApproxLZ77 => Bild
 \subsection{Theoretisches Laufzeit- und Speicherverhalten}
 Eine theoretische Laufzeit von $O(\frac{n \log n}{p})$ kann erreicht werden, wobei $p$ die Anzahl der Prozessoren ist. Der Speicherbedarf des Algorithmus beträgt $O(z)$. Dies stellt jedoch eine
 ideale Abschätzung dar, die in der Praxis nicht erreicht werden kann. Insbesondere die Interaktion mit dem Speicher und die Kommunikation zwischen den Prozessoren führen zu einer oberen Schranke
@@ -133,9 +134,51 @@ sinkender Kompressionsrate.
     FR^{Approx.LZ77}_{DynEnd} \geq FR^{Approx.LZ77}
 \end{equation}
 
-\subsection{Dynamische Startrunde(DynStart) - Laufzeit vs. Speicher}
-
+\subsection{Dynamische Startrunde(DynStart) - Laufzeit vs. Speicher} \label{sec:dynstart}
+Gegeben seien zwei initiale Runden $r_{init1}$ und $r_{init2}$ mit $1\leq r_{init1} < r_{init2}\leq log_2{|S|}$, die auf der gesamten Eingabe S angewendet werden, 
+so wird die Eingabe jeweils in $2^{r_{init1}}$ bzw. $2^{r_{init2}}$ Blöcke gleicher Größe eingeteilt. Die Menge der Blöcke werde im Folgenden als $B_{init1}$ bzw. $B_{init2}$ bezeichnet.
+Im Rahmen der Bearbeitung der Runden wird eine Menge von markierten Blöcken $B_{init1}^{marked}\subset B_{init1}$ bzw. $B_{init2}^{marked}\subset B_{init2}$ erzeugt, für die ein vorheriges
+Vorkommen bestimmt wurde. Aufgrund der Natur der Blockhalbierung in jeder Runde, kann jedem Block in $B_{init1}$ eine Gruppe von $2^{r_{init2}-r_{init1}}$ Blöcken in $B_{init2}$ zugeordnet
+werden, die die gleiche Zeichenfolge repräsentieren. Die Folgerung lässt sich insbesonere auch auf die markierten Blöcke anwenden, sodass die folgende Beziehung hergeleitet werden kann:
+\begin{equation}
+    |B^{init2}_{marked}| \geq 2^{r_{init2}-r_{init1}} \cdot |B^{init1}_{marked}|.
+\end{equation}
+Weiterhin folgt, dass die Existenz eines markierten Blocks in $B^{init1}$ die Existenz von $2^{r_{init2}-r_{init1}}$ benachbarten markierten Blöcken in $B^{init2}$ impliziert. Die
+Umkehrung dieser Aussage liefert,
+\begin{equation}
+    longestChain(B^{init2}_{marked}) < 2^{r_{init2}-r_{init1}} \Rightarrow B^{init1}_{marked}=\emptyset, 
+\end{equation}
+wobei $LongestChain(B^{init2}_{marked})$ die längste Kette von benachbarten markierten Blöcken in $B^{init2}_{marked}$ bezeichnet.
+Die Technik der dynamischen Startrunde greift diese Beziehung auf, indem initial die Runde $r_{init}=log_2{|S|}/2$ auf die gesamte Eingabe S angewendet wird. Im Anschluss
+kann der Wert $longestChain(B^{init}_{marked})$ mithilfe eines Scans über die markierten Blöcke bestimmt werden. Der errechnete Wert impliziert eine Runde $r_{Start}$ derart,
+dass vorherige Runden garantiert keine markierten Blöcke erzeugen und damit ausgelassen werden können. Der Wert $r_{Start}$ ergibt sich wie folgt,
+\begin{equation}
+    r_{Start} = r_{init}-
+    \begin{cases}
+        -1, & \text{falls } longestChain(B^{init}_{marked}) = 0\\
+        \lfloor log_2{longestChain(B^{init}_{marked})} \rfloor, & \text{sonst}
+    \end{cases}
+\end{equation}
+In Abhängigkeit von der Beschaffenheiit der Eingabe, können maximal die Hälfte aller Runden ausgelassen werden, ohne eine Veränderung der Ergebnisse zu verursachen. In
+Runde $r_{init}=log_2{|S|}/2$ werden jedoch $2^{log_2{|S|}/2}=\sqrt{|S|}$ Blöcke erzeugt. Dies führt zu einer weiteren unteren Schranke für den Speicheraufwand des Algorithmus.
+Falls diese Technik angewandt wird, kann der Speicheraufwand mit $O(\max\{\sqrt{n}, z\})$ abgeschätzt werden.
 
 \subsection{Vorberechnete Runde(PreMatching) - Laufzeit vs. Speicher}
+Analog zu der dynamischen Startrunde kann eine vorberechnete Runde ebenfalls genutzt werden, um den Arbeitsaufwand vorheriger Runden zu reduzieren. Sei $r_{prematch} mit 
+1\leq r_{prematch} \leq log_2{|S|}$ eine Runde, die auf die gesamte Eingabe angewendet wird. Als Ergebnis erhalten wir die Menge der markierten Blöcke $B_{prematch}^{marked}$.
+Weiterhin speichern wir uns den RFP aller Blöcke, die im Rahmen der Runde erzeugt werden. Wie in \ref{sec:dynstart} gezeigt, kann jedem Block in einer vorherigen Runde einer Gruppe
+von Blöcken in einer späteren Runde zugeordnet werden, die die gleiche Zeichenfolge repräsentieren. Die Konkatenation von Zeichenfolgen kann entsprechend \ref{eq:concat} in eine
+konstante Operation auf der Basis des RFP übersetzt werden. Gegeben sei eine Runde $r_m$ mit $1\leq r_m \leq log_2{|S|}$. Für einen beliebigen Block $b \in B_m$ können $2^{r_{prematch}-r_m}$
+viele Böcke $(b_1, b_2, ..., b_{2^{r_{prematch}-r_m}})\in B_{prematch}$ gefunden werden, die die gleiche Zeichenfolge repräsentieren. So ergibt sich für den zugehörigen RFP,
+\begin{equation}
+    RFP(b) = RFP(b_1) \oplus RFP(b_2) \oplus ... \oplus RFP(b_{2^{r_{prematch}-r_m}})
+\end{equation}
+, wobei jede Operation in konstanter Zeit durchgeführt werden kann. Die Anzahl der Rechenschritte für die Berechnung des RFP eines Blockes hängt nun nicht mehr von der Länge der
+repräsentierten Zeichenfolge ab, sondern Rundendistanz zur vorberechneten Runde.
+Weiterhin kann die Menge der unmarkierten Blöcke $B_{prematch}^{unmarked}=B_{prematch}\setminus B_{prematch}^{marked}$ genutzt werden, um die Menge der Blöcke $B_m$ in Runde $r_m$
+zu reduzieren. Ein Block $b \in B_m$ kann nur dann markiert werden, wenn die equivalente Sequenz von Blocken $(b_1, b_2, ..., b_{2^{r_{prematch}-r_m}})\in B_{prematch}$ markiert ist.
+Die Umkehrung dieser Aussage liefert einen Filter für alle vorherigen Runden. Die zusätzlich gespeicherten Daten erhöhen den Speicherbedarf des Algorithmus. Falls die vorberechnete
+Runde auf den Wert $k\in \mathbb{N}$ festgelegt wird, so kann der Speicherbedarf mit $O(\max\{2^k, z\})$ abgeschätzt werden.
 
 \subsection{Minimale Tabellengröße(ScanSkip) - Laufzeit vs. Qualität}
+ToDo: Grundlagen + ApproxLZ77 ausweiten

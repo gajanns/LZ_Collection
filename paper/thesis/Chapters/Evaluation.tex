@@ -8,6 +8,15 @@ softwareseitig über OpenMP-Instruktionen realisiert.
 \section{Implementierung}
 
 \subsection{Klassenstruktur}
+\begin{figure}[h]
+    \centering
+    \caption{Klassenstruktur der Implementierung}
+    \includegraphics[scale=0.4]{Images/uml.png} \label{uml}
+\end{figure}
+
+Die in \ref{uml} dargestellte Klassenstruktur illustriert die grundlegende Abstraktion, die für die Implementierung der Algorithmen verwendet wurde. Compressor und
+Coder beschreiben jeweils ein Interface bzw. ein Template, welches durch ein konkretes Kompressionsverfahren und einer Kodierung spezialisiert werden kann. Jegliche
+Spezialisierungen teilen sich jedoch eine gemeinsame Definition eines Faktors im LZ77-Schema.
 
 \subsection{Code}
 Die konkrete Implementierung erfolgte in der Programmiersprache C++ im C++20 - Standard und dem Build - System CMake in der Version 3.28. Die Parallelisierung wurde
@@ -18,7 +27,7 @@ Die konkrete Implementierung erfolgte in der Programmiersprache C++ im C++20 - S
 \subsection{Eingabedaten}
 Die folgenden Algorithmend wurden auf verschiedenen Dateien aus dem Pizza \& Chili-Corpus getestet. Die verwendeten Dateien decken verschiedene Kontexte und damit
 Kompressionspotentiale ab.
-\begin{figure}
+\begin{figure}[h]
     \centering
     \caption{Auflistung der verwendeten Eingabedaten}
     \label{inputdata}
@@ -53,6 +62,26 @@ Der Speicherverbrauch der Algorithmen wurde auch intern mithilfe einer externen 
 gemessen. Im Rahmen dieser Arbeit wurde die Spitze des allokierten Speichers im Zeitraum nach dem Einlesen der Eingabedatei und nach dem vollständigen Auffüllen der
 Faktorfolge gemessen.
 
+\subsubsection{Kompressionsrate CR*}
+Die Kompressionsrate wird neben der Anzahl der Faktoren zum Großteil von der verwendeten Kodierung bestimmt. Wie bereits erwähnt, sind wir in der Wahl der Kodierung
+nicht beschränkt, sodass die Aussagekraft bezüglich der Qualität der Kompression nicht eingeschränkt ist. Es ist jedoch zu beachten, dass Faktoren, die durch Approx. LZ77
+erzeugt werden stets eine Zweierpotenz als Länge annehmen. Die binäre Repräsentation dieser Längen kann daher in Abhängigkeit von der gewählten Kodierung kompakt 
+konstruiert werden. Um dieses Phänomen zu illustrieren gehen wir im Folgenden eine naive Kodierung vor, auf dessen Grundlage wir die Kompressionrate $CR*$ definieren.
+\begin{equation}
+    |K_{LZ77}(f)| = 1 + \begin{cases}
+        2\log_2(n) & \text{falls } |f| > 1 \\
+        9 & \text{sonst}
+    \end{cases}
+\end{equation}
+Im Falle von LZ77 bestimmt ein Bit, ob es sich um eine Referenz oder ein einzelnes Zeichen handelt. Im Falle einer Referenz wird die Länge und die Position der Referenz
+mithilfe von $\log_2(n)$ Bits kodiert. Im Falle eines einzelnen Zeichens wird die ASCII-Kodierung des Zeichens verwendet, die 8 Bits benötigt.
+\begin{equation}
+    |K_{Approx.LZ77}|= 1 + \begin{cases}
+        \log_2(n)+\log_2(\log_2(n)) & \text{falls } |f| > 1 \\
+        9 & \text{sonst}
+    \end{cases}
+\end{equation}
+Im Falle von Approx. LZ77 kann die Länge mithilfe von $\log_2(\log_2(n))$ Bits kodiert werden, da die Länge anhand einer einzelnen Bitposition bestimmt wird.
 \subsection{Messwerte}
 
 \subsubsection{Laufzeiten}
