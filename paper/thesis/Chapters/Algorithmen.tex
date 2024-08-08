@@ -7,7 +7,7 @@ Der im Folgenden beschriebene Algorithmus für die Generierung einer exakten LZ7
 Wie bereits in Kapitel xx beschrieben, erzeugen Algorithmen der LZ77 - Familie eine Faktorisierung einer Eingabezeichenfolge $S$, wobei die Faktoren entweder Referenzen
 zu vorherigen Zeichenfolgen oder einzelne Zeichen sein können. Im Rahmen der exakten LZ77 - Faktorisierung wird ein Greedy - Ansatz verwendet, um von links nach rechts 
 stets die längste Zeichenfolge zu referenzieren, die bereits links von der aktuellen Position vorkommt.
-\begin{algorithm}
+\begin{algorithm}[ht]
 \centering
 \caption{COMP$_{LZ77}$} \label{alg:complz77}
 \algorithmicrequire $S=e_1...e_n$
@@ -50,50 +50,155 @@ angemerkt werden, dass die Linearität des Speicherbedarfs einen hohen konstante
 
 \section{Approximation der LZ77-Faktorisierung(Approx. LZ77)}
 \subsection{Konzept}
-Eine Approximation der LZ77-Faktorisierung ist ein Algorithmus, der ebenfalls eine Faktorisierung einer Eingabe $S$ derart erzeugt, dass 
-eine verlustfreie Dekrompression mit \ref{alg:decomp} möglich ist. Im Gegensatz zur exakten LZ77-Faktorisierung wird jedoch kein Greedy-Ansatz verwendet, um die längsten Referenzen
-zu finden. Stattdessen wird eine Approximation der optimalen Faktorisierung erzeugt, die einen Tradeoff zwischen der Qualität und der Performanz des Algorithmus darstellt.
-In dieser Arbeit wird die erste Phase des approximativen LZ77-Algorithmus, im Folgenden Approx. LZ77 genannt, herangezogen. Das Ergebnis von Approx. LZ77 ist eine Faktorisierung, in der
-Faktoren nur Zweierpotenzen als Länge haben. Im Folgenden gehen wir davon aus, dass die Länge unserer Eingabe eine Zweierpotenz ist. In der Praxis kann eine abweichende Länge durch
-entsprechendes Padding erreicht werden.
-Der Algorithmus teilt ihren Ablauf in Runden ein, wobei in jeder Runde die noch unverarbeitete Zeichenfolge in Blöcke gleicher Größe eingeteilt werden. In der ersten Runde entspricht
-die Blockgröße der Hälfte der Eingabelänge und wird sukzessive halbiert, bis die Zeichenfolge vollständig verarbeitet oder die Blockgröße 1 erreicht wurde. In jeder Runde werden für die
-erzeugten Blöcke Referenzen gesucht. Im Erfolgsfall wird ein entsprechender Faktor extrahiert und die Zeichenfolge gilt als verarbeitet.
-\begin{algorithm}
+Im Rahmen dieser Arbeit wird die erste Phase einer speichereffizienten Approximation des LZ77-Algorithmus betrachtet, welche auch eine verlustfreie Kompression darstellt. Wie in
+\cite{ApproxLZ77} beschrieben, kann die Kombination aller drei Phasen des Algorithmus eine 2-Approximation bezüglich der Faktorrate ermöglichen. Die resultierenden Faktoren entsprechen
+jedoch dem LZ77-Schema, sodass eine verlustfreie Dekompression mit \ref{alg:decomp} möglich ist. Im weiteren Verlauf werden wir die sequenzielle erste Phase des Algorithmus als 
+Approx.LZ77 bezeichnen. Im Gegensatz zur exakten LZ77-Faktorisierung werden Referenzen nicht durch einen Greedy-Ansatz mit einem Scan von links nach rechts gefunden. Stattdessen wird 
+eine Approximation der exakten LZ77-Faktorisierung erzeugt, die einen Tradeoff zwischen der Faktorrate und der Performanz, hier der Speicherverbrauch, des Algorithmus darstellt. Die
+resultierenden Faktoren sind insbesondere dadurch definiert, dass ihre Länge einer Zweierpotenz entspricht. Analog dazu gehen wir ohne Beschränkung der Allgemeinheit davon aus, dass
+die Länge der Eingabe ebenfalls eine Zweierpotenz ist. Eine abweichende Eingabelänge kann stets durch entsprechendes Padding erreicht werden. Die Approximation wird in mehreren Runden
+durchgeführt, wobei in jeder Runde die noch unverarbeitete Eingabe in Blöcke gleicher Größe eingeteilt wird. Innerhalb einer Runde werden für Zeichenfolgen, die durch die jeweiligen
+Blöcke repräsentiert werden, Referenzen, also vorherige Vorokommen, gesucht. Im Erfolgsfall wird ein entsprechender Faktor extrahiert und der Block gilt als markiert. Die verbleibenden
+Blöcke werden im Übergang zur nächsten Runde in der Hälfte geteilt. Der Algorithmus terminiert, wenn die Eingabe vollständig verarbeitet wurde, was spätestens nach $log_2(|S|)$ Runden
+der Fall ist, da Blöcke der Größe 1 nicht weiter geteilt werden können. Die Zeichenfolgen der Blöcke, die in der letzten Runde nicht markiert wurden, werden als einzelne Zeichen interpretiert
+und faktorisiert. Der Ablauf des Algorithmus wird in \ref{alg:compapproxlz77} dargestellt. Initial wird die Eingabe in $2^r$ Blöcke gleicher Größe eingeteilt, wobei $r$ die initiale Runde beschreibt.
+Daraufhin wird eine Schleife über alle Runden gestartet, wobei in jeder Iteration die aktuelle Menge der Blöcke auf Referenzen untersucht und ggf. markiert werden. Die Menge der markierten Blöcke,
+die auch zur Menge der Faktoren $F$ hinzugefügt werden, wird in der Routine ProcessRound bestimmt. Nachdem die Menge der Blöcke um die markierten Blöcke bereinigt wurde, werden die verbleibenden
+Blöcke halbiert und die nächste Runde initiiert.
+\begin{algorithm}[ht]
 \centering
 \caption{COMP$_{ApproxLZ77}$} \label{alg:compapproxlz77}
 \algorithmicrequire $S=e_1...e_n$
 \algorithmicensure $F=f_1...f_z$
-\begin{algorithmic}
+\begin{algorithmic}[1]
     \STATE $F \gets \emptyset$
     \STATE $r \gets 1$
-    \STATE $Blocks[1..2^r] \gets InitNodes(S, 2^r)$ \algorithmiccomment{Split S into $2^r$ equal blocks}
+    \STATE $Blocks[1..2^r] \gets InitBlocks(S, 2^r)$ \algorithmiccomment{Split S into $2^r$ equal blocks}
     \WHILE{$r \leq log_2(|S|)$}
-    \STATE $(markedBlock, refPos)[1..z_r] \gets MatchNodes(r, S, blocks)$
-    \FOR{$i \gets 1$ \TO $z_r$}
-        \STATE $F \gets InsertFactor(F, (length=\frac{|S|}{2^r}, ref=refPos[i]), markedBlock[i])$
-    \ENDFOR
-    \STATE $blocks \gets NextNodes(blocks\setminus markedBlock[1..z_r])$ \algorithmiccomment{Halve unmarked blocks}
-    \STATE $r \gets r+1$
+        \STATE $markedBlocks[1..z_r] \gets ProcessRound(r, S, Blocks, F)$
+        \STATE $Blocks \gets NextNodes(Blocks\setminus markedBlock[1..z_r])$ \algorithmiccomment{Halve unmarked blocks}
+        \STATE $r \gets r+1$
     \ENDWHILE
     \RETURN $F$
 \end{algorithmic}
 \end{algorithm}
-In \ref{alg:compapproxlz77} wird der Ablauf des Algorithmus illustriert. In der initialen Runde $r$ wird die Eingabe in der Routine InitNodes zunächst in $2^r$ Blöcke gleicher Größe eingeteilt.
-Die erzeugten Bläcke repräsentieren die komplette Eingabe und werden in mehreren Runden einer Schleife verarbeitet. In der MatchNodes-Routine wird die Eingabe $S$ auf Referenzen, also
-früher Vorkommen der Blöcke, durchsucht. Im Falle eines Treffers, werden referenzierte BLöcke markiert und die Position der Referenz abgespeichert. Die Routine gibt die Menge der 
-markierten Blöcke und dessen Referenzpositionen aus. In der Runde $r$ besitzen gefundene Referenzen bzw. Faktoren eine Länge von $\frac{|S|}{2^r}$, jeder markierte Block dem Faktor 
-$(\frac{|S|}{2^r}, Referenzposition)$ entspricht. Schließlich werden die markierten Blöcke aus der Menge der zu verarbeitenden Blöcke entfernt, die verbleibenden Blöcke halbiert und die nächste 
-Runde gestartet. Da eine Blöckgröße von 1 nicht unterschritten werden kann, terminiert der Algorithmus spätestens nach $log_2(|S|)$ Runden. Für die Extraktion von Referenzen wird die Technik des 
-Rabin-Karp-Fingerprints verwendet. Dabie wird jedem Block, der eine Zeichenfolge repräsentiert, ein Hashwert zugewiesen und in einer Hashtabelle abgespeichert. Im Anschluss kann ein einfacher
-Durchgang der Eingabe mithilfe eines Rolling-Hashes und der Hashtabelle die Referenzen in linearer Zeit finden.
+
+Die Funktionsweise der ProcessRound-Routine wird in \ref{alg:processround} beschrieben. Die Ausführung kann in drei Schritte unterteilt werden. Im ersten Schritt werden die Tabellen RFPTable und RefTable
+mithilfe der Routine InitTables initialisiert. Die RFPTable ordnet jedem einzigartigen Rabin-Karp-Fingerprint(RFP), der über die Menge aller Blöcke erzeugt wird, den linksten Block zu, welcher diesen 
+Wert aufweist. In diesem Rahmen vernachlässigen wird explizit Kollisionfälle des RFP und gehen davon aus, dass die Gleichheit der RFPs zweier Zeichenfolgen ebenfalls die Gleichheit der Zeichenfolgen impliziert.
+Die RefTable speichert für jeden Block die Position des linkesten Vorkommens seiner Zeichenfolge in der Eingabe, die zum aktuellen Zeitpunkt bekannt ist.
+Die Routine InitTables, wie in \ref{alg:inittables} beschrieben, erzeugt die RFPTable, indem alle Blöcke von links nach rechts durchlaufen werden und das Paar aus einem Block und dessen RFP in die Tabelle
+nur dann eingefügt wird, wenn der RFP noch nicht vorhanden ist. Als Konsequenz wird für jeden RFP, der eine einzigartige Zeichenfolge repräsentiert, der entsprechende linkeste Block gespeichert. Die RefTable
+wird analog initialisiert. Falls der RFP eines Blocks bereits in der RFPTable vorhanden ist, so kann dem Block ein vorheriges Vorkommen zugeordnet werden. Andernfalls ist der Block das linkeste Vorkommen seiner
+Zeichenfolge und dessen Position wird entsprechend gespeichert. Es ist zu betonen, dass die InitTables-Routine durch Aktualisierungen der RefTable bereits markierte Blöcke bzw. Faktoren erzeugt.
+
+Im zweiten Schritt werden zusätzliche Referenzen innerhalb der gesamten Eingabe S gesucht. Dazu wird der RFP eines Fensters der Größe $\frac{|S|}{2^r}$ über die Eingabe berechnet und mit den Einträgen der
+RFPTable verglichen. Im Falle eines Treffers wird die Position des Fensters ggf. in der RefTable eingetragen. Im Rahmen des Scans wird ein Rolling-Hash verwendet, um die RFPs der Fenster effizient um eine
+Position zu verschieben. 
+Schließlich wird im dritten Schritt die RefTable genutzt, um die markierten Blöcke zu bestimmen. Ein Block wird markiert, wenn die Position des linksten Vorkommens seiner Zeichenfolge in der RefTable kleiner
+als die aktuelle Position des Blocks ist. Die markierten Blöcke werden in die Menge der Faktoren $F$ eingefügt, wobei die Reihenfolge der Faktoren entweder während des Einfügens oder durch eine nachfolgende
+Sortierung sichergestellt werden muss.
+\begin{algorithm}[ht]
+    \centering
+    \caption{ProcessRound} \label{alg:processround}
+    \algorithmicrequire $r, S, Blocks$
+    \algorithmicensure $markedBlocks$
+    \begin{algorithmic}[1]
+        \STATE $(RFPTable, RefTable) \gets InitTables(Blocks)$
+        \STATE $ReferenceScan(S, Blocks, RFPTable, RefTable)$
+        \FOR {$i \gets 1$ \TO $|Blocks|$}
+            \IF{$RefTable[i] < Blocks[i].Pos$}
+                \STATE $markedBlocks.insert(i)$
+                \STATE $F.insert(\frac{|S|}{2^r}, RefTable[i])$ \algorithmiccomment{Ordered Insert}
+            \ENDIF
+        \ENDFOR
+        \RETURN $markedBlocks$
+    \end{algorithmic}
+    \end{algorithm}
+
+\begin{algorithm}[ht]
+\centering
+\caption{InitTables} \label{alg:inittables}
+\algorithmicrequire $Blocks$
+\algorithmicensure $RFPTable, RefTable$
+\begin{algorithmic}[1]
+    \STATE $RFPTable \gets HashTable[RFP, LeftMostBlock]$
+    \STATE $RefTable[1..|S|] \gets (0,...,0)$
+    \FOR{$i \gets 1$ \TO $|Blocks|$}
+        \STATE $RFP \gets RFP(Blocks[i])$
+        \IF{$RFP \textbf{ in } RFPTable$}
+            \STATE $RefTable[i] \gets RFPTable[RFP].Pos$
+        \ELSE
+            \STATE $RFPTable.insert(RFP,Blocks[i])$
+            \STATE $RefTable[i] \gets Blocks[i].Pos$
+        \ENDIF
+    \ENDFOR
+    \RETURN $RFPTable, RefTable$
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[ht]
+\centering
+\caption{ReferenceScan}
+\algorithmicrequire $S, Blocks, RFPTable, RefTable$
+\begin{algorithmic}
+    \STATE blockSize $\gets \frac{|S|}{|Blocks|}$
+    \STATE $RFP \gets RFP(S[1..blockSize])$
+    \FOR{$i \gets 1$ \TO $|S|-blockSize$}
+        \IF{$RFP in RFPTable$ \AND $i < RefTable[RFPTable[RFP]]$}
+            \STATE $RefTable[RFPTable[RFP]] \gets i$
+        \ENDIF
+        \STATE $RFP \gets RFP(S[i+1..i+blockSize])$ \algorithmiccomment{Rolling Hash}
+    \ENDFOR
+\end{algorithmic}
+\end{algorithm}
+
+
 \subsection{Theoretisches Laufzeit- und Speicherverhalten}
-Die Laufzeit des Algorithmus wird durch die Anzahl der Runden und der Extraktion von Referenzen in jeder Runde bestimmt. Die Anzahl der Runden beträgt maximal $log_2(|S|)=log_2(n)$, wobei in jeder Runde
-ein einfacher Durchgang der Eingabe $S$ notwendig ist, um ggf. Referenzen zu finden. Damit kann die Laufzeit des Algorithmus mit $O(n \log n)$ abgeschätzt werden. 
+Die Laufzeit des Algorithmus wird durch die Anzahl der Runden und der Extraktion von Referenzen in jeder Runde bestimmt. Die Anzahl der Runden beträgt maximal $log_2(|S|)=log_2(n)$. In jeder Runde
+werden Referenzen innerhalb der Blöcke durchd die InitTables-Routine bestimmt. Die Menge aller Blöcke, die in dieser Routine bearbeitet werden, decken maximal die gesamte Eingabe S ab. Die Laufzeit
+der Routine erhält durch die Berechnung des RFPs über dieser Zeichenfolge eine Laufzeitschätzung von $O(n)$. Die Referenzsuche über die gesamte Eingabe durch die ReferenceScan-Routine benötigt ebenfalls
+$O(n)$ Laufzeit, da des berücksichtigte Fenster in linearer Zeit über die Eingabe verschoben werden kann. Die Laufzeit der ProcessRound-Routine beträgt somit $O(n)$. Insgesamt ergibt sich eine
+Gesamtlaufzeit von $O(n \cdot log_2(n))$ für die Generierung der approximativen LZ77-Faktorisierung. Der Speicherbedarf des Algorithmus wird durch die Größe der RFPTable und der RefTable bestimmt, die
+wiederum durch die Anzahl der Blöcke bestimmt wird. In jeder Runde repräsentiert die Menge der Blöcke die noch unverarbeitete Eingabe, sodass aus jedem Block im Laufe des Algorithmus mindestens ein
+Faktor extrahiert wird. Die Anzahl der Blöcke in der Runde übersteigt damit nie die Anzahl der endgültigen Faktoren. Der Speicherbedarf kann damit konservativ auf $O(z)$ abgeschätzt werden.
 
 \section{Parallelisierung von Approx. LZ77(Approx. LZ77Par)}
 \subsection{Konzept}
-ToDo: ApproxLZ77 => Bild
+Im Folgenden beschreiben wir das verwendete Schema zur Parallelisierung des Approx. LZ77-Algorithmus. Die Parallelisierung zielt auf eine schrittweise Bearbeitung der Eingabe, die jeweils
+auf die verschiedenen Prozessoren bzw. Threads verteilt werden. 
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Images/parallel_initnodes.png}
+    \caption{Parallele Generierung der initialen Blöcke}
+    \label{fig:parinitnodes}
+\end{figure}
+In \ref{fig:parinitnodes} wird die parallele Generierung der initialen Blöcke dargestellt. Hiebrei wird die Eingabe $S$ in $P$ Teile aufgebrochen, sodass die Routine InitBlocks auf jedem Prozessor
+die zugehörigen Blöcke erzeugen kann. Da die chronologische Ordnung erhalten bleibt, können die erzeugten Blöcke ohne zusätzlichen Aufwand kombiniert werden.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Images/parallel_inittables.png}
+    \caption{Parallele Initialisierung der RFP-Tabelle und der Referenztabelle}
+    \label{fig:parinittables}
+\end{figure}
+In \ref{fig:parinittables} wird die parallele Initialisierung der RFP-Tabelle und der Referenztabelle dargestellt. Die Menge aller Blöcke wird in $P$ Teile aufgeteilt, wobei als Kriterium für die
+Aufteilung der RFP jedes Blocks verwendet wird. Als Konsequenz werden identische Zeichenfolgen nicht auf verschiedene Prozessoren verteilt. Jeder Prozessor erzeugt eine eigene RFP-Tabelle, wobei
+die Referenztabelle durch alle Prozessoren gemeinsam aktualisiert wird. Auch hier wird durch den Aufteilungsschlüssel eine Überlappung der Zugriffe vermieden. Das Ergebnis ist eine konsistente
+Referenztabelle und eine eine Menge von P RFP-Tabellen, die jeweils eine klar definierte Teilmenge der RFPs enthalten.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.8\textwidth]{Images/parallel_referencescan.png}
+    \caption{Paralleler Scan der Eingabe nach zusätzlichen Referenzen}
+    \label{fig:parrefscan}
+\end{figure}
+In \ref{fig:parrefscan} wird der parallele Scan der Eingabe S nach zusätzlichen Referenzen dargestellt. Die Eingabe S wird in $P$ Teile aufgeteilt. Auf jede Teilmenge wird die sequenzielle Routine
+ReferenceScan angewendet, wobei die Referentabelle durch alle Prozessoren gemeinsam aktualisiert wird und ein paralleler Lesezugriff auf die RFP-Tabellen stattfindet. 
+
+Schließlich müssen die implizit erzeugten Faktoren in die Menge der Faktoren $F$ eingefügt werden. Da die Reihenfolge der Faktoren erhalten bleiben muss, wird eine nachträgliche parallele Sortierung
+verwendet. Die Implementierung der parallelen Sortierung ist jedoch nicht Gegenstand dieser Arbeit und wird daher nicht weiter betrachtet. Eine mögliche Implementierung ist in [] beschrieben.
+
 \subsection{Theoretisches Laufzeit- und Speicherverhalten}
 Eine theoretische Laufzeit von $O(\frac{n \log n}{p})$ kann erreicht werden, wobei $p$ die Anzahl der Prozessoren ist. Der Speicherbedarf des Algorithmus beträgt $O(z)$. Dies stellt jedoch eine
 ideale Abschätzung dar, die in der Praxis nicht erreicht werden kann. Insbesondere die Interaktion mit dem Speicher und die Kommunikation zwischen den Prozessoren führen zu einer oberen Schranke

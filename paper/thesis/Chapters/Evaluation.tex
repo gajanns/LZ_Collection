@@ -25,7 +25,7 @@ Die konkrete Implementierung erfolgte in der Programmiersprache C++ im C++20 - S
 \section{Messung}
 
 \subsection{Eingabedaten}
-Die folgenden Algorithmend wurden auf verschiedenen Dateien aus dem Pizza \& Chili-Corpus getestet. Die verwendeten Dateien decken verschiedene Kontexte und damit
+Die folgenden Algorithmen wurden auf verschiedenen Dateien aus dem Pizza \& Chili-Corpus getestet. Die verwendeten Dateien decken verschiedene Kontexte und damit
 Kompressionspotentiale ab.
 \begin{figure}[h]
     \centering
@@ -33,17 +33,17 @@ Kompressionspotentiale ab.
     \label{inputdata}
     \begin{tabular}{|c|c|c|c|c|}
         \hline
-        \textbf{Datei} & \textbf{Größe} & \textbf{Alphabet} & \textbf{Beschreibung} \\
+        \textbf{Datei} & \textbf{Größe} & \textbf{Alphabetgröße} & \textbf{Beschreibung} \\
         \hline
-        \texttt{dna} & 100MB & 4 & DNA-Sequenzen \\
+        \texttt{dna} & 200MB & 4 & DNA-Sequenzen \\
         \hline
-        \texttt{english} & 100MB & 256 & Englische Texte \\
+        \texttt{english} & 200MB & 256 & Englische Texte \\
         \hline
-        \texttt{proteins} & 100MB & 20 & Proteinsequenzen \\
+        \texttt{proteins} & 200MB & 20 & Proteinsequenzen \\
         \hline
-        \texttt{sources} & 100MB & 256 & Quellcode \\
+        \texttt{sources} & 200MB & 256 & Quellcode \\
         \hline
-        \texttt{xml} & 100MB & 256 & XML-Dateien \\
+        \texttt{xml} & 200MB & 256 & XML-Dateien \\
         \hline
     \end{tabular}
 \end{figure}
@@ -82,23 +82,62 @@ mithilfe von $\log_2(n)$ Bits kodiert. Im Falle eines einzelnen Zeichens wird di
     \end{cases}
 \end{equation}
 Im Falle von Approx. LZ77 kann die Länge mithilfe von $\log_2(\log_2(n))$ Bits kodiert werden, da die Länge anhand einer einzelnen Bitposition bestimmt wird.
+
+\newpage
 \subsection{Messwerte}
 
+\begin{table}[ht]
+    \centering
+    \caption{Messgrößen der Algorithmen}
+    \label{messwerte}
+    \begin{tabular} { |c|c|c|c|c|c| }
+        \hline
+        \textbf{Eingabe} & \textbf{Algorithmus} & \textbf{Laufzeit[s]} & \textbf{Speicher[Byte]} & \textbf{FR} & \textbf{CR*} \\
+        \hline
+        & LZ77 & 15.40 & 20.00 & 9.98\% & 70.83\% \\
+        proteins & Approx.LZ77 & 44.06 & 9.94 & 15.34\% & 63.95\% \\
+        & Approx.LZ77Par & 6.99 & 10.21 & 15.34\% & 63.95\% \\
+        \hline
+        & LZ77 & 13.47 & 20.00 & 5.60\% & 38.75\% \\
+        sources & Approx.LZ77 & 40.43 & 6.42 & 10.05\% & 40.14\% \\
+        & Approx.LZ77Par & 6.49 & 5.90 & 10.05\% & 40.14\% \\
+        \hline
+        & LZ77 & 15.36 & 20.00 & 6.70\% & 47.24\% \\
+        english & Approx.LZ77 & 51.00 & 7.06 & 10.42\% & 43.39\% \\
+        & Approx.LZ77Par & 7.46 & 6.16 & 10.42\% & 43.39\% \\
+        \hline
+        & LZ77 & 14.89 & 20.00 & 6.66\% & 47.46\% \\
+        dna & Approx.LZ77 & 30.10 & 8.38 & 10.71\% & 45.53\% \\
+        & Approx.LZ77Par & 4.80 & 6.66 & 10.71\% & 45.53\% \\
+        \hline
+        & LZ77 & 13.02 & 20.00 & 3.42\% & 23.61\% \\
+        xml & Approx.LZ77 & 29.38 & 3.46 & 6.62\% & 26.78\% \\
+        & Approx.LZ77Par & 4.91 & 3.46 & 6.62\% & 26.78\% \\
+        \hline
+    \end{tabular}
+\end{table}
+
 \subsubsection{Laufzeiten}
-\begin{figure}
+\begin{figure}[ht]
     \centering
-    \caption{Laufzeit der Algorithmen auf Präfixen verschiedener Größen der Datei Proteins}
-    \includegraphics[scale=0.6]{Images/progressive.png}
-    \end{figure}
+    \caption{Laufzeitmessung von LZ77, Approx.LZ77 und Approx.LZ77Par(16 Threads) auf verschiedenen Präfixen von proteins. Als Vergleichsmaß wurde 
+    die lineare Regression der Kurven gestrichelt eingezeichnet.}
+    \includegraphics[scale=0.6]{Images/progressive_proteins.pdf}
+\end{figure}
     
-\begin{figure}
+\begin{figure}[ht]
     \centering
-    \caption{Laufzeit der parallelen Approximation von LZ77 mit verschiedenen Anzahlen von Threads}
-    \includegraphics[scale=0.6]{Images/progressive_speedup_stack.png}
+    \caption{Laufzeitmessung von Approx.LZ77Par mit verschiedener Anzahl an Threads für proteins}
+    \includegraphics[scale=0.6]{Images/progressive_speedup_proteins.pdf}
 \end{figure}
 
 \subsubsection{Speicherverbrauch}
-
+\begin{figure}[ht]
+    \centering
+    \caption{Speicherverbrauch von LZ77, Approx.LZ77 und Approx.LZ77Par(16 Threads) auf verschiedenen Präfixen von proteins. Aufgezeichnet wurde das Verhältnis
+    von allokiertem Speicher zur Eingabegröße.}
+    \includegraphics[scale=0.6]{Images/progressive_mem.pdf}
+\end{figure}
 \subsubsection{FR und CR*}
 
 \section{Auswertung}
