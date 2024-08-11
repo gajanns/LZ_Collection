@@ -139,7 +139,7 @@ Sortierung sichergestellt werden muss.
 
 \begin{algorithm}[ht]
 \centering
-\caption{ReferenceScan}
+\caption{ReferenceScan} \label{alg:refscan}
 \algorithmicrequire $S, Blocks, RFPTable, RefTable$
 \begin{algorithmic}
     \STATE blockSize $\gets \frac{|S|}{|Blocks|}$
@@ -286,4 +286,12 @@ Die Umkehrung dieser Aussage liefert einen Filter für alle vorherigen Runden. D
 Runde auf den Wert $k\in \mathbb{N}$ festgelegt wird, so kann der Speicherbedarf mit $O(\max\{2^k, z\})$ abgeschätzt werden.
 
 \subsection{Minimale Tabellengröße(ScanSkip) - Laufzeit vs. Qualität}
-ToDo: Grundlagen + ApproxLZ77 ausweiten
+Wie in \ref{alg:inittables} beschrieben, wird die RFP-Tabelle und die Referenztabelle durch die InitTables-Routine initialisiert. Im Rahmen der Routine werden alle Blöcke auf Duplikate
+überprüft, sodass nur einzigartige Blöcke in die RFP-Tabelle eingefügt werden und die Referenztabelle implizite Faktoren speichert. Die Anzahl der Blöcke, die im folgenden Schritt 
+in der Referencescan-Routine\ref{alg:refscan} markeirt werden können, ist durch die Anzahl der Einträge in der RFP-Tabelle beschränkt. Der Wert $k\in [0,1]$ gebe den Anteil der
+Einträge in der RFP-Tabelle in Relation zur Anzahl der Blöcke an. Unsere Optimierung sieht vor, dass in jeder Runde die Referencescan-Routine nur angewendet wird, falls $k$ größer
+als ein Schwellwert $k_{min}\in [0,1]$ ist. Faktoren, die durch die ausgelassene Suche in dieser Runde nicht erzeugt wurden, werden in einer der nächsten Runden ausgegeben, wobei diese
+durch die Halbierung der Blöcke sukzessive in ihrer Anzahl verdoppelt werden. Damit sinkt zwangsläufig die Faktorrate, wobei die ausgelassen Referenzsuche einen zeitlichen Gewinn bringt.
+Es wurde bereits etabliert, dass die Anzahl der Blöcke in jeder Runde durch die Anzahl der Faktoren, z, beschränkt ist. Damit ist die Anzahl der Faktoren, die durch diese Technik nicht
+direkt ausgegeben werden, stets kleiner als $k_{min} \cdot z$ und weiterhin bei der Ausgabe durch $2 \cdot k_{min} \cdot z$ beschränkt. In der Gesamtheit aller Runden ergibt sich dadurch
+auf einer obere Schranke für die relative Verschlechterung der Faktorrate um den Faktor $k_{min} * 2^{log_2{|S|}}$, wobei diese Schätzung sehr konservativ ist.

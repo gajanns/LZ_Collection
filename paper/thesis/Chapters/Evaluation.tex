@@ -8,7 +8,7 @@ softwareseitig über OpenMP-Instruktionen realisiert.
 \section{Implementierung}
 
 \subsection{Klassenstruktur}
-\begin{figure}[h]
+\begin{figure}[ht]
     \centering
     \caption{Klassenstruktur der Implementierung}
     \includegraphics[scale=0.4]{Images/uml.png} \label{uml}
@@ -18,16 +18,28 @@ Die in \ref{uml} dargestellte Klassenstruktur illustriert die grundlegende Abstr
 Coder beschreiben jeweils ein Interface bzw. ein Template, welches durch ein konkretes Kompressionsverfahren und einer Kodierung spezialisiert werden kann. Jegliche
 Spezialisierungen teilen sich jedoch eine gemeinsame Definition eines Faktors im LZ77-Schema.
 
-\subsection{Code}
-Die konkrete Implementierung erfolgte in der Programmiersprache C++ im C++20 - Standard und dem Build - System CMake in der Version 3.28. Die Parallelisierung wurde
-über Präprozessor - Instruktionen von OpenMP realisiert.
+\subsection{Externe Bibliotheken}
+Im Folgenden werden die genutzten externen Bibliotheken aufgelistet, die im Rahmen der Implementierung der Algorithmen, sowie deren Evaluation genutzt wurden.
+\subsubsection{Malloc Count}
+Malloc Count\cite{malloc_count} ist eine C++-Bibliothek, die es ermöglicht, Speicherallokationen und -freigaben auf dem Heap zu überwachen und zu messen. Im
+Rahmen unserer Evaluation gibt uns diese Bibliothek die Spitze des allokierten Speichers innerhalb des Ausführung der Algorithmen aus.
+
+\subsubsection{Unordered-Dense-Map}
+Die Unordered-Dense-Map\cite{unordered_dense} stellt eine hochperformante Hashtabelle dar, die insbesondere in der Dauer ihrer Suchoperationen gegenüber
+der std::unordered\_map aus der Standardbibliothek deutlich trumpft. Dies Hashtabelle wurde in Approx.LZ77 und Approx.LZ77Par für die Speicherung der
+RFPs in jeder Runde verwendet. Im Rahmen der Entwicklung von Approx.LZ77Par hat sich die Verwendung mehrerer Instanzen von Unordered-Dense-Map im Vergleich
+zu anderen inherent parallelen Hashtabellen\cite{oneapi}\cite{sharded_map} als effizienter herausgestellt.
+
+\subsubsection{LibSaiS}
+Für die Implementierung der exakten LZ77-Faktorisierung, die als Referenzalgorithmus fungiert, wurde die Bibliothek LibSaiS\cite{libsais} zu Hilfe genommen. Diese
+Bibliothek stellt eine effiziente Implementierung für die Konstruktion des Suffix-Arrays bereit.
 
 \section{Messung}
 
 \subsection{Eingabedaten}
 Die folgenden Algorithmen wurden auf verschiedenen Dateien aus dem Pizza \& Chili-Corpus getestet. Die verwendeten Dateien decken verschiedene Kontexte und damit
 Kompressionspotentiale ab.
-\begin{figure}[h]
+\begin{figure}[ht]
     \centering
     \caption{Auflistung der verwendeten Eingabedaten}
     \label{inputdata}
@@ -62,7 +74,7 @@ Der Speicherverbrauch der Algorithmen wurde auch intern mithilfe einer externen 
 gemessen. Im Rahmen dieser Arbeit wurde die Spitze des allokierten Speichers im Zeitraum nach dem Einlesen der Eingabedatei und nach dem vollständigen Auffüllen der
 Faktorfolge gemessen.
 
-\subsubsection{Kompressionsrate CR*}
+\subsubsection{Kompressionsrate CR*} \label{cr}
 Die Kompressionsrate wird neben der Anzahl der Faktoren zum Großteil von der verwendeten Kodierung bestimmt. Wie bereits erwähnt, sind wir in der Wahl der Kodierung
 nicht beschränkt, sodass die Aussagekraft bezüglich der Qualität der Kompression nicht eingeschränkt ist. Es ist jedoch zu beachten, dass Faktoren, die durch Approx. LZ77
 erzeugt werden stets eine Zweierpotenz als Länge annehmen. Die binäre Repräsentation dieser Längen kann daher in Abhängigkeit von der gewählten Kodierung kompakt 
@@ -122,12 +134,14 @@ Im Falle von Approx. LZ77 kann die Länge mithilfe von $\log_2(\log_2(n))$ Bits 
     \centering
     \caption{Laufzeitmessung von LZ77, Approx.LZ77 und Approx.LZ77Par(16 Threads) auf verschiedenen Präfixen von proteins. Als Vergleichsmaß wurde 
     die lineare Regression der Kurven gestrichelt eingezeichnet.}
+    \label{runtime}
     \includegraphics[scale=0.6]{Images/progressive_proteins.pdf}
 \end{figure}
     
 \begin{figure}[ht]
     \centering
     \caption{Laufzeitmessung von Approx.LZ77Par mit verschiedener Anzahl an Threads für proteins}
+    \label{runtime_threads}
     \includegraphics[scale=0.6]{Images/progressive_speedup_proteins.pdf}
 \end{figure}
 
@@ -136,11 +150,34 @@ Im Falle von Approx. LZ77 kann die Länge mithilfe von $\log_2(\log_2(n))$ Bits 
     \centering
     \caption{Speicherverbrauch von LZ77, Approx.LZ77 und Approx.LZ77Par(16 Threads) auf verschiedenen Präfixen von proteins. Aufgezeichnet wurde das Verhältnis
     von allokiertem Speicher zur Eingabegröße.}
+    \label{memory}
     \includegraphics[scale=0.6]{Images/progressive_mem.pdf}
 \end{figure}
 \subsubsection{FR und CR*}
 
 \section{Auswertung}
 \subsection{LZ77}
+Wie in Kapitel 3.1 beschrieben, zeigt der verwendete Algorithmus zur Generierung einer exakten LZ77-Faktorisierung ein lineares Verhalten bezüglich der Laufzeit.
+Dies wird in Abbildung \ref{runtime} deutlich, wo die Laufzeitmessung von LZ77 auf verschiedenen Präfixen von proteins dargestellt ist. Die lineare Regression der
+Kurven verdeutlicht das lineare Verhalten. Auch im Bezug auf die Speichernutzung wird das lineare Verhältnis zur Eingabegröße in Abbildung \ref{memory} deutlich.
+Das Verhältnis von allokiertem Speicher zur Eingabegröße beträgt in nahezu allen Präfixen von proteins 20 Byte pro Eingabezeichen. Hiermit konnten wir die theoretische
+Analyse des Laufzeit- und Speicherverhaltens empirisch bestätigen.
+
 \subsection{Approx. LZ77}
+In \ref{messwerte} wird deutlich, dass Approx. LZ77 dem exakten LZ77-Algorithmus in der Laufzeit und der Faktorrate stets deutlich unterlegen ist. Wie bereits in Kapitel
+3.2 beschrieben, liegt der Fokus von Approx. LZ77 auf der Reduktion des Speicherverbrauchs. Weiterhin wurde eine schlechtere theoretische Laufzeitkomplexität von
+$O(n\log n)$ gegenüber $O(n)$ für LZ77 festgestellt. Die Messwerte in \ref{messwerte} bestätigen diese theoretische Analyse damit. Es ist jedoch zu beachten, dass
+Approx. LZ77 wie zu erwarten auch eine deutlich bessere Speichernutzung aufweist, wobei diese stark von der Eingabe abhängt. In Abbildung \ref{memory} wird deutlich, dass
+selbst verschiedene Präfixe einer Eingabedatei unterschiedliche relative Speichernutzungen aufweisen. Dies lässt sich auf ein unterschiedliches Maß der Redundanz in den
+Eingaben zurückführen. Die Kompressionsrate $CR*$ von Approx. LZ77 ist in \ref{messwerte} ebenfalls aufgeführt. Es ist zu erkennen, dass die Abweichung der Kompressionsrate
+von LZ77 in den meisten Fällen geringer ausfällt als die Abweichung der Faktorrate. Dies ist auf die in \ref{cr} beschriebene Eigenart der Kodierung zurückzuführen.
+
 \subsection{Approx. LZ77Par}
+Im Bezug auf die Qualität der Kompression weist die Approx.LZ77Par keine Unterschiede zu Approx.LZ77 auf, was als Indiz für die Korrektheit der Implementierung
+interpretiert werden kann. Die Laufzeitmessung in \ref{runtime} zeigt, dass Approx.LZ77Par mit 16 Threads eine deutlich bessere Laufzeit aufweist als Approx.LZ77.
+Die Laufzeitmessung in \ref{runtime_threads} zeigt, dass die Laufzeit von Approx.LZ77Par von einer kleinen Anzahl an Threads stärker profitiert. Mit zunehmender 
+Anzahl an Threads wird die Beschleunigung bzw. der Speedup geringer. Die resultierende Asymptote in der Laufzeitmessung ist auf externe Faktoren zurückzuführen,
+wie der Bandbreite der Speicherzugriffe und Symptomen von False Sharing. Der Speicherverbrauch von Approx.LZ77Par ist in \ref{memory} ebenfalls aufgezeichnet.
+Es fällt auf, dass der Speicherverbrauch von Approx.LZ77Par im Vergleich zu Approx.LZ77 in den meisten Fällen leicht geringer ausfällt. 
+Dies ist auf die Verwendung von mehreren Instanzen von Unordered-Dense-Map zurückzuführen, die aufgrund ihrer inhärenten Struktur einen geringen gesamten
+Speicherverbrauch aufweisen. 
