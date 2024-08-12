@@ -15,6 +15,7 @@ Im Rahmen der Parallelisierung des approximativen LZ77-Algorithmus werden wir di
 shared-memory-Modell konfliktfrei auf Datenstrukturen zugreifen und eine korrekte Ausgabe liefern können. Im Rahmen der praktischen Evaluation der
 beschriebenen Konzepte wird eine Implementierung in C++ herangezogen. Die Parallelisierung wird hauptsächlich über OpenMP-Instruktionen \cite{openmp} realisiert.
 Im Rahmen dieser Arbeit wird insbesondere die parallele Generierung einer Suchtabelle von Referenzen, sowie die parallele Suche nach Referenzen über die gesamte Eingabe
-hinweg betrachtet. Wir führen eine theoretische und praktische Evaluation Qualität und Performanz der Algorithmen durch. Insbesondere stellen wir einen Vergleich der
-Laufzeit und Speicheranforderung der sequentiellen und parallelen Approximation mit einer exakten LZ77-Faktorisierung an. Die Güte der Parallelisierung werden wir anhand
-der gemessenen Speedup-Werte bewerten. Für jegliche Messungen verwenden wir Testdaten aus unterschiedlichen Kontexten aus dem Pizza\&Chili Corpus \cite{corpus}.
+hinweg betrachtet. Wir führen eine theoretische und praktische Evaluation der Qualität und Performanz der Algorithmen durch. Insbesondere stellen wir einen Vergleich der
+Laufzeit und Speicheranforderung der sequentiellen und parallelen Approximation mit einer exakten LZ77-Faktorisierung\cite{exactLemZiv} an. Die Güte der Parallelisierung
+werden wir anhand der gemessenen Beschleunigung der Laufzeit bewerten. Für jegliche Messungen verwenden wir Testdaten aus unterschiedlichen Kontexten des 
+Pizza\&Chili Corpus \cite{corpus}.

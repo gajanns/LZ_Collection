@@ -1,3 +1,17 @@
 \chapter{Fazit}
 \section{Zusammenfassung und Einordnung}
+Im Rahmen dieser Arbeit haben wir die erste Phase eines approximativen LZ77- Algorithmus, der in erster Linie auf die Minimierung
+seines Speicherbedarfs abzielt, auch in seiner Laufzeit optimiert. Hierbei spielte neben praktischen Optimierungen insbesondere eine 
+parallele Ausführung eine entscheidende Rolle. Die Parallelisierung des Algorithmus zeigte eine deutliche Beschleunigung der Laufzeit ohne
+die Qualität der Kompression zu beeinträchtigen. Es ist jedoch zu beachten, dass wir mit einer oberen Schranke für den Grad der Parallelisierung
+konfrontiert wurden, die mit hoher Wahrscheinlichkeit durch die begrenzte Bandbreite des Speichersystems verursacht wurde. Weiterhin
+stellen die optionalen Optimierungen einen TradeOff zwischen Metriken des Algorithmus dar, welcher je nach Eingabe und der Anforderungen
+abgewägt werden muss.
+
 \section{Ideen für die Zukunft}
+Die beschriebenen Schwächen bzw. Grenzen des implementierten Algorithmus bieten Raum für zukünftige Verbesserungen. So können weitergehende
+Optimierung der Parallelisierung, die auf einer hardwarenahen Steuerung der Speicherzugriffe basieren, die Grenzen der Bandbreite des Speichersystems
+besser ausnutzen. Im Laufe der Ausarbeitung dieser Algorithmus wurden alternative Techniken und Bibliotheken getestet, die jedoch zum Zeitpunkt
+der Finalisierung dieser Arbeit nicht zufriedenstellend optimiert waren. Beispielsweise könnte die Verwendung eines Bloom-Filters \cite{bloom} das Volumen
+der Suchoperationen von Referenzen reduzieren. Weitehrin wäre eine Paralleliserung der weiteren zwei Phasen des approximativen LZ77-Kompressionsalgorithmus
+eine sinnvolle Erweiterung.

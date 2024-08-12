@@ -11,10 +11,10 @@ $S_1$ und $S_2$ beschreibt der Ausdruck $S_1+S_2$ die Konkatenation der beiden T
 
 \section{Ausgabe $\rightarrow$ Faktorisierung}
 Ein charakteristisches Merkmal der Familie der Lempel-Ziv-Kompressionsverfahren ist die Repräsentation der Ausgabe in Form einer Faktorisierung. Für eine Eingabe $S=e_1...e_n$ 
-wird eine Faktorisierung $F=f_1...f_z$ mit $z\leq n$ derart erzeugt, dass die Eingabe $S$ durch die Faktorisierung in eine equivalente Folge von nichtleeren Teilfolgen zerlegt werden. Dabei
-ist jeder Faktor $f_i$ mit $1\leq i\leq z$ als Präfix von $S[|f_1...f_i-1|+1..n]$ definiert, der bereits in $S[1..|f_1...f_i|]$ vorkommt oder als einzelnes Zeichen ohne vorheriges Vorkommen.
-Die im Folgenden betrachteten Algorithmen können speziell der Klasse der LZ77-Kompressionsverfahren zugeordnet werden, dessen Faktoren im Schema des Lempel-Ziv-Storer-Szymanski repräsentiert
-werden sollen. 
+wird eine Faktorisierung $F=f_1...f_z$ mit $z\leq n$ derart erzeugt, dass die Eingabe $S$ durch die Faktorisierung in eine equivalente Folge von nichtleeren Teilfolgen zerlegt wird. Dabei
+ist jeder Faktor $f_i$ mit $1\leq i\leq z$ als nichtleerer Präfix von $S[|f_1...f_i-1|+1..n]$ definiert, der bereits in $S[1..|f_1...f_i|]$ vorkommt, oder als einzelnes Zeichen.
+Die im Folgenden betrachteten Algorithmen können speziell der Klasse der LZ77-Kompressionsverfahren zugeordnet werden, dessen Faktoren im Schema des Lempel-Ziv-Storer-Szymanski
+\cite{lzss} repräsentiert werden sollen. 
 
 \begin{equation} \label{eq:faktor}
     F = f_1...f_z \text{ mit } f_i = \begin{cases} (Length, Position) & \text{falls Referenz} \\ (0, Zeichen) & \text{sonst} \end{cases}
@@ -38,7 +38,7 @@ Verfahren der LZ77-Familie, kann die Dekompression durch die folgende Abbildung 
     DECOMP_{LZ77}: F(1..z) \rightarrow S(1..n).
 \end{equation}
 
-\begin{algorithm}
+\begin{algorithm} [ht]
 \centering
 \caption{DECOMP$_{LZ77}$} \label{alg:decomp}
 \algorithmicrequire $F=f_1...f_z$
@@ -64,7 +64,8 @@ Der beschriebene Algorithmus iteriert durch alle Faktoren und fügt die referenz
 geschätzt werden.
 
 \subsection{String-Matching $\rightarrow$ Rabin-Karp}
-Im Rahmen des approximativen Algorithmus, welcher in dieser Arbeit beschrieben wird, werden Vergleiche von Zeichenfolgen mithilfe des Rabin-Karp-Fingerprints(RFP) durchgeführt. Sei
+Im Rahmen des approximativen Algorithmus, welcher in dieser Arbeit beschrieben wird, werden Vergleiche von Zeichenfolgen mithilfe des Rabin-Karp-Fingerprints(RFP)\cite{ApproxLZ77}
+durchgeführt. Sei
 $p\in \mathbb{P}$ eine Primzahl und $b\in \mathbb{N}$ eine Basis, so kann der RFP einer Zeichenfolge $S$ der Länge $n$ durch den Ausdruck
 \begin{equation}
     \begin{split}
@@ -73,20 +74,21 @@ $p\in \mathbb{P}$ eine Primzahl und $b\in \mathbb{N}$ eine Basis, so kann der RF
     \end{split}
 \end{equation}
 berechnet werden. Hierbei wird eine Zeichenfolge beliebiger Länge in eine Zahl aus dem Intervall $[0,p-1]$ abgebildet. Der RFP erlaubt es, die Gleichheit zweier Zeichenfolgen zu widerlegen
-im Falle von unterschiedlichen Fingerprints. Im Falle von gleichen Fingerprints, kann die Gleichheit der Zeichenfolgen jedoch nicht garantiert werden. Die Wahrscheinlichkeit einer Kollision 
-dieser Art bei Zeichenfolgen gleicher Größe ist jedoch beschränkt und praktisch gering. Insbesondere kann die Wahrscheinlichkeit durch die passende Wahl von $p$ und $b$ minimiert werden.
+im Falle von unterschiedlichen Werten. Im Falle von gleichen RFPs, kann die Gleichheit der Zeichenfolgen jedoch nicht garantiert werden. Die Wahrscheinlichkeit einer Kollision 
+dieser Art bei Zeichenfolgen gleicher Größe ist jedoch beschränkt und praktisch gering\cite{ApproxLZ77}. Insbesondere kann die Wahrscheinlichkeit durch die passende Wahl von $p$ und $b$ 
+minimiert werden.
 
 Rabin-Karp-Fingerprints erlauben verschiedene Operationen auf Zeichenfolgen, die im Rahmen der approximativen LZ77-Faktorisierung effizient genutzt werden können. Zum Einen kann ein
-beschränktes Fenster $S_{W} = S(j..j+w)$ der Länge $w<n$ leicht verschoben werden. Sei $RFP(S_{W})$ der Fingerabdruck des Fensters, so kann der Fingerabdruck
-durch die Verschiebung um ein Zeichen nach rechts durch den Ausdruck,
-\begin{equation}
+beschränktes Fenster $S_{W} = S(j..j+w)$ der Länge $w<n$ leicht verschoben werden. Sei $RFP(S_{W})$ der Fingerabdruck des Fensters, so kann der Fingerprint durch die Verschiebung um 
+ein Zeichen nach rechts durch den Ausdruck,
+\begin{equation} \label{eq:shift}
     RFP(S(j+1..j+w+1)) = (RFP(S_W) - S[j]b^{w-1})b + S[j+w+1] \mod p,
 \end{equation}
-beschrieben. Desweiteren seien zwei Teilfolgen $S_1$ und $S_2$ der gleichen Länge $n$ gegeben. Der RFP der Konkatenation $S_1+S_2$ der beiden Teilfolgen kann durch den Ausdruck,
+beschrieben werden. Desweiteren seien zwei Teilfolgen $S_1$ und $S_2$ der gleichen Länge $n$ gegeben. Der RFP der Konkatenation,$S_1+S_2$, der beiden Teilfolgen kann durch den Ausdruck,
 \begin{equation} \label{eq:concat}
     RFP(S_1 + S_2) = (RFP(S_1)b^n + RFP(S_2)) \mod p,
 \end{equation}
-berechnet werden. Ähnlich zur Konkatenation von Zeichenfolgen ist die Operation \ref{eq:concat} ebenfalls assoziativ, jedoch nicht kommutativ.
+berechnet werden. Analog zur Konkatenation von Zeichenfolgen ist die Operation \ref{eq:concat} ebenfalls assoziativ, jedoch nicht kommutativ.
 
 \subsection{Verlustbehaftete Kompression}
 Im Rahmen dieser Arbeit werden wir einen Approximationsalgorithmus betrachten, der aufgrund der verwendeten RFP-Technik für Vergleiche von Zeichenfolgen eine fehlerhafte Faktorisierung mit 
@@ -95,7 +97,7 @@ Kompressionsprozess in diesem Fall mit anderen Parametern wiederholt werden kann
 
 \begin{figure}
     \centering
-    \caption{Las-Vegas-Algorithmus}
+    \caption{Konstruktion eines verlustfreien Las-Vegas-Algorithmus durch Wiederholung des verlustbehafteten Kompressionsprozesses}
     \label{fig:lasvegas}
     \includegraphics[scale=0.25]{Images/lasvegas_algorithm.png}
 \end{figure}
@@ -138,18 +140,20 @@ gegeben. In beiden Fällen wird ein niedriger Wert bevorzugt, da dieser auf eine
 Das Ziel dieser Arbeit ist die Entwicklung und Evaluation eines parallel Kompressionsalgorithmus. Im Folgenden definieren wir die Rahmenbedingungen und Konzepte der Parallelität.
 
 \subsection{Shared-Memory-Modell}
-Unser Algorithmus agiere auf einem Shared-Memory-Modell mit $P$ Ausführungseinheiten, welches im Gegensatz zum Distributed-Memory-Modell allen beteiligten Ausführungseinheiten bzw. 
-Prozessoren einen gemeinsamen Zugriff auf den Speicher ermöglicht. Im Rahmen der Arbeit und Kommunikation unter den Prozessoren wird man jedoch auf Konflikte bei gleichzeitigen 
-Speicherzugriffen zustoßen. Ein parallel modellierter Algorithmus muss explizit hinsichtlich der Korrektheit und Effizienz Mechanismen zur Synchronisation implementieren.
+Unser Algorithmus agiert auf einem Shared-Memory-Modell mit $P$ Ausführungseinheiten, welches im Gegensatz zum Distributed-Memory-Modell allen beteiligten 
+Ausführungseinheiten bzw. Prozessoren einen gemeinsamen Zugriff auf den Speicher ermöglicht. Im Rahmen der parallelen Programmierung muss der simultane Lese- bzw. Schreibzugriff auf
+Speicherbereiche synchronisiert werden, um Konflikte zu vermeiden. Die Konsequenz einer mangelnden oder ineffizienten Synchronisation können Inkonsistenzen in der Korrektheit und
+Performanz des Algorithmus sein. In der Praxis manifestieren sich diese Probleme beispielsweise in Form von Data-Races oder False-Sharing.\cite{parallelcomputing}
+Unser parallel modellierte Algorithmus muss explizit seine Korrektheit bewahren mit dem Ziel einer möglichst hohen Beschleunigung der Laufzeit.
 
 \subsection{Metriken}
-Das Ziel der Parallelisierung eines Algorithmus liegt hauptsächlich in einer Verbesserung der Laufzeit, insbesondere unter Berücksichtigung von Ressourcenkonflikten. Die zeitliche
-Beschleunigung der Laufzeit kann durch den Speedup $SP$ bemessen werden. Für eine Eingabe $S$ der Länge $n$ brauche ein sequenzieller Durchlauf $T(n, p=1)$ Zeit, während ein paralleler
-Algorithmus mit $P$ Prozessoren $T(n,p=P)$ an Zeit benötigt. Der Speedup ist dabei definiert durch
+Das Ziel der Parallelisierung eines Algorithmus liegt hauptsächlich in einer Verbesserung der Laufzeit, insbesondere unter Berücksichtigung der bereits beschriebenen Ressourcenkonflikten. 
+Die zeitliche Beschleunigung der Laufzeit kann durch den Speedup $SP$ bemessen werden. Für eine Eingabe $S$ der Länge $n$ brauche ein sequenzieller Durchlauf $T(n, p=1)$ Zeit, während ein 
+paralleler Algorithmus mit $P$ Prozessoren $T(n,p=P)$ an Zeit benötigt. Der Speedup ist dabei definiert durch
 \begin{equation}
     SP(n,P) = \frac{T(n,1)}{T(n,P)}.
 \end{equation}
 Ein idealer Speedup ist gegeben durch $SP(n,P)=P$. Verschiedene Effekte im Rahmen des Speicherzugriffs, der Synchronisation und der Kommunikation über mehrere Prozessoren können jedoch
-die Effizienz der Parallelisierung stark beeinträchtigen. Insbesondere können sequenzielle Abschnitte im Algorithmus aufgrund des Amdahlschen Gesetzes eine obere Schranke für den
-Speedup setzen.
+die Effizienz der Parallelisierung stark beeinträchtigen. Insbesondere können sequenzielle Abschnitte im Algorithmus aufgrund des Amdahl'schen Gesetzes\cite{amdahl} eine obere Schranke 
+für den Speedup setzen.
 

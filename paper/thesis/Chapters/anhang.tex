@@ -1,56 +1,61 @@
 % anhang.tex
 \chapter{Weitere Informationen}
 \section{Alternative Eingabedaten}
-\begin{figure}
+Im Folgenden sind die vollständigen Laufzeitmessungen für die Eingabedaten, sources, english, dna und xml, aufgeführt. Während die absoluten Werte
+der Laufzeit für die verschiedenen Eingabedaten variieren, zeigen die Kurven der Laufzeitmessungen eine ähnliche Tendenz.
+\begin{figure} [ht]
     \centering
     \caption{Laufzeitmessung von LZ77, Approx.LZ77 und Approx.LZ77Par(16 Threads) auf verschiedenen Präfixen von sources. Als Vergleichsmaß wurde 
     die lineare Regression der Kurven gestrichelt eingezeichnet.}
     \includegraphics[scale=0.6]{Images/progressive_sources.pdf}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[ht]
     \centering
     \caption{Laufzeitmessung von Approx.LZ77Par mit verschiedener Anzahl an Threads für sources}
     \includegraphics[scale=0.6]{Images/progressive_speedup_sources.pdf}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[ht]
     \centering
     \caption{Laufzeitmessung von LZ77, Approx.LZ77 und Approx.LZ77Par(16 Threads) auf verschiedenen Präfixen von english. Als Vergleichsmaß wurde 
     die lineare Regression der Kurven gestrichelt eingezeichnet.}
     \includegraphics[scale=0.6]{Images/progressive_english.pdf}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[ht]
     \centering
     \caption{Laufzeitmessung von Approx.LZ77Par mit verschiedener Anzahl an Threads für english}
     \includegraphics[scale=0.6]{Images/progressive_speedup_english.pdf}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[ht]
     \centering
     \caption{Laufzeitmessung von LZ77, Approx.LZ77 und Approx.LZ77Par(16 Threads) auf verschiedenen Präfixen von dna. Als Vergleichsmaß wurde 
     die lineare Regression der Kurven gestrichelt eingezeichnet.}
     \includegraphics[scale=0.6]{Images/progressive_dna.pdf}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[ht]
     \centering
     \caption{Laufzeitmessung von Approx.LZ77Par mit verschiedener Anzahl an Threads für dna}
     \includegraphics[scale=0.6]{Images/progressive_speedup_dna.pdf}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[ht]
     \centering
     \caption{Laufzeitmessung von LZ77, Approx.LZ77 und Approx.LZ77Par(16 Threads) auf verschiedenen Präfixen von xml. Als Vergleichsmaß wurde 
     die lineare Regression der Kurven gestrichelt eingezeichnet.}
     \includegraphics[scale=0.6]{Images/progressive_xml.pdf}
 \end{figure}
 
-\begin{figure}
+\begin{figure}[ht]
     \centering
     \caption{Laufzeitmessung von Approx.LZ77Par mit verschiedener Anzahl an Threads für xml}
     \includegraphics[scale=0.6]{Images/progressive_speedup_xml.pdf}
 \end{figure}
 
 \section{Alternative Testumgebung}
+Für die folgenden Messwerte wurden die Algorithmen auf einer Rechner mit einem AMD EYPC 32-Core Prozessor mit 128 nutzbaren Threads ausgeführt.
+Die Einstellungen der Algorithmen, die in \ref{settings} etabliert wurden, wurden beibehalten.
+ToDo: Tabelle einfügen
