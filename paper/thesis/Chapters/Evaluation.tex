@@ -50,7 +50,7 @@ Optimierungen festgelegt:
         \hline
         DynStart & Aktiv \\
         \hline
-        PreMatching & $r_{prematching}=r_{DynEnd}-4$ \\
+        PreMatching & $r_{prematching}=r_{DynEnd}-3$ \\
         \hline
         ScanSkip & $k_{min}=3\%$ \\
         \hline
@@ -175,6 +175,20 @@ Im Falle von Approx.LZ77 kann die Länge mithilfe von $\log_2(\log_2(n))$ Bits k
     \includegraphics[scale=0.6]{Images/progressive_mem.pdf}
 \end{figure}
 
+\begin{figure}[ht]
+    \centering
+    \caption{Darstellung der Verteilung der Laufzeit der Subroutinen innerhalb jeder Runde im Falle einer Ausführung von Approx.LZ77 ohne jegliche Optimierungen \ref{sec:practopt}}
+    \label{unopt}
+    \includegraphics[scale=0.6]{Images/progressive_unopt_stack.pdf}
+\end{figure}
+
+\begin{figure}[ht]
+    \centering
+    \caption{Darstellung der Verteilung der Laufzeit der Subroutinen innerhalb jeder Runde im Falle einer Ausführung von Approx.LZ77 mit allen Optimierungen \ref{settings}}
+    \label{opt}
+    \includegraphics[scale=0.6]{Images/progressive_opt_stack.pdf}
+\end{figure}
+
 \section{Auswertung}
 \subsection{LZ77}
 Wie in Kapitel 3.1 beschrieben, zeigt der verwendete Algorithmus zur Generierung einer exakten LZ77-Faktorisierung ein lineares Verhalten bezüglich der Laufzeit.
@@ -193,6 +207,18 @@ unterschiedliches Maß der Redundanz in den Eingaben zurückführen. Die Kompres
 zu erkennen, dass die Abweichung der Kompressionsrate von LZ77 in den meisten Fällen geringer ausfällt als die Abweichung der Faktorrate. Dies ist auf die in 
 \ref{cr} beschriebene Eigenart der Kodierung zurückzuführen.
 
+\subsection{Approx. LZ77 Optimierungen}
+Die praktische Optimierungen aus Kapitel 3.4 wurden in der Evalutation von Approx.LZ77 und Approx.LZ77Par standardmäßig aktiviert. Um den Nutzen dieser Optimierungen
+zu verdeutlichen wurden in \ref{unopt} und \ref{opt} die Auswirkungen auf die Laufzeiten der einzelnen Runden von Approx.LZ77 aufgezeichnet. Aufgrund der 
+Optimierungen DynStart und DynEnd ist sofort ersichtlich, dass der Algorithmus einen großen Anteil der sonst nötigen Runden auslässt. Konkret werden die ersten 12 und
+die letzten 2 Runden im Falle der Eingabe proteins ausgelassen. Dies bringt bereits eine signifikante Reduktion der Gesamtlaufzeit. Weiterhin fällt auf, dass die 
+InitTables- und Postprocess-Routine im optimierten Fall deutlich weniger Zeit in Anspruch nehmen. Dies lässt sich auf die Anwendung von PreMatching zurückführen,
+da in InitTables vorgefiltert werden und so weniger Einfügeoperationen stattfinden, sowie in Postprocess die Spaltung der Blöcke durch vorberechnete RFPs
+beschleunigt wird. Dieser Effekt verfällt enstprechend nach der vorberechneten Runde, hier 24. Schließlich zeigt sich die Wirkung von ScanSkip in den Ausfällen
+der ReferenceScan-Routine in den ersten vier und der letzten Runde. Die Kombination aus der Filterung durch PreMatching und der Eliminierung von Duplikaten in 
+InitTables führt in beiden Fällen zu einer relativ kleinen RFPTable. In der Gesamtheit haben wir die Sinnhaftigkeit der Nutzung der Optimierungen in Approx.LZ77 
+bestätigt. Die hier beschriebenen Effekte sind aufgrund des identischen Programmablaufs auch auf Approx.LZ77Par übertragbar.
+
 \subsection{Approx. LZ77Par}
 Im Bezug auf die Qualität der Kompression weist die Approx.LZ77Par keine Unterschiede zu Approx.LZ77 auf, was als Indiz für die Korrektheit der Implementierung
 interpretiert werden kann. Die Laufzeitmessung in \ref{runtime} zeigt, dass Approx.LZ77Par mit 16 Threads eine deutlich bessere Laufzeit aufweist als Approx.LZ77.
@@ -202,5 +228,3 @@ wie der Bandbreite der Speicherzugriffe und Symptomen von False-Sharing. Der Spe
 Es fällt auf, dass der Speicherverbrauch von Approx.LZ77Par im Vergleich zu Approx.LZ77 in den meisten Fällen leicht geringer ausfällt. 
 Dies ist auf die Verwendung von mehreren Instanzen von Unordered-Dense-Map \ref{unordereddense} zurückzuführen, die aufgrund ihrer inhärenten Struktur einen 
 geringen gesamten Speicherverbrauch aufweisen.
-
-ToDo: Praktische Optimierungen analysieren + Speedup erwähnen
