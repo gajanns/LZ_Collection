@@ -8,9 +8,8 @@ void LZ77Compressor::compress_impl(InStreamView &p_in, Coder::Encoder<LZ77::fact
     auto sa = SuffixArray::generate_suffix_array_libsais(input_span);
     std::vector<int32_t> psv(sa.size()-1, -1), nsv(sa.size()-1, -1);
     sa[0] = -1;
-    sa.push_back(-1);
     
-    for(size_t i = 1; i < sa.size()-1; i++) {
+    for(size_t i = 1; i < sa.size(); i++) {
         auto j = sa[i-1];
         auto k = sa[i];
 
