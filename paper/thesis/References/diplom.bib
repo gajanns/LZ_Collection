@@ -10,11 +10,55 @@
   doi={10.1109/TIT.1977.1055714}
 }
 
+@INPROCEEDINGS{sais,
+  author={Nong, Ge and Zhang, Sen and Chan, Wai Hong},
+  booktitle={2009 Data Compression Conference}, 
+  title={Linear Suffix Array Construction by Almost Pure Induced-Sorting}, 
+  year={2009},
+  volume={},
+  number={},
+  pages={193-202},
+  keywords={Sorting;Educational institutions;Algorithm design and analysis;Data compression;Computer science;Sun;Mathematics;Data structures;Indexing;Information retrieval;Suffix array;linear time;divide-and-conquer;algorithm design},
+  doi={10.1109/DCC.2009.42}}
+
+@book{jaja,
+author = {J\'{a}J\'{a}, Joseph},
+title = {An introduction to parallel algorithms},
+year = {1992},
+isbn = {0201548569},
+publisher = {Addison Wesley Longman Publishing Co., Inc.},
+pages= {9-11},
+}
+
+@article{nsvpsv,
+title = {Computing Longest Previous Factor in linear time and applications},
+journal = {Information Processing Letters},
+volume = {106},
+number = {2},
+pages = {75-80},
+year = {2008},
+issn = {0020-0190},
+doi = {https://doi.org/10.1016/j.ipl.2007.10.006},
+url = {https://www.sciencedirect.com/science/article/pii/S0020019007002979},
+author = {Maxime Crochemore and Lucian Ilie},
+keywords = {Design of algorithms, Analysis of algorithms, Strings, Suffix array, Longest common prefix, Longest previous factor, Lempel–Ziv factorization, Repetitions, Runs},
+abstract = {We give two optimal linear-time algorithms for computing the Longest Previous Factor (LPF) array corresponding to a string w. For any position i in w, LPF[i] gives the length of the longest factor of w starting at position i that occurs previously in w. Several properties and applications of LPF are investigated. They include computing the Lempel–Ziv factorization of a string and detecting all repetitions (runs) in a string in linear time independently of the integer alphabet size.}
+}
+
+@article{rfp,
+author = {Karp, Richard M. and Rabin, Michael O.},
+title = {Efficient randomized pattern-matching algorithms},
+year = {1987},
+url = {https://doi.org/10.1147/rd.312.0249},
+doi = {10.1147/rd.312.0249},
+journal = {IBM J. Res. Dev.},
+pages = {249–260}
+}
+
 @article{lzss,
 author = {Storer, James A. and Szymanski, Thomas G.},
 title = {Data compression via textual substitution},
 year = {1982},
-issue_date = {Oct. 1982},
 publisher = {Association for Computing Machinery},
 address = {New York, NY, USA},
 volume = {29},
@@ -23,7 +67,6 @@ issn = {0004-5411},
 url = {https://doi.org/10.1145/322344.322346},
 doi = {10.1145/322344.322346},
 journal = {J. ACM},
-month = {oct},
 pages = {928–951},
 numpages = {24}
 }
@@ -52,7 +95,6 @@ doi={10.1007/978-3-662-48350-3_45}
 author = {Bloom, Burton H.},
 title = {Space/time trade-offs in hash coding with allowable errors},
 year = {1970},
-issue_date = {July 1970},
 publisher = {Association for Computing Machinery},
 address = {New York, NY, USA},
 volume = {13},
@@ -60,91 +102,35 @@ number = {7},
 issn = {0001-0782},
 url = {https://doi.org/10.1145/362686.362692},
 doi = {10.1145/362686.362692},
-abstract = {In this paper trade-offs among certain computational factors in hash coding are analyzed. The paradigm problem considered is that of testing a series of messages one-by-one for membership in a given set of messages. Two new hash-coding methods are examined and compared with a particular conventional hash-coding method. The computational factors considered are the size of the hash area (space), the time required to identify a message as a nonmember of the given set (reject time), and an allowable error frequency.The new methods are intended to reduce the amount of space required to contain the hash-coded information from that associated with conventional methods. The reduction in space is accomplished by exploiting the possibility that a small fraction of errors of commission may be tolerable in some applications, in particular, applications in which a large amount of data is involved and a core resident hash area is consequently not feasible using conventional methods.In such applications, it is envisaged that overall performance could be improved by using a smaller core resident hash area in conjunction with the new methods and, when necessary, by using some secondary and perhaps time-consuming test to “catch” the small fraction of errors associated with the new methods. An example is discussed which illustrates possible areas of application for the new methods.Analysis of the paradigm problem demonstrates that allowing a small number of test messages to be falsely identified as members of the given set will permit a much smaller hash area to be used without increasing reject time.},
 journal = {Commun. ACM},
-month = {jul},
-pages = {422–426},
-numpages = {5},
-keywords = {storage layout, storage efficiency, searching, scatter storage, retrieval trade-offs, retrieval efficiency, hash coding, hash addressing}
+pages = {422–426}
 }
 
 @misc{openmp,
-  title={OpenMP ARB},
-  note={https://www.openmp.org}
+  author = {OpenMP Architecture Review Board},
+  title = {OpenMP Application Program Interface},
+  year = {2021},
+  url = {https://www.openmp.org/wp-content/uploads/OpenMP-API-Specification-5.2.pdf},
+  note = {Version 5.2}
 }
 
 @misc{execpol,
   title={STL Execution Policy},
-  note={https://en.cppreference.com/w/cpp/algorithm/execution\textunderscore policy\textunderscore tag\textunderscore t}
-}
-
-@misc{parcont,
-  title={Parallel Concurrent Datastructures},
-  note={https://github.com/TooBiased/growt}
-}
-
-@article{lzw,
-  author={Welch},
-  journal={Computer}, 
-  title={A Technique for High-Performance Data Compression}, 
-  year={1984},
-  volume={17},
-  number={6},
-  pages={8-19},
-  keywords={Data compression;Image coding;Compression algorithms;Programming profession;Data structures;Encoding;Runtime;System performance},
-  doi={10.1109/MC.1984.1659158}
+  note={https://en.cppreference.com/w/cpp/algorithm/execution\textunderscore policy\textunderscore tag\textunderscore t},
+  year={2024}
 }
 
 @misc{oneapi,
+  author={Intel},
   title={Intel oneAPI Threading Building Blocks},
-  howpublished={\url{https://www.intel.com/content/www/us/en/developer/tools/oneapi/onetbb.html}}
+  howpublished={\url{https://www.intel.com/content/www/us/en/developer/tools/oneapi/onetbb.html}},
+  note={Accessed: 2024-08-15}
 }
 
 @misc{stdcont,
   title={Thread Safety of STD Containers},
-  note={https://en.cppreference.com/w/cpp/container\#Thread\textunderscore safety}
-}
-
-@article{parlz77,
-title = {Parallel Lempel Ziv coding},
-journal = {Discrete Applied Mathematics},
-volume = {146},
-number = {2},
-pages = {180-191},
-year = {2005},
-note = {12th Annual Symposium on Combinatorial Pattern Matching},
-issn = {0166-218X},
-doi = {https://doi.org/10.1016/j.dam.2004.04.013},
-url = {https://www.sciencedirect.com/science/article/pii/S0166218X04003476},
-author = {Shmuel Tomi Klein and Yair Wiseman},
-keywords = {Data compression, Lempel–Ziv algorithms, Parallel algorithms},
-}
-
-@InProceedings{parcollect,
-author="Prokopec, Aleksandar
-and Bagwell, Phil
-and Rompf, Tiark
-and Odersky, Martin",
-title="A Generic Parallel Collection Framework",
-booktitle="Euro-Par 2011 Parallel Processing",
-year="2011",
-publisher="Springer",
-pages="136--147",
-isbn="978-3-642-23397-5"
-}
-
-@InProceedings{parrabin,
-author="Shah, Parth
-and Oza, Rachana",
-editor="Satapathy, Suresh Chandra
-and Joshi, Amit",
-title="Improved Parallel Rabin-Karp Algorithm Using Compute Unified Device Architecture",
-booktitle="Information and Communication Technology for Intelligent Systems",
-volume ="2",
-year="2017",
-publisher="Springer International Publishing",
-pages="236--244",
-isbn="978-3-319-63645-0"
+  howpublished={\url{https://en.cppreference.com/w/cpp/container\#Thread\textunderscore safety}},
+  note = {Accessed: 2024-08-15}
 }
 
 @misc{parallelcomputing,
@@ -155,38 +141,46 @@ isbn="978-3-319-63645-0"
   publisher={Springer Cham}
 }
 
-@misc{amdahl,
-  title={Amdahls Law},
-  howpublished={\url{https://en.wikipedia.org/wiki/Amdahl%27s_law}}
+@book{mccool,
+author = {McCool, Michael and Reinders, James and Robison, Arch},
+title = {Structured Parallel Programming: Patterns for Efficient Computation},
+year = {2012},
+isbn = {9780123914439},
+publisher = {Morgan Kaufmann Publishers Inc.},
+pages = {58}
 }
 
 @misc{corpus,
+key = {corpus},
 title={The Pizza\& Chili Corpus},
 note={https://pizzachili.dcc.uchile.cl/texts.html}
 }
 
-@misc{deflate,
-title={DEFLATE Compressed Data Format Specification version 1.3},
-note={https://www.rfc-editor.org/rfc/rfc1951.html}
-}
-
 @misc{malloc_count,
+author={Bingmann},
 title={Malloc Count},
-howpublished = {\url{https://github.com/ByteHamster-etc/malloc_count.git}}
+howpublished = {\url{https://github.com/ByteHamster-etc/malloc_count.git}},
+note={Accessed: 2024-08-15}
 }
 
 @misc{libsais,
+author={Ilya Grebnov},
 title={libsais},
-howpublished = {\url{https://github.com/IlyaGrebnov/libsais.git}}
+howpublished = {\url{https://github.com/IlyaGrebnov/libsais.git}},
+note={Accessed: 2024-08-15}
 }
 
 @misc{unordered_dense,
 title={Unordered Dense Hash Map},
-howpublished = {\url{https://github.com/martinus/unordered_dense.git}}
+key={unordered_dense},
+howpublished = {\url{https://github.com/martinus/unordered_dense.git}},
+note={Accessed: 2024-08-15}
 }
 
 @misc{sharded_map,
+key={sharded_map},
 title={Sharded Map},
-howpublished = {\url{https://github.com/Skadic/sharded_map.git}}
+howpublished = {\url{https://github.com/Skadic/sharded_map.git}},
+note={Accessed: 2024-08-15}
 }
 
