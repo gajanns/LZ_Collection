@@ -22,7 +22,7 @@ Spezialisierungen teilen sich jedoch eine gemeinsame Definition eines Faktors im
 Im Folgenden werden die genutzten externen Bibliotheken aufgelistet, die im Rahmen der Implementierung der Algorithmen, sowie deren Evaluation genutzt wurden.
 \subsubsection{Malloc Count} \label{malloccount}
 Malloc Count\cite{malloc_count} ist eine C++-Bibliothek, die es ermöglicht, Speicherallokationen und -freigaben auf dem Heap zu überwachen und zu messen. Im
-Rahmen unserer Evaluation gibt uns diese Bibliothek die Spitze des allokierten Speichers innerhalb des Ausführung der Algorithmen aus.
+Rahmen unserer Evaluation gibt uns diese Bibliothek die Spitze des allokierten Speichers innerhalb der Ausführung der Algorithmen aus.
 
 \subsubsection{Unordered-Dense-Map} \label{unordereddense}
 Die Unordered-Dense-Map \cite{unordered_dense} stellt eine performante Hashtabelle dar, die insbesondere in der Dauer ihrer Suchoperationen gegenüber
@@ -31,8 +31,12 @@ RFPs in jeder Runde verwendet. Im Rahmen der Entwicklung von Approx.LZ77Par hat 
 zu anderen inherent parallelen Hashtabellen \cite{oneapi} \cite{sharded_map} als effizienter herausgestellt.
 
 \subsubsection{LibSaiS}
-Für die Implementierung der exakten LZ77-Faktorisierung, die als Referenzalgorithmus fungiert, wurde die Bibliothek LibSaiS\cite{libsais} zu Hilfe genommen. Diese
+Für die Implementierung der exakten LZ77-Faktorisierung, die als Referenzalgorithmus fungiert, wurde die Bibliothek LibSaiS \cite{libsais} zu Hilfe genommen. Diese
 Bibliothek stellt eine effiziente Implementierung für die Konstruktion des Suffix-Arrays bereit.
+
+\subsubsection{STL - Sortierung}
+Die Standardbibliothek von C++ stellt bereits Implementierungen von Sortieralgorithmen bereit. Diese wurden in der Implementierung von LZ77 und Approx.LZ77 für
+die nachträgliche Sortierung der Faktoren verwendet. Insbesondere wurden Execution Policies \cite{execpol} genutzt, um die Sortierung parallelisieren zu können.
 
 \subsection{Parametrisierte Einstellung}
 Falls nicht anders ausgewiesen wurden die Approximationsalgorithmen mit allen prakischen Optimierungen aus Kapitel 3.4 ausgeführt. Im Falle von Approx.LZ77Par
@@ -83,7 +87,8 @@ Kompressionspotentiale ab.
     \end{tabular}
 \end{table}
 In der Tabelle \ref{inputdata} sind die verwendeten Dateien aufgelistet. Die Größe der Dateien wurde auf 200MB beschränkt, um einen angemessenen Rahmen für die 
-Laufzeitmessung zu erhalten.
+Laufzeitmessung zu erhalten. Detaillierte Messungen werten wir auf der Eingabe proteins aus, da diese Datei die schlechtesten Metriken aufweist. Weitergehende
+Laufzeitmessungen der anderen Dateien sind in \ref{alternative} aufgeführt.
 
 \subsection{Messgrößen}
 
@@ -168,7 +173,7 @@ Im Falle von Approx.LZ77 kann die Länge mithilfe von $\log_2(\log_2(n))$ Bits k
     \label{runtime}
 \end{figure}
     
-\begin{figure}[ht]
+\begin{figure}[H]
     \centering
     \includegraphics[scale=0.65]{Images/progressive_speedup_proteins.pdf}
     \caption{Laufzeit-(Blau) und Speedup(Grün)-Messung von Approx.LZ77Par mit verschiedener Anzahl an Threads für proteins}
@@ -177,15 +182,17 @@ Im Falle von Approx.LZ77 kann die Länge mithilfe von $\log_2(\log_2(n))$ Bits k
 
 \begin{figure}[H]
     \centering
-    \includegraphics[scale=0.7]{Images/progressive_unopt_stack.pdf}
-    \caption{Darstellung der Verteilung der Laufzeit der Subroutinen innerhalb jeder Runde im Falle einer Ausführung von Approx.LZ77 ohne jegliche Optimierungen \ref{sec:practopt}}
+    \includegraphics[scale=0.63]{Images/progressive_unopt_stack.pdf}
+    \caption{Darstellung der Verteilung der Laufzeit der Subroutinen innerhalb jeder Runde im Falle einer Ausführung von Approx.LZ77 ohne jegliche Optimierungen \ref{sec:practopt}.
+    Postprocess deckt dabei die nötigen Prozesse zum Rundenübergang, wie das Spalten der Blöcke und der Extraktion der Faktoren, ab.}
     \label{unopt}
 \end{figure}
 
 \begin{figure}[H]
     \centering
-    \includegraphics[scale=0.7]{Images/progressive_opt_stack.pdf}
-    \caption{Darstellung der Verteilung der Laufzeit der Subroutinen innerhalb jeder Runde im Falle einer Ausführung von Approx.LZ77 mit allen Optimierungen \ref{settings}}
+    \includegraphics[scale=0.63]{Images/progressive_opt_stack.pdf}
+    \caption{Darstellung der Verteilung der Laufzeit der Subroutinen innerhalb jeder Runde im Falle einer Ausführung von Approx.LZ77 mit allen Optimierungen \ref{settings}.
+    Postprocess deckt dabei die nötigen Prozesse zum Rundenübergang, wie das Spalten der Blöcke und der Extraktion der Faktoren, ab.}
     \label{opt}
 \end{figure}
 
@@ -193,7 +200,7 @@ Im Falle von Approx.LZ77 kann die Länge mithilfe von $\log_2(\log_2(n))$ Bits k
 \subsection{LZ77}
 Wie in Kapitel 3.1 beschrieben, zeigt der verwendete Algorithmus zur Generierung einer exakten LZ77-Faktorisierung ein lineares Verhalten bezüglich der Laufzeit.
 Dies wird in Abbildung \ref{runtime} deutlich, wo die Laufzeitmessung von LZ77 auf verschiedenen Präfixen von proteins dargestellt ist. Die lineare Regression der
-Kurven verdeutlicht das lineare Verhalten. Auch im Bezug auf die Speichernutzung wird das lineare Verhältnis zur Eingabegröße in Abbildung \ref{memory} deutlich.
+Kurven verdeutlicht das lineare Verhalten. Auch in Bezug auf die Speichernutzung wird das lineare Verhältnis zur Eingabegröße in Abbildung \ref{memory} deutlich.
 Das Verhältnis von allokiertem Speicher zur Eingabegröße beträgt in nahezu allen Präfixen von proteins 20 Byte pro Eingabezeichen. Hiermit konnten wir die theoretische
 Analyse des Laufzeit- und Speicherverhaltens empirisch bestätigen.
 
@@ -208,19 +215,19 @@ zu erkennen, dass die Abweichung der Kompressionsrate von LZ77 in den meisten F�
 \ref{cr} beschriebene Eigenart der Kodierung zurückzuführen.
 
 \subsection{Approx. LZ77 Optimierungen}
-Die praktische Optimierungen aus Kapitel 3.4 wurden in der Evalutation von Approx.LZ77 und Approx.LZ77Par standardmäßig aktiviert. Um den Nutzen dieser Optimierungen
+Die praktischen Optimierungen aus Kapitel 3.4 wurden in der Evalutation von Approx.LZ77 und Approx.LZ77Par standardmäßig aktiviert. Um den Nutzen dieser Optimierungen
 zu verdeutlichen wurden in \ref{unopt} und \ref{opt} die Auswirkungen auf die Laufzeiten der einzelnen Runden von Approx.LZ77 aufgezeichnet. Aufgrund der 
 Optimierungen DynStart und DynEnd ist sofort ersichtlich, dass der Algorithmus einen großen Anteil der sonst nötigen Runden auslässt. Konkret werden die ersten 12 und
 die letzten 2 Runden im Falle der Eingabe proteins ausgelassen. Dies bringt bereits eine signifikante Reduktion der Gesamtlaufzeit. Weiterhin fällt auf, dass die 
 InitTables- und Postprocess-Routine im optimierten Fall deutlich weniger Zeit in Anspruch nehmen. Dies lässt sich auf die Anwendung von PreMatching zurückführen,
-da in InitTables vorgefiltert werden und so weniger Einfügeoperationen stattfinden, sowie in Postprocess die Spaltung der Blöcke durch vorberechnete RFPs
+da Blöcke in InitTables vorgefiltert werden und so weniger Einfügeoperationen stattfinden, sowie im Rundenübergang die Spaltung der Blöcke durch vorberechnete RFPs
 beschleunigt wird. Dieser Effekt verfällt enstprechend nach der vorberechneten Runde, hier 24. Schließlich zeigt sich die Wirkung von ScanSkip in den Ausfällen
 der ReferenceScan-Routine in den ersten vier und der letzten Runde. Die Kombination aus der Filterung durch PreMatching und der Eliminierung von Duplikaten in 
 InitTables führt in beiden Fällen zu einer relativ kleinen RFPTable. In der Gesamtheit haben wir die Sinnhaftigkeit der Nutzung der Optimierungen in Approx.LZ77 
 bestätigt. Die hier beschriebenen Effekte sind aufgrund des identischen Programmablaufs auch auf Approx.LZ77Par übertragbar.
 
 \subsection{Approx. LZ77Par}
-Im Bezug auf die Qualität der Kompression weist die Approx.LZ77Par keine Unterschiede zu Approx.LZ77 auf, was als Indiz für die Korrektheit der Implementierung
+In Bezug auf die Qualität der Kompression weist die Approx.LZ77Par keine Unterschiede zu Approx.LZ77 auf, was als Indiz für die Korrektheit der Implementierung
 interpretiert werden kann. Die Laufzeitmessung in \ref{runtime} zeigt, dass Approx.LZ77Par mit 16 Threads eine deutlich bessere Laufzeit aufweist als Approx.LZ77.
 Die Laufzeitmessung in \ref{runtime_threads} zeigt, dass die Laufzeit von Approx.LZ77Par von einer kleinen Anzahl an Threads stärker profitiert. Mit zunehmender 
 Anzahl an Threads wird die Beschleunigung bzw. der Speedup geringer. Die resultierende Asymptote in der Laufzeitmessung ist auf externe Faktoren zurückzuführen,

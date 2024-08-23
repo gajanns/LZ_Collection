@@ -19,7 +19,7 @@ stets die längste Zeichenfolge zu referenzieren, die bereits links von der aktu
     \STATE $k \gets 1$
     \WHILE{$k \leq n$}
     \STATE $(len, ref) \gets (0, 0)$
-    \STATE $l_{f} \gets \max\{l_{nsv}=LCP(S(NSV[k]..n), S(k..n))\text{ , } l_{psv}=LCP(S(PSV[k]..n), S(k..n)\}$
+    \STATE $l_{f} \gets \max\{l_{nsv}=LCP(S(NSV[k]..n), S(k..n))\text{, } l_{psv}=LCP(S(PSV[k]..n), S(k..n)\}$
     \IF{$l_{f} = 0$}
         \STATE $ref \gets (0, S[k])$
     \ELSIF{$l_{nsv} \geq l_{psv}$}
@@ -34,7 +34,7 @@ stets die längste Zeichenfolge zu referenzieren, die bereits links von der aktu
 \end{algorithmic}
 \end{algorithm}
 In \ref{alg:complz77} wird der Algorithmus zur Generierung einer exakten LZ77-Faktorisierung illustriert, welcher in \cite{exactLemZiv} beschrieben ist. Der 
-Algorithmus erzeugt zunächst ein Suffix-Array, welches allen Suffixen der Eingabe einen lexikographische Rand zuweist. Anhand des lexikographischen Rangs 
+Algorithmus erzeugt zunächst ein Suffix-Array, welches allen Suffixen der Eingabe einen lexikografische Rand zuweist. Anhand des lexikografischen Rangs 
 können Kandidaten für Referenzen effizient bestimmt werden. Hierfür werden mithilfe des Suffix-Arrays zwei Arrays, das Next Smaller Value(NSV) und das 
 Previous Smaller Value(PSV) erzeugt.
 
@@ -48,9 +48,9 @@ Sei $S$ eine Eingabezeichenfolge und $SA$ das Suffix-Array von $S$. Das Next Sma
 für $1\leq k \leq n$.
 
 Die Minimierung der lexikografischen Distanz indiziert eine Maximierung der Länge des übereinstimmenden Präfixes zwischen zwei Teilfolgen der Eingabe.
-Sei die aktuelle Position in der Eingabe $k$, so muss aufgrund von positionellen und lexikographischen Einschränkungen die 
+Sei die aktuelle Position in der Eingabe $k$, so muss aufgrund von positionellen und lexikografischen Einschränkungen die 
 Position der längsten vorherigen Referenz entweder $NSV[k]$ oder $PSV[k]$ sein, da beide in Anlehnung an \ref{eq_nsv} und \ref{eq_psv} die
-minimale lexikographische Distanz aufweisen. Die maximale Länge der übereinstimmenden Präfixe zwischen $S(NSV[k]..n)$ und $S(k..n)$ bzw. $S(PSV[k]..n)$ 
+minimale lexikografische Distanz aufweisen. Die maximale Länge der übereinstimmenden Präfixe zwischen $S(NSV[k]..n)$ und $S(k..n)$ bzw. $S(PSV[k]..n)$ 
 und $S(k..n)$ wird durch die Funktion $LCP$ berechnet. Der LCP-Wert zweier Zeichenfolgen kann durch einen Scan durch beide
 Zeichenfolgen berechnet werden. Das Ergebnis dieser Berechnung bestimmt sukzessive Faktoren durch die Länge und Position der Referenzen. Der Algorithmus 
 terminiert, wenn die gesamte Eingabe abgearbeitet wurde.
@@ -78,14 +78,14 @@ gehen wir ohne Beschränkung der Allgemeinheit davon aus, dass die Länge der Ei
 Padding erreicht werden. 
 Der Ablauf des Algorithmus ist durch mehrere Runden definiert, in denen Faktoren mit einer zunehmend kleineren Länge extrahiert werden. In jeder Runde wird die noch unverarbeitete
 Teilfolge der Eingabe in Blöcke gleicher Größe eingeteilt. Im Übergang zwischen den Runden werden Blöcke, die unverarbeitete Zeichenfolgen repräsentieren, in der Hälfte geteilt,
-sodass die zugehörige Blockgröße und damit die potentielle Faktorlänge kontinuierlich halbiert wird. Der Algorithmus terminiert, wenn die Eingabe vollständig verarbeitet wurde, 
+sodass die zugehörige Blockgröße und damit die potenzielle Faktorlänge kontinuierlich halbiert wird. Der Algorithmus terminiert, wenn die Eingabe vollständig verarbeitet wurde, 
 was spätestens nach $log_2(|S|)$ Runden der Fall ist, da Blöcke der Größe 1 nicht weiter geteilt werden können. Im Folgenden bezeichne $B_i$ die Menge der Blöcke in Runde 
 $i=1,2,...,log_2(|S|)$.
 Innerhalb einer beliebigen Runde $i$ wird die Menge der Blöcke $B_i$ auf Referenzen, also auf vorherige Vorkommen in $S$, untersucht. Im Erfolgsfall wird für den Block und
 dessen repräsentierter Zeichenfolge ein Faktor geeneriert. In diesem Fall wird dieser Block als markiert bezeichnet. Die Menge aller markierten Blöcke, die in der Runde $i$
 erzeugt wurden, wird als $B_i^{marked}$ mit $B_i^{marked}\subset B_i$ bezeichnet. Die verbleibenden Blöcke, $B_i^{unmarked}=B_i\setminus B_i^{marked}$, werden im Übergang
 zur nächsten Runde jeweils halbiert. Die Zeichenfolgen der unmarkierten Blöcke werden als einzelne Zeichen interpretiert und faktorisiert.
-\begin{figure} [h]
+\begin{figure} [ht]
     \centering
     \includegraphics[width=1\textwidth]{Images/approxlz77.png}
     \caption{Die Abbildung illustriert die rundenbasierte Verarbeitung von Blöcken über der Eingabe in Approx. LZ77. In Runde $i$ werden die Blöcke in $B_i$ auf Referenzen untersucht und
@@ -99,12 +99,12 @@ thematisiert, da diese den Kern der Faktorgeneration in jeder Runde ausmacht.
 In \ref{alg:compapproxlz77} werden die notwendingen Prozesse vor, während und nach der rundenbasierten Ausführungsschleife von Approx. LZ77 beschrieben. Zu Beginn der initialen
 Runde $r_{init}=1$ wird die gesamte Eingabe in $2^{r_{init}}$ Blöcke gleicher Größe eingeteilt. Dieser Prozess wird durch die Routine InitBlocks erfasst. Darauf folgt eine Schleife
 über eine beschränkte Anzahl an Runden, die durch $r_{end}=log_2(|S|)$ definiert ist. Die Routine ProcessRound beschreibt die bereits erwähnte Extraktion von Referenzen über die
-Menge der Blöcke, die eine Menge von markierten Blöcken und und den zugehörigen Faktoren generiert. Im Übergang zur nächsten Runde werden die unmarkierten Blöcke in der Routine 
+Menge der Blöcke, die eine Menge von markierten Blöcken und den zugehörigen Faktoren generiert. Im Übergang zur nächsten Runde werden die unmarkierten Blöcke in der Routine 
 NextNodes jeweils halbiert. Am Ausgang der Schleife steht die Menge der Faktoren $F$ als Resultat fest, die die gesamte Eingabe $S$ abdeckt.
 
 \begin{algorithm}[ht]
 \centering
-\caption{COMP$_{ApproxLZ77}$: Approximation der exakten LZ77-Faktorisierung durch einer blockweisen Referenzsuche} \label{alg:compapproxlz77}
+\caption{COMP$_{ApproxLZ77}$: Approximation der exakten LZ77-Faktorisierung durch eine blockweise Referenzsuche} \label{alg:compapproxlz77}
 \algorithmicrequire $S=e_1...e_n$
 \algorithmicensure $F=f_1...f_z$
 \begin{algorithmic}[1]
@@ -209,7 +209,7 @@ Faktorfolge, $z$. Der Speicherbedarf kann damit konservativ auf $O(z)$ abgeschä
 \subsection{Konzept}
 Im Folgenden beschreiben wir das verwendete Schema zur Parallelisierung des Approx. LZ77-Algorithmus. Die Parallelisierung zielt auf eine schrittweise isolierte Parallelisierung der Bearbeitung, wobei
 jeweils Eingabedaten auf verschiedene Prozessoren bzw. Threads verteilt und die Ergebnisse kombiniert werden.
-\begin{figure}[h]
+\begin{figure}[ht]
     \centering
     \includegraphics[width=0.8\textwidth]{Images/parallel_initnodes.png}
     \caption{Parallele Generierung der initialen Blöcke}
@@ -218,7 +218,7 @@ jeweils Eingabedaten auf verschiedene Prozessoren bzw. Threads verteilt und die 
 In \ref{fig:parinitnodes} wird die parallele Generierung der initialen Blöcke dargestellt. Hierbei wird die Eingabe $S$ in $P$ Teile aufgebrochen, sodass die Routine InitBlocks auf jedem Prozessor
 die zugehörigen Blöcke erzeugen kann. Da die chronologische Ordnung erhalten bleibt, können die erzeugten Blöcke ohne zusätzlichen Aufwand kombiniert werden.
 
-\begin{figure}[h]
+\begin{figure}[ht]
     \centering
     \includegraphics[width=0.8\textwidth]{Images/parallel_inittables.png}
     \caption{Parallele Initialisierung der RFP-Tabelle und der Referenztabelle}
@@ -229,7 +229,7 @@ Aufteilung der RFP jedes Blocks verwendet wird. Als Konsequenz werden identische
 die RefTable durch alle Prozessoren gemeinsam aktualisiert wird. Auch hier wird durch den Aufteilungsschlüssel eine Überlappung der Zugriffe vermieden. Das Ergebnis ist eine konsistente
 RefTable und eine $P$-elementige Menge von Instanzen der RFPTable, die jeweils eine klar definierte Teilmenge aller RFPs abdecken.
 
-\begin{figure}[h]
+\begin{figure}[ht]
     \centering
     \includegraphics[width=0.8\textwidth]{Images/parallel_referencescan.png}
     \caption{Paralleler Scan der Eingabe nach zusätzlichen Referenzen}
@@ -320,9 +320,9 @@ konstante Operation auf der Basis des RFP übersetzt werden. Gegeben sei eine Ru
 $2^{r_{prematch}-r_m}$ viele Böcke $(b_1, b_2, ..., b_{2^{r_{prematch}-r_m}})\in B_{prematch}$ gefunden werden, die die gleiche Zeichenfolge repräsentieren. So ergibt sich für den 
 zugehörigen RFP,
 \begin{equation}
-    RFP(b) = RFP(b_1) \oplus RFP(b_2) \oplus ... \oplus RFP(b_{2^{r_{prematch}-r_m}})
+    RFP(b) = RFP(b_1) \oplus RFP(b_2) \oplus ... \oplus RFP(b_{2^{r_{prematch}-r_m}}),
 \end{equation}
-, wobei jede Operation in konstanter Zeit durchgeführt werden kann. Die Anzahl der Rechenschritte für die Berechnung des RFP eines Blockes hängt nun nicht mehr von der Länge der
+wobei jede Operation in konstanter Zeit durchgeführt werden kann. Die Anzahl der Rechenschritte für die Berechnung des RFP eines Blockes hängt nun nicht mehr von der Länge der
 repräsentierten Zeichenfolge ab, sondern der Rundendistanz zur vorberechneten Runde.
 Weiterhin kann die Menge der unmarkierten Blöcke $B_{prematch}^{unmarked}=B_{prematch}\setminus B_{prematch}^{marked}$ genutzt werden, um die Menge der Blöcke $B_m$ in Runde $r_m$
 zu reduzieren. Ein Block $b \in B_m$ kann nur dann markiert werden, wenn die equivalente Sequenz von Blocken $(b_1, b_2, ..., b_{2^{r_{prematch}-r_m}})\in B_{prematch}$ markiert ist.
@@ -343,7 +343,7 @@ Runden als konservative obere Schranke genutzt werden kann. Insgesamt ergibt sic
 $(1 + k_{min} \cdot {log_2{|S|}})$.
 
 \subsection{Korrelation der Optimierungen}
-Die Einschränkung der initialen und terminalen Runde durch DynStart und DynEnd reduziert die potentielle Rundendistanz zur einer gewählten vorberechneten Runde, $r_{prematch}$.
+Die Einschränkung der initialen und terminalen Runde durch DynStart und DynEnd reduziert die potenzielle Rundendistanz zur einer gewählten vorberechneten Runde, $r_{prematch}$.
 Dies unterstützt die zeitsparende Wirkung von PreMatching. Die Filterung von Blöcken, die keine Kandidaten eine Markierung sind, durch PreMatching erlaubt eine Reduktion der 
 RFPTable, die durch die InitTables-Routine erzeugt wird. Entsprechend kann für die ScanSkip-Optimierung ein kleinerer Wert für $k_{min}$ gewählt werden, um die Verschlechterung
 der Faktorrate bei gleicher Häufigkeit der ausgelassenen ReferenceScan-Routine zu reduzieren. Die spezifischen Auswirkungen der Optimierungen, sowie deren Korrelation, sind 
