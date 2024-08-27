@@ -87,7 +87,7 @@ der Größe 1 nicht weiter geteilt werden können. Im Folgenden bezeichne $B_i$ 
     die Funde in die Menge der markierten Blöcke übernommen. Nur die unmarkierten Blöcke werden geteilt und in die nächste Runde übernommen.}
     \label{fig:roundapproxlz77}
 \end{figure}
-Innerhalb einer beliebigen Runde $i\int [1,log(|S|)]$ wird die Menge der Blöcke $B_i$ auf Referenzen, also auf vorherige Vorkommen in $S$, untersucht. Im Erfolgsfall wird für den Block und
+Innerhalb einer beliebigen Runde $i\in [1,log(|S|)]$ wird die Menge der Blöcke $B_i$ auf Referenzen, also auf vorherige Vorkommen in $S$, untersucht. Im Erfolgsfall wird für den Block und
 dessen repräsentierter Zeichenfolge ein Faktor generiert. Weiterhin deklarieren wir den entsprechenden Block als markiert. Die Menge aller markierten Blöcke, die in der Runde $i$
 erzeugt wurden, wird durch $B_i^{marked}$ mit $B_i^{marked}\subset B_i$ bezeichnet. Die verbleibenden Blöcke, $B_i^{unmarked}=B_i\setminus B_i^{marked}$, werden im Übergang
 zur nächsten Runde jeweils gespaltet. Im Anschluss an die letzte Runde werden die repräsentierten Zeichen der unmarkierten Blöcke referenzlos interpretiert und faktorisiert.
@@ -177,7 +177,7 @@ des RFP des Fensters in Folge der sukzessiven Verschiebung um eine Position kann
 Schließlich wird im dritten Schritt die RefTable genutzt, um die implizit markierten Blöcke zu extrahieren. Ein Block wird markiert, wenn die RefTable die Position einer Referenz indiziert, die kleiner als die
 des Blocks ist. Die Position der Referenz und die rundenbedingte Blockgröße als Faktorlänge definieren einen eindeutigen Faktor, der in die Menge der Faktoren $F$ eingefügt wird. Die Reihenfolge der Faktoren
 wird endgültig durch die Position der repräsentierten Zeichenfolge bestimmt. Für die Einhaltung der Reihenfolge sei im Rahmen der Analyse der Laufzeit und des Speicherverbrauchs eine nachträgliche Sortierung
-der Faktoren in $F$ vorgegeben werden.
+der Faktoren in $F$ vorgegeben.
 
 \begin{algorithm}[ht]
 \centering
@@ -202,7 +202,7 @@ werden Referenzen unter den Blöcken durch die InitTables-Routine bestimmt. Die 
 der Routine erhält durch die Berechnung des RFPs über dieser Zeichenfolge eine Laufzeitschätzung von $O(n)$. Die Referenzsuche über die gesamte Eingabe durch die ReferenceScan-Routine benötigt ebenfalls
 $O(n)$ Laufzeit, da das berücksichtigte Fenster in linearer Zeit über die Eingabe verschoben werden kann. Durch die Verwendung einer Hashtabelle sind die Suchoperationen jeweils in konstanter Zeit
 durchführbar. Die Laufzeit der ProcessRound-Routine beträgt somit $O(n)$. Insgesamt ergibt sich eine Gesamtlaufzeit von $O(n\log{n})$ für Approx. LZ77. 
-Der Speicherbedarf des Algorithmus wird durch die Größe der Blockmenge,RFPTable und der RefTable bestimmt, die wiederum alle durch die Anzahl der Blöcke bestimmt werden. In jeder Runde repräsentiert 
+Der Speicherbedarf des Algorithmus wird durch die Größe der Blockmenge, RFPTable und der RefTable bestimmt, die wiederum alle durch die Anzahl der Blöcke bestimmt werden. In jeder Runde repräsentiert 
 die Menge der Blöcke die noch unverarbeitete Eingabe, sodass aus jedem Block im Laufe des Algorithmus mindestens ein Faktor extrahiert wird. Die Anzahl der Blöcke einer Runde übersteigt damit nie die 
 Größe der endgültigen Faktorfolge, $|F|=z$. Der Speicherbedarf kann damit konservativ auf $O(z)$ abgeschätzt werden.
 
@@ -225,7 +225,7 @@ die zugehörigen Blöcke erzeugen kann. Da die Ordnung und die Größe der Ergeb
     \caption{Parallele Initialisierung der RFP-Tabelle und der Referenztabelle}
     \label{fig:parinittables}
 \end{figure}
-In \ref{fig:parinittables} wird die parallele Initialisierung der RFPTable und der RefTebl dargestellt. Die Menge aller Blöcke wird in $P$ Teile aufgeteilt, wobei als Kriterium für die
+In \ref{fig:parinittables} wird die parallele Initialisierung der RFPTable und der RefTable dargestellt. Die Menge aller Blöcke wird in $P$ Teile aufgeteilt, wobei als Kriterium für die
 Aufteilung der RFP jedes Blocks verwendet wird. Als Konsequenz werden identische Zeichenfolgen nicht auf verschiedene Prozessoren verteilt. Jeder Prozessor erzeugt eine eigene RFPTable, wobei
 die RefTable durch alle Prozessoren gemeinsam aktualisiert wird. Auch hier wird durch den RFP als Aufteilungsschlüssel eine Überlappung der Zugriffe vermieden. Das Ergebnis ist eine konsistente
 RefTable und eine $P$-elementige Menge von Instanzen der RFPTable, die jeweils eine klar abgegrenzte Teilmenge aller RFPs abdecken.
@@ -268,13 +268,13 @@ Dann gilt für die Länge der kodierten Repräsentation von $f_{ref}$:
 \begin{split}
     |K_{OUT}(f_{ref})| & \geq Min^{Ref}_{Bin}\\
     & \geq |f_{ref}| \cdot Max^{Lit}_{Bin}\\
-    & \geq \sum_{i=1}^{|f_{ref}|} |K((0, S_{ref}[i]))|.
+    & \geq \sum_{i=1}^{|f_{ref}|} |K_{OUT}((0, S_{ref}[i]))|.
 \end{split}
 \end{equation}
 Es folgt, dass ein referenzierender Faktor, dessen Länge eine obere Schranke von $\frac{Min^{Ref}_{Bin}}{Max^{Lit}_{Bin}}$ Zeichen nicht überschreitet, nicht effizient kodiert werden kann.
 Stattdessen sollten die referenzierten Zeichen einzeln kodiert werden. Die Technik der dynamischen Endrunde greift diese Idee auf, indem Referenzen unterhalb einer Grenzlänge nicht extrahiert
 werden. Gibt uns die Kodierung eine Grenzlänge $l^{ref}_{min} = \lceil\frac{Min^{Ref}_{Bin}}{Max^{Lit}_{Bin}}\rceil$ vor, so kann der Algorithmus in Runde 
-$r_{DynDnd} = \lceil log_2{|S|}-log_2{l^{ref}_{min}} \rceil$ terminieren. Da potenziell referenzierende Faktoren aufgebrochen werden, kann die Qualität der Faktorisierung sinken, wobei das 
+$r_{DynEnd} = \lceil log_2{|S|}-log_2{l^{ref}_{min}} \rceil$ terminieren. Da potenziell referenzierende Faktoren aufgebrochen werden, kann die Qualität der Faktorisierung sinken, wobei das 
 binäre Endprodukt kleiner wird. Es ergibt sich also eine steigende Faktorrate bei einer gleichzeitig sinkenden Kompressionsrate.
 \begin{equation}
     CR^{Approx.LZ77}_{DynEnd} \leq CR^{Approx.LZ77}
@@ -288,7 +288,7 @@ Gegeben seien zwei initiale Runden $r_{init1}$ und $r_{init2}$ mit $1\leq r_{ini
 so wird die Eingabe jeweils in $2^{r_{init1}}$ bzw. $2^{r_{init2}}$ Blöcke gleicher Größe eingeteilt. Die Mengen der Blöcke werden im Folgenden als $B_{init1}$ bzw. $B_{init2}$ bezeichnet.
 Im Rahmen der Bearbeitung der Runden wird eine Menge von markierten Blöcken $B_{init1}^{marked}\subset B_{init1}$ bzw. $B_{init2}^{marked}\subset B_{init2}$ erzeugt, für die ein vorheriges
 Vorkommen bestimmt wurde. Aufgrund der Natur der Blockspaltung in jeder Runde, kann jedem Block in $B_{init1}$ eine Gruppe von $2^{r_{init2}-r_{init1}}$ Blöcken in $B_{init2}$ zugeordnet
-werden, die die gleiche Zeichenfolge repräsentieren. Die Folgerung lässt sich insbesonere auch auf die markierten Blöcke anwenden, sodass die folgende Beziehung hergeleitet werden kann:
+werden, die die gleiche Zeichenfolge repräsentieren. Die Folgerung lässt sich insbesondere auch auf die markierten Blöcke anwenden, sodass die folgende Beziehung hergeleitet werden kann:
 \begin{equation}
     |B_{init2}^{marked}| \geq 2^{r_{init2}-r_{init1}} \cdot |B_{init1}^{marked}|.
 \end{equation}
@@ -297,7 +297,7 @@ Umkehrung dieser Aussage liefert,
 \begin{equation}
     longestChain(B_{init2}^{marked}) < 2^{r_{init2}-r_{init1}} \Rightarrow B_{init1}^{marked}=\emptyset, 
 \end{equation}
-wobei $longestChain(B^{init2}_{marked})$ die Größe der längsten Kette von benachbarten markierten Blöcken in $B_{init2}^{marked}$ bezeichnet.
+wobei $longestChain(B_{init2}^{marked})$ die Größe der längsten Kette von benachbarten markierten Blöcken in $B_{init2}^{marked}$ bezeichnet.
 Die Technik der dynamischen Startrunde greift diese Beziehung auf, indem initial die Runde $r_{init}=log_2{|S|}/2$ auf die gesamte Eingabe S angewendet wird. Im Anschluss
 kann der Wert $longestChain(B_{init}^{marked})$ mithilfe eines Scans über die markierten Blöcke bestimmt werden. Der errechnete Wert impliziert eine Runde $r_{DynStart}$ derart,
 dass vorherige Runden garantiert keine markierten Blöcke erzeugen und damit ausgelassen werden können. Der Wert $r_{DynStart}$ ergibt sich wie folgt,
@@ -305,7 +305,7 @@ dass vorherige Runden garantiert keine markierten Blöcke erzeugen und damit aus
     r_{DynStart} = r_{init}-
     \begin{cases}
         -1, & \text{falls } longestChain(B^{init}_{marked}) = 0\\
-        \lfloor log_2{longestChain(B^{init}_{marked})} \rfloor, & \text{sonst}
+        \lfloor log_2{longestChain(B^{init}_{marked})} \rfloor, & \text{sonst.}
     \end{cases}
 \end{equation}
 In Abhängigkeit von der Beschaffenheit der Eingabe, kann maximal die Hälfte aller Runden ausgelassen werden, ohne eine Veränderung der Ergebnisse zu verursachen. In
@@ -324,7 +324,7 @@ für den zugehörigen RFP,
     RFP(b) = RFP(b_1 \cdot b_2 \cdot ... \cdot b_{2^{r_{PreMatch}-r_m}}),
 \end{equation}
 wobei jede Konkatenation in eine Operation mit konstanter Laufeit für die RFPs abgebildet werden kann. Die Anzahl der Rechenschritte für die Berechnung des RFP eines Blockes hängt nun 
-nicht mehr von der Länge der repräsentierten Zeichenfolge sondern der Rundendistanz zur vorberechneten Runde ab.
+nicht mehr von der Länge der repräsentierten Zeichenfolge, sondern der Rundendistanz zur vorberechneten Runde ab.
 Weiterhin kann die Menge der unmarkierten Blöcke $B_{PreMatch}^{unmarked}=B_{PreMatch}\setminus B_{PreMatch}^{marked}$ genutzt werden, um die Menge der Blöcke $B_m$ in Runde $r_m$
 zu filtern. Sei ein Block $b \in B_m^{marked}$ gegeben, so muss die equivalente Sequenz von Blöcken $(b_1, b_2, ..., b_{2^{r_{PreMatch}-r_m}})\in B_{prematch}$ auch markiert sein bzw.
 Teil von $B_{prematch}^{marked}$ sein.
@@ -341,13 +341,15 @@ als ein Schwellwert $k_{min}\in [0,1]$ ist. Faktoren, die durch die ausgelassene
 durch die Halbierung der Blöcke sukzessive in ihrer Anzahl verdoppelt werden. Damit steigt zwangsläufig die Faktorrate, wobei die ausgelassene Referenzsuche einen zeitlichen Gewinn bringt.
 Es wurde bereits etabliert, dass die Anzahl der Blöcke in jeder Runde durch die Anzahl der Faktoren, $z$, beschränkt ist. Die Anzahl der Faktoren, die durch die Auslassung von 
 ReferenceScan in einer Runde nicht erzeugt werden, ist durch $k_{min} \cdot z$ beschränkt. Ähnlich dazu ist die Anzahl der zusätzlich erzeugten Faktoren in der nächsten Ausführung
-der Referencescan-Routine durch $2 \cdot k_{min} \cdot z$ beschränkt. Die Häufigkeit dieser Ereigniskette hängt von der Beschaffenheit der Eingabe ab, wobei die Anzahl der
-Runden als konservative obere Schranke genutzt werden kann. Insgesamt ergibt sich eine konservative obere Schranke für die relative Verschlechterung der Faktorrate um den Faktor 
-$(1 + k_{min} \cdot {log_2{|S|}})$.
+der Referencescan-Routine durch $2 \cdot k_{min} \cdot z$ beschränkt. Die Häufigkeit dieser Ereigniskette hängt von der Beschaffenheit der Eingabe ab, wobei die Hälfte der Anzahl der
+Runden als konservative obere Schranke genutzt werden kann. Insgesamt ergibt sich eine konservative Schätzung für die relative Verschlechterung der Faktorrate mit
+\begin{equation}
+    FR^{Approx.LZ77} \leq FR^{Approx.LZ77}_{ScanSkip} \leq FR^{Approx.LZ77} * (1 + k_{min} \cdot {log_2{|S|}}).
+\end{equation}
 
 \subsection{Korrelation der Optimierungen}
 Die Einschränkung der initialen und terminalen Runde durch DynStart und DynEnd reduziert die potenzielle Rundendistanz zu einer gewählten vorberechneten Runde, $r_{PreMatch}$.
 Dies unterstützt die zeitsparende Wirkung von PreMatching. Die Filterung von Blöcken, die keine Kandidaten eine Markierung sind, durch PreMatching erlaubt eine Reduktion der 
 RFPTable, die durch die InitTables-Routine erzeugt wird. Entsprechend kann für die ScanSkip-Optimierung ein kleinerer Wert für $k_{min}$ gewählt werden, um die Verschlechterung
 der Faktorrate bei gleicher Häufigkeit der ausgelassenen ReferenceScan-Routine zu reduzieren. Diese Überlegungen stellen eine zu erwartende Korrelation der Optimierungen dar,
-wobei die spezifischen Auswirkungen von der Beschaffenheit der Eingabe und der Wahl der Parameter abhängen.
+wobei die spezifischen Auswirkungen von der Beschaffenheit der Eingabe und der Wahl der Parameter abhängen. 

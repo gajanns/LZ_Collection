@@ -4,18 +4,18 @@
 Die Entwicklung, Verbreitung und Nutzung digitaler Technologien hängt im hohen Maße von der Fähigkeit ab, große Mengen an Daten speichern, transportieren und
 analysieren zu können. Der Umgang mit großen Datenmengen geht jedoch mit entsprechend hohen Kosten einher. Ein wichtiges Werkzeug zur Bewältigung dieses Problems
 sind Kompressionstechniken, die Relationen und Redundanzen in Datenmengen extrahieren, um ihre Größe möglichst auf ihre inhärente Komplexität zu reduzieren. 
-Im Laufe der Zeit wurden zahlreiche Kompressionsalgorithmen entwickelt, die wiederum über mehrere Iterationen verbessert wurden.Viele solcher Kompressionstechniken
-können der Familie der LZ77-Algorithmen (\cite{LemZiv}) zugeordnet werden, wobei diese sich in Statistiken, wie der Laufzeit, der Speicheranforderung oder Kompressionrate unterscheiden
-. In (\cite{ApproxLZ77}) wird eine Variante der LZ77-Faktorisierung beschrieben, die über drei Phasen eine 2-Approximation einer exakten LZ77-Faktorisierung
+Im Laufe der Zeit wurden zahlreiche Kompressionsalgorithmen entwickelt, die wiederum über mehrere Iterationen verbessert wurden. Viele solcher Kompressionstechniken
+können der Familie der LZ77-Algorithmen (\cite{LemZiv}) zugeordnet werden, wobei diese sich in Statistiken, wie der Laufzeit, der Speicheranforderung oder Kompressionrate 
+unterscheiden. In (\cite{ApproxLZ77}) wird eine Variante der LZ77-Faktorisierung beschrieben, die über drei Phasen eine 2-Approximation einer exakten LZ77-Faktorisierung
  (\cite{exactLemZiv}) erreichen kann. Diese beschränkten Einbußen in der Qualität der Ausgabe werden jedoch dadurch kompensiert, dass der Algorithmus die Speicheranforderung
-weit unterbieten kann. In dieser Arbeit untersuchen wir diesen Algorithmus auf ihr Potential zur Verbesserung der Laufzeit durch eine Parallelisierung.
+weit unterbieten kann. In dieser Arbeit untersuchen wir diesen Algorithmus auf ihr Potenzial zur Verbesserung der Laufzeit durch eine Parallelisierung.
 
 \section{Ziele und Methodik}
 Im Rahmen der Parallelisierung des approximativen LZ77-Algorithmus werden wir die erste Phase des Algorithmus dahingehend anpassen, dass mehrere Threads im 
-shared-memory-Modell (\cite{jaja}) konfliktfrei auf Datenstrukturen zugreifen und eine korrekte Ausgabe liefern können. Im Rahmen der praktischen Evaluation der
+shared-memory-Modell (\cite{jaja}) konfliktfrei auf Datenstrukturen zugreifen und eine korrekte Ausgabe liefern können. Für die praktische Evaluation der
 beschriebenen Konzepte wird eine Implementierung in C++ herangezogen. Die Parallelisierung wird hauptsächlich über OpenMP-Instruktionen (\cite{openmp}) realisiert.
 Im Rahmen dieser Arbeit wird insbesondere die parallele Generierung einer Suchtabelle für Referenzen, sowie die parallele Suche nach Referenzen über die gesamte Eingabe
 hinweg betrachtet. Wir führen eine theoretische und praktische Evaluation der Qualität und Performanz der Algorithmen durch. Insbesondere stellen wir einen Vergleich der
 Laufzeit und Speicheranforderung der sequentiellen und parallelen Approximation mit einer exakten LZ77-Faktorisierung (\cite{exactLemZiv}) an. Die Güte der Parallelisierung
 werden wir anhand der gemessenen Beschleunigung der Laufzeit bewerten. Für jegliche Messungen verwenden wir Testdaten aus unterschiedlichen Kontexten des 
-Pizza\& Chili Corpus (\cite{corpus}).
+Pizza \& Chili Corpus (\cite{corpus}).

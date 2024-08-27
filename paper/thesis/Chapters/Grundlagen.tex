@@ -13,7 +13,7 @@ $S_1$ und $S_2$ beschreibt der Ausdruck $S_1\cdot S_2$ die Konkatenation der bei
 Ein charakteristisches Merkmal der Familie der Lempel-Ziv-Kompressionsverfahren (\cite{LemZiv}) ist die Repräsentation der Ausgabe in Form einer Faktorisierung. Für eine Eingabe $S=e_1...e_n$ 
 wird eine Faktorisierung $F=f_1\cdot\cdot\cdot f_z$ mit $z\leq n$ derart erzeugt, dass die Eingabe $S$ durch die Faktorisierung in eine äquivalente Folge von nichtleeren Teilfolgen 
 zerlegt wird. Dabei ist jeder Faktor $f_i$ mit $1\leq i\leq z$ als nichtleerer Präfix von $S[|f_1\cdot\cdot\cdot f_{i-1}|+1..n]$ definiert, der bereits in $S[1..|f_1\cdot\cdot\cdot f_i|]$ 
-vorkommt, oder als einzelnes Zeichen. Die im Folgenden betrachteten Algorithmen können speziell der Klasse der LZ77-Kompressionsverfahren zugeordnet werden, dessen Faktoren im Schema 
+vorkommt, oder als einzelnes referenzloses Zeichen. Die im Folgenden betrachteten Algorithmen können speziell der Klasse der LZ77-Kompressionsverfahren zugeordnet werden, dessen Faktoren im Schema 
 des Lempel-Ziv-Storer-Szymanski(LZSS) (\cite{lzss}) repräsentiert werden sollen. 
 
 \begin{equation} \label{eq:faktor}
@@ -78,13 +78,13 @@ im Falle von unterschiedlichen Werten. Im Falle von gleichen RFPs, kann die Glei
 dieser Art bei Zeichenfolgen gleicher Größe ist jedoch beschränkt und praktisch gering. Insbesondere kann die Wahrscheinlichkeit durch die passende Wahl von $p$ und $b$ 
 minimiert werden.
 
-Rabin-Karp-Fingerprints erlauben verschiedene Operationen auf Zeichenfolgen, die im Rahmen der approximativen LZ77-Faktorisierung effizient genutzt werden können. Zum Einen kann ein
+Rabin-Karp-Fingerprints erlauben verschiedene Operationen auf Zeichenfolgen, die im Rahmen der approximativen LZ77-Faktorisierung effizient genutzt werden können. Zum einen kann ein
 beschränktes Fenster $S_{W} = S[j..j+w]$ der Länge $w<n$ leicht verschoben werden. Sei $RFP(S_{W})$ der RFP des Fensters, so kann der resultierende RFP durch die Verschiebung um 
 ein Zeichen nach rechts durch den Ausdruck,
 \begin{equation} \label{eq:shift}
     RFP(S(j+1..j+w+1)) = (RFP(S_W) - S[j]b^{w-1})b + S[j+w+1] \mod p,
 \end{equation}
-beschrieben werden. Desweiteren seien zwei Teilfolgen $S_1$ und $S_2$ der gleichen Länge $n$ gegeben. Der RFP der Konkatenation, $S_1\cdot S_2$, der beiden Teilfolgen kann durch den Ausdruck,
+beschrieben werden. Des Weiteren seien zwei Teilfolgen $S_1$ und $S_2$ der gleichen Länge $n$ gegeben. Der RFP der Konkatenation, $S_1\cdot S_2$, der beiden Teilfolgen kann durch den Ausdruck,
 \begin{equation} \label{eq:concat}
     RFP(S_1\cdot S_2) = (RFP(S_1)b^n + RFP(S_2)) \mod p,
 \end{equation}
@@ -102,8 +102,8 @@ Kompressionsprozess in diesem Fall mit anderen Werten für die Parameter $p$ und
     \includegraphics[scale=0.4]{Images/lasvegas_algorithm.png}
 \end{figure}
 
-In Abbildung \ref{fig:lasvegas} wird eine verallgemeinerte Regelsteuerung illustriert. Die fehleranfällige Kompression wird solange mit neuen Parametern, hier $p$ und $b$, wiederholt, bis
-eine korrekte Faktorisierung erzeugt wird. In der praktischen Evaluation in \ref{sec:evaluation} werden wir sehen, dass die Auftrittswahrscheinlichkeit einer fehlerhaften Faktorisierung
+In Abbildung \ref{fig:lasvegas} wird eine verallgemeinerte Regelsteuerung illustriert. Die fehleranfällige Kompression wird, solange mit neuen Parametern, hier $p$ und $b$, wiederholt, bis
+eine korrekte Faktorisierung erzeugt wird. In der praktischen Evaluation in Kapitel \ref{sec:evaluation} werden wir sehen, dass die Auftrittswahrscheinlichkeit einer fehlerhaften Faktorisierung
 praktisch irrelevant ist.
 
 \subsection{Binäre (De-)Kodierung}
@@ -124,7 +124,7 @@ ergibt sich die binäre Ausgabegröße $|F|_{Bin}$ durch
 \end{equation}
 
 \subsection{Metriken}
-Die Qualität einer Kompression kann durch verschiedene Metriken quantifiziert werden. Zum Einen beschreibt die Kompressionsrate $CR$ den Grad der Kompression und ist durch den
+Die Qualität einer Kompression kann durch verschiedene Metriken quantifiziert werden. Zum einen beschreibt die Kompressionsrate $CR$ den Grad der Kompression und ist durch den
 Ausdruck, 
 \begin{equation}
     CR = \frac{|F|_{Bin}}{|S|_{Bin}},
