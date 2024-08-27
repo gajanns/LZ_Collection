@@ -10,11 +10,11 @@ der Form $S[1..k]$ mit $1\leq k\leq n$ wird als Präfix von $S$ bezeichnet. Im G
 $S_1$ und $S_2$ beschreibt der Ausdruck $S_1\cdot S_2$ die Konkatenation der beiden Teilfolgen.
 
 \section{Ausgabe $\rightarrow$ Faktorisierung}
-Ein charakteristisches Merkmal der Familie der Lempel-Ziv-Kompressionsverfahren ist die Repräsentation der Ausgabe in Form einer Faktorisierung. Für eine Eingabe $S=e_1...e_n$ 
+Ein charakteristisches Merkmal der Familie der Lempel-Ziv-Kompressionsverfahren (\cite{LemZiv}) ist die Repräsentation der Ausgabe in Form einer Faktorisierung. Für eine Eingabe $S=e_1...e_n$ 
 wird eine Faktorisierung $F=f_1\cdot\cdot\cdot f_z$ mit $z\leq n$ derart erzeugt, dass die Eingabe $S$ durch die Faktorisierung in eine äquivalente Folge von nichtleeren Teilfolgen 
 zerlegt wird. Dabei ist jeder Faktor $f_i$ mit $1\leq i\leq z$ als nichtleerer Präfix von $S[|f_1\cdot\cdot\cdot f_{i-1}|+1..n]$ definiert, der bereits in $S[1..|f_1\cdot\cdot\cdot f_i|]$ 
 vorkommt, oder als einzelnes Zeichen. Die im Folgenden betrachteten Algorithmen können speziell der Klasse der LZ77-Kompressionsverfahren zugeordnet werden, dessen Faktoren im Schema 
-des Lempel-Ziv-Storer-Szymanski \cite{lzss} repräsentiert werden sollen. 
+des Lempel-Ziv-Storer-Szymanski(LZSS) (\cite{lzss}) repräsentiert werden sollen. 
 
 \begin{equation} \label{eq:faktor}
     F = f_1\cdot\cdot\cdot f_z \text{ mit } f_i = \begin{cases} (\text{Länge}, \text{Position}) & \text{falls Referenz} \\ (0, \text{Zeichen}) & \text{sonst} \end{cases}
@@ -59,12 +59,12 @@ Verfahren der LZ77-Familie, kann die Dekompression durch die folgende Abbildung 
 \end{algorithmic}
 \end{algorithm}
 
-Der dargestellte Algorithmus \ref{alg:decomp} beschreibt eine mögliche Implementierung der Dekompression für eine Faktorisierung $F=f_1...f_z$ zu der Eingabe $S=e_1...e_n$.
-Der beschriebene Algorithmus iteriert durch alle Faktoren und fügt die referenzierten Zeichen einzeln in die Ausgabe $S$ ein. Damit kann die Laufzeit des Algorithmus auf $O(n)$
-geschätzt werden.
+Der dargestellte Algorithmus in \ref{alg:decomp} beschreibt eine mögliche Implementierung der Dekompression von einer Faktorisierung $F=f_1...f_z$ zu der originalen Eingabe
+$S=e_1...e_n$. Der beschriebene Algorithmus iteriert durch alle Faktoren und fügt die referenzierten Zeichen einzeln in $S$ ein. Damit kann die Laufzeit des 
+Algorithmus auf $O(n)$ geschätzt werden.
 
 \subsection{String-Matching $\rightarrow$ Rabin-Karp}
-Im Rahmen des approximativen Algorithmus, welcher in dieser Arbeit beschrieben wird, werden Vergleiche von Zeichenfolgen mithilfe des Rabin-Karp-Fingerprints (RFP) \cite{rfp}
+Im Rahmen des approximativen Algorithmus, welcher in dieser Arbeit beschrieben wird, werden Vergleiche von Zeichenfolgen mithilfe des Rabin-Karp-Fingerprints (RFP) (\cite{rfp})
 durchgeführt. Sei
 $p\in \mathbb{P}$ eine Primzahl und $b\in \mathbb{N}$ eine Basis, so kann der RFP einer Zeichenfolge $S$ der Länge $n$ durch den Ausdruck
 \begin{equation}
@@ -79,12 +79,12 @@ dieser Art bei Zeichenfolgen gleicher Größe ist jedoch beschränkt und praktis
 minimiert werden.
 
 Rabin-Karp-Fingerprints erlauben verschiedene Operationen auf Zeichenfolgen, die im Rahmen der approximativen LZ77-Faktorisierung effizient genutzt werden können. Zum Einen kann ein
-beschränktes Fenster $S_{W} = S(j..j+w)$ der Länge $w<n$ leicht verschoben werden. Sei $RFP(S_{W})$ der RFP des Fensters, so kann der resultierende RFP durch die Verschiebung um 
+beschränktes Fenster $S_{W} = S[j..j+w]$ der Länge $w<n$ leicht verschoben werden. Sei $RFP(S_{W})$ der RFP des Fensters, so kann der resultierende RFP durch die Verschiebung um 
 ein Zeichen nach rechts durch den Ausdruck,
 \begin{equation} \label{eq:shift}
     RFP(S(j+1..j+w+1)) = (RFP(S_W) - S[j]b^{w-1})b + S[j+w+1] \mod p,
 \end{equation}
-beschrieben werden. Desweiteren seien zwei Teilfolgen $S_1$ und $S_2$ der gleichen Länge $n$ gegeben. Der RFP der Konkatenation,$S_1\cdot S_2$, der beiden Teilfolgen kann durch den Ausdruck,
+beschrieben werden. Desweiteren seien zwei Teilfolgen $S_1$ und $S_2$ der gleichen Länge $n$ gegeben. Der RFP der Konkatenation, $S_1\cdot S_2$, der beiden Teilfolgen kann durch den Ausdruck,
 \begin{equation} \label{eq:concat}
     RFP(S_1\cdot S_2) = (RFP(S_1)b^n + RFP(S_2)) \mod p,
 \end{equation}
@@ -102,33 +102,34 @@ Kompressionsprozess in diesem Fall mit anderen Werten für die Parameter $p$ und
     \includegraphics[scale=0.4]{Images/lasvegas_algorithm.png}
 \end{figure}
 
-In Abbildung \ref{fig:lasvegas} wird eine Regelsteuerung illustriert. Der Algorithmus wird solange wiederholt, bis eine korrekte Faktorisierung erzeugt wurde. Dass die
-Anzahl der Wiederholungen in der Praxis irrelevant ist, werden wir im Rahmen der Evaluation zeigen.
+In Abbildung \ref{fig:lasvegas} wird eine verallgemeinerte Regelsteuerung illustriert. Die fehleranfällige Kompression wird solange mit neuen Parametern, hier $p$ und $b$, wiederholt, bis
+eine korrekte Faktorisierung erzeugt wird. In der praktischen Evaluation in \ref{sec:evaluation} werden wir sehen, dass die Auftrittswahrscheinlichkeit einer fehlerhaften Faktorisierung
+praktisch irrelevant ist.
 
 \subsection{Binäre (De-)Kodierung}
 Die Kodierung $K_{IN}: \Sigma^* \rightarrow \{0,1\}^*$ überführt unsere Eingabe aus dem Alphabet $\Sigma$ in eine binäre Repräsentation.
 Die Umkehrabbildung $K^{-1}_{IN}: \{0,1\}^* \rightarrow \Sigma^*$ definiert die Dekodierung und überführt eine binäre Repräsentation in eine Zeichenfolge
 aus dem Alphabet $\Sigma$. Im Rahmen dieser Arbeit gehen wir davon aus, dass unsere Eingabe $S$ über dem Alphabet $\Sigma=\{1,...,255\}$ erzeugt wurde und 
-jedes Zeichen durch 8 Bits, oder 1 Byte, dargestellt wird. Für die Länge, $|S|_{Bin}$, der binären Repräsentation folgt,
+jedes Zeichen durch 8 Bits bzw. 1 Byte dargestellt wird. Für die Länge, $|S|_{Bin}$, der binären Repräsentation folgt,
 \begin{equation}
     |S|_{Bin} = |K_{IN}(S)| = 8*|S|.
 \end{equation}
 
 Die eingelesene Eingabefolge wird durch den Kompressionsalgorithmus in die Faktorfolge $F=f_1...f_z$ überführt. Die bijektive Abbildung $K_{OUT}: F \rightarrow \{0,1\}^*$
 definiert die Kodierung der Faktoren in eine binäre Repräsentation. Analog dazu wird die Dekodierung $K^{-1}_{OUT}: \{0,1\}^* \rightarrow F$ definiert. Im Gegensatz zur Eingabe, 
-werden wir keine Kodierung bzw. Dekodierung der Faktoren vorgeben, da diese durch den Kompressionsalgorithmus nicht beschränkt wird. Für eine beliebige lineare Kodierung $K_{OUT}$ ergibt 
-sich die binäre Ausgabegröße $|F|_{Bin}$ durch
+werden wir keine Kodierung bzw. Dekodierung der Faktoren vorgeben, da diese durch den Kompressionsalgorithmus nicht beschränkt wird. Für eine beliebige lineare Kodierung $K_{OUT}$
+ergibt sich die binäre Ausgabegröße $|F|_{Bin}$ durch
 \begin{equation}
-    |F|_{Bin} = \sum_{i=1}^{z} |K(f_i)|.
+    |F|_{Bin} = \sum_{i=1}^{z} |K_{OUT}(f_i)|.
 \end{equation}
 
 \subsection{Metriken}
 Die Qualität einer Kompression kann durch verschiedene Metriken quantifiziert werden. Zum Einen beschreibt die Kompressionsrate $CR$ den Grad der Kompression und ist durch den
 Ausdruck, 
 \begin{equation}
-    CR = \frac{|F|_{Bin}}{|S|_{Bin}}
+    CR = \frac{|F|_{Bin}}{|S|_{Bin}},
 \end{equation}
-, definiert.
+definiert.
 Da die Kodierung der Faktoren nicht eindeutig aus der Wahl des Kompressionsalgorithmus eingegrenzt wird, ist stattdessen die Anzahl der erzeugten Faktoren ein
 weiteres geeignetes Gütemaß. Für die Eingabe $S$ der Länge n und der Ausgabe $f_1...f_z$ sei die Faktorrate durch
 \begin{equation}
@@ -139,20 +140,20 @@ gegeben. In beiden Fällen wird ein niedriger Wert bevorzugt, da dieser auf eine
 \section{Parallelität}
 Das Ziel dieser Arbeit ist die Entwicklung und Evaluation eines parallel Kompressionsalgorithmus. Im Folgenden definieren wir die Rahmenbedingungen und Konzepte der Parallelität.
 
-\subsection{Shared-Memory-Modell}
-Unser Algorithmus agiert auf einem Shared-Memory-Modell \cite{jaja} mit $P$ Ausführungseinheiten, welches im Gegensatz zum Distributed-Memory-Modell allen beteiligten 
+\subsection{Shared-Memory-Modell} \label{shared}
+Unser Algorithmus agiert auf einem Shared-Memory-Modell (\cite{jaja}) mit $P$ Ausführungseinheiten, welches im Gegensatz zum Distributed-Memory-Modell allen beteiligten 
 Ausführungseinheiten bzw. Prozessoren einen gemeinsamen Zugriff auf den Speicher ermöglicht. Im Rahmen der parallelen Programmierung muss der simultane Lese- bzw. Schreibzugriff auf
 Speicherbereiche synchronisiert werden, um Konflikte zu vermeiden. Die Konsequenz einer mangelnden oder ineffizienten Synchronisation können Inkonsistenzen in der Korrektheit und
-Performanz des Algorithmus sein. In der Praxis manifestieren sich diese Probleme beispielsweise in Form von Data-Races oder False-Sharing \cite{parallelcomputing}. 
+Performanz des Algorithmus sein. In der Praxis manifestieren sich diese Probleme beispielsweise in Form von Data-Races oder False-Sharing (\cite{parallelcomputing}). 
 Unser parallel modellierte Algorithmus muss explizit seine Korrektheit bewahren mit dem Ziel einer möglichst hohen Beschleunigung der Laufzeit.
 
 \subsection{Metriken}
 Das Ziel der Parallelisierung eines Algorithmus liegt hauptsächlich in einer Verbesserung der Laufzeit, insbesondere unter Berücksichtigung der bereits beschriebenen Ressourcenkonflikten. 
 Die zeitliche Beschleunigung der Laufzeit kann durch den Speedup $SP$ bemessen werden. Für eine Eingabe $S$ der Länge $n$ brauche ein sequenzieller Durchlauf $T(n, p=1)$ Zeit, während ein 
-paralleler Algorithmus mit $P$ Prozessoren $T(n,p=P)$ an Zeit benötigt. Der Speedup ist dabei definiert durch
+paralleler Algorithmus mit $P$ Prozessoren $T(n,p=P)$ an Zeit benötige. Der Speedup ist dabei definiert durch
 \begin{equation}
     SP(n,P) = \frac{T(n,1)}{T(n,P)}.
 \end{equation}
 Ein idealer Speedup ist gegeben durch $SP(n,P)=P$. Verschiedene Effekte im Rahmen des Speicherzugriffs, der Synchronisation und der Kommunikation über mehrere Prozessoren können jedoch
-die Effizienz der Parallelisierung stark beeinträchtigen. Insbesondere können sequenzielle Abschnitte im Algorithmus auf Basis des Amdahl'schen Gesetzes \cite{mccool} eine obere Schranke 
+die Effizienz der Parallelisierung stark beeinträchtigen. Insbesondere können sequenzielle Abschnitte im Algorithmus auf Basis des Amdahl'schen Gesetzes (\cite{mccool}) eine obere Schranke 
 für den Speedup setzen. 
