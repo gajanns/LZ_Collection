@@ -1,6 +1,23 @@
 # LZ_Collection
+Collection of Prototypes of LZ-Algorithms:LZW, LZ77, Approx. LZ77 (seq+ par)
 
-Simple Collection of Prototypes of LZ-Algorithms:LZW, LZ77, Approx. LZ77 (seq+ par)
+## Compilation
+Follow these steps to compile the project:
+- Move to the top of the project directory
+- Execute the following command: 
+-    cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+-    Optionally: Activate the cmake-flag "LOAD_PIZZA" before configuration in order to download sample files from Pizza&Chili Corpus 
+-    cmake --build build --target all
+
+## Usage
+ Example:
+    LZ_Collection input output algorithm [flags]*
+ 
+- input/output: Path to input- and output-file
+- algorithm: LZW LZ77, Approx.LZ77, Approx.LZ77Par
+- flags:
+-    c/d : Compress or Decompress input into output
+-    b : Output a report.csv containing benchmark measurements
 
 ## Experiment(Last Update: 17/07)
 
@@ -49,33 +66,5 @@ Simple Collection of Prototypes of LZ-Algorithms:LZW, LZ77, Approx. LZ77 (seq+ p
 |english.100MB|LZ77|46.75%|18.86|8.56%|20.00|
 |english.100MB|Approx.LZ77|44.42%|37.81|11.10%|8.79|
 |english.100MB|Approx.LZ77Par|44.42%|3.05|11.10%|6.40|
-
-## Thesis-Plan
-
-(Status: ❌ &rarr; ⟳ &harr; ✔ &rarr; 🌟 &nbsp;&nbsp;&nbsp;&nbsp; Tested: ⛔ &harr; ✅)
-
-
-### Phase 1:
-|Task               |Deadline   |Status  |Tested     |Last Update|
-|-------------------|:---------:|:------:|:---------:|:---------:|
-|Framework          |-          |✔       |✅          |12/03      |
-| -IO               |-          |✔       |✅          |12/03      |
-| -Perf-Measurement |-          |✔       |✅          |09/05      |
-| -Plot             |-          |✔       |⛔          |17/06      |
-|LZ78/LZW           |-          |✔       |✅          |17/04      |
-|exact LZ77         |-          |✔       |✅          |16/05      |
-
----
-### Phase 2:
-|Task               |Deadline   |Status  |Tested     |Last Update|
-|-------------------|:---------:|:------:|:---------:|:---------:|
-|Approx. LZ77(seq)  |-          |✔       |✅          |10/07      |
-| -Rabin-Karp       |-          |✔       |✅          |17/06      |
-
----
-### Phase 3:
-|Task               |Deadline   |Status  |Tested     |Last Update|
-|-------------------|:---------:|:------:|:---------:|:---------:|
-|Approx. LZ77(par)  |-          |⟳       |✅          |10/07      |
 
 
