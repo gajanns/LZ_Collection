@@ -131,6 +131,7 @@ namespace ApproxLZ77 {
     #endif
 
     const bool precompute = true;
+    const size_t prematch_diff = 3;
 
     /**
      * @brief Representation of Factor in Approximate LZ77-Algorithm
