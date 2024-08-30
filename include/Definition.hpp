@@ -12,7 +12,7 @@
 
 
 
-#define DYNAMIC_GRANULARITY true
+#define DYN_END true
 
 
 /**
@@ -65,7 +65,7 @@ namespace LZW
 
 namespace LZ77
 {
-    #if DYNAMIC_GRANULARITY == true
+    #if DYN_END == true
         inline size_t min_ref_size = 1;
     #else
         const size_t min_ref_size = 1;
@@ -120,11 +120,11 @@ namespace LZ77
 }
 
 namespace ApproxLZ77 {
-    const bool dynamic_init = true;
+    const bool dyn_start = true;
     const size_t min_round = 1;
     const double min_fp_ratio = 0.03;
 
-    #if DYNAMIC_GRANULARITY == true
+    #if DYN_END == true
        inline size_t min_block_size = 1;
     #else
         const size_t min_block_size = 1;

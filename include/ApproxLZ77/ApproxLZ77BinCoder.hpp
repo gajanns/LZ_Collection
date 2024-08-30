@@ -19,7 +19,7 @@ public:
         }
         m_bytes_written++;
 
-        #if DYNAMIC_GRANULARITY == true
+        #if DYN_END == true
             ApproxLZ77::min_block_size = std::bit_ceil((offset_bit_size + length_bit_size + 9) / 9);
         #endif
     };

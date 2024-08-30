@@ -19,8 +19,8 @@ public:
         }
         m_bytes_written++;
 
-        #if DYNAMIC_GRANULARITY == true
-            //LZ77::min_ref_size = (2 * factor_bit_size + 9) / 9;
+        #if DYN_END == true
+            LZ77::min_ref_size = 1; //(2 * factor_bit_size + 9) / 9;
         #endif
     };
 

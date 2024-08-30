@@ -3,68 +3,36 @@ Collection of Prototypes of LZ-Algorithms:LZW, LZ77, Approx. LZ77 (seq+ par)
 
 ## Compilation
 Follow these steps to compile the project:
-- Move to the top of the project directory
-- Execute the following command: 
--    cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
--    Optionally: Activate the cmake-flag "LOAD_PIZZA" before configuration in order to download sample files from Pizza&Chili Corpus 
--    cmake --build build --target all
+1. Move to the top of the project directory
+2. Configure CMAKE-Build:
+    - (Optionally) Set **LOAD_PIZZA** to **ON** in the top CMakeLists.txt in order automatically download Testdata from Pizza&Chili Corpus  
+    - Execute the following command:
+        ```
+        cmake -S . -B build -DCMAKE_BUILD_TYPE=Release     
+        ```  
+3. Compile: 
+    - Execute the following command: 
+        ``` 
+        cmake --build build --target all
+        ```
 
 ## Usage
- Example:
-    LZ_Collection input output algorithm [flags]*
- 
-- input/output: Path to input- and output-file
-- algorithm: LZW LZ77, Approx.LZ77, Approx.LZ77Par
-- flags:
--    c/d : Compress or Decompress input into output
--    b : Output a report.csv containing benchmark measurements
+Example:  **LZ_Collection [input] [output] [algorithm] [flags..]**  
 
-## Experiment(Last Update: 17/07)
+|Argument|Description|
+|--------|-----------|
+|input|Path to Input-File. For the purpose of benchmarking the option "all" will compress all files in **data/** consecutively|
+|output|Path to Output-File. File will be created if it doesn't exist yet.|
+|algorithm| Choose from **LZW, LZ77, Approx.LZ77, Approx.LZ77Par**|
 
-### System = Codespace-P16, Dynamic Start = On, Dynamic End = On, Table-Ratio = 3%
+|Optional Flags|Description|
+|--------------|-----------|
+|-c| Compress from input to output(Default)|
+|-d| Decompress from input to output|
+|-b| Output Benchmark-Data into **report/report.csv**|
 
-|File.Size|Algorithm|Ratio(Out/In)|Runtime[s]|Factors(#/In)|Mem([Byte]/In)|
-|---------------|---------------|:---------------:|:---------------:|:---------------:|:---------:|
-|proteins.100MB|LZ77|80.20%|7.74|11.73%|20.00|
-|proteins.100MB|Approx.LZ77|70.53%|21.85|17.63%|14.77|
-|proteins.100MB|Approx.LZ77Par|70.53%|3.74|17.63%|14.65|
-|dummy.6018B|LZ77|16.53%|0.00|11.58%|20.00|
-|dummy.6018B|Approx.LZ77|20.41%|0.00|11.05%|8.65|
-|dummy.6018B|Approx.LZ77Par|20.41%|0.00|11.05%|8.03|
-|dblp.xml.100MB|LZ77|23.97%|6.55|3.64%|20.00|
-|dblp.xml.100MB|Approx.LZ77|27.28%|13.09|7.06%|4.04|
-|dblp.xml.100MB|Approx.LZ77Par|27.28%|2.17|7.06%|4.25|
-|dna.100MB|LZ77|48.31%|7.62|7.03%|20.00|
-|dna.100MB|Approx.LZ77|46.06%|11.53|11.17%|8.89|
-|dna.100MB|Approx.LZ77Par|46.06%|1.97|11.17%|7.42|
-|english.100MB|LZ77|48.23%|7.82|7.13%|20.00|
-|english.100MB|Approx.LZ77|44.42%|22.76|11.10%|8.79|
-|english.100MB|Approx.LZ77Par|44.42%|3.64|11.10%|6.56|
-|sources.100MB|LZ77|40.06%|6.88|6.07%|20.00|
-|sources.100MB|Approx.LZ77|41.58%|18.44|10.93%|6.93|
-|sources.100MB|Approx.LZ77Par|41.58%|3.23|10.93%|6.32|
+## Calibration
 
-### System = LS11-P128, Dynamic Start = On, Dynamic End = On, Table-Ratio = 3%
-
-|File.Size|Algorithm|Ratio(Out/In)|Runtime[s]|Factors(#/In)|Mem([Byte]/In)|
-|---------------|---------------|:---------------:|:---------------:|:---------------:|:---------:|
-|dna.100MB|LZ77|48.31%|15.11|7.03%|20.00|
-|dna.100MB|Approx.LZ77|46.06%|18.63|11.17%|8.89|
-|dna.100MB|Approx.LZ77Par|46.06%|2.44|11.17%|7.07|
-|dblp.xml.100MB|LZ77|23.09%|15.03|4.63%|20.00|
-|dblp.xml.100MB|Approx.LZ77|27.28%|20.94|7.06%|4.04|
-|dblp.xml.100MB|Approx.LZ77Par|27.28%|1.96|7.06%|3.76|
-|sources.100MB|LZ77|38.15%|14.42|7.98%|20.00|
-|sources.100MB|Approx.LZ77|41.58%|30.02|10.93%|6.93|
-|sources.100MB|Approx.LZ77Par|41.58%|2.63|10.93%|5.57|
-|dummy.6018B|LZ77|16.85%|0.00|9.70%|20.00|
-|dummy.6018B|Approx.LZ77|20.41%|0.00|11.05%|8.65|
-|dummy.6018B|Approx.LZ77Par|20.41%|0.51|11.05%|6.07|
-|proteins.100MB|LZ77|69.21%|20.35|40.51%|27.52|
-|proteins.100MB|Approx.LZ77|70.53%|35.63|17.63%|14.77|
-|proteins.100MB|Approx.LZ77Par|70.53%|3.32|17.63%|12.83|
-|english.100MB|LZ77|46.75%|18.86|8.56%|20.00|
-|english.100MB|Approx.LZ77|44.42%|37.81|11.10%|8.79|
-|english.100MB|Approx.LZ77Par|44.42%|3.05|11.10%|6.40|
+The Algorithms, especially Approx.LZ77 and Approx.LZ77Par, are dependent on Parameters and Flags. Those can be found in **\include\Definition.hpp**. 
 
 
