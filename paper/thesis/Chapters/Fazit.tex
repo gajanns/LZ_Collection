@@ -1,6 +1,6 @@
 \chapter{Fazit}
 \section{Zusammenfassung und Einordnung}
-Im Rahmen dieser Arbeit haben wir die erste Phase des approximativen LZ77-Algorithmus (\cite{ApproxLZ77}), der in erster Linie auf die Reduktion
+Im Rahmen dieser Arbeit haben wir die erste Phase des approximativen LZ77-Algorithmus \cite{ApproxLZ77}, der in erster Linie auf die Reduktion
 seines Speicherbedarfs abzielt, auch in seiner Laufzeit optimiert. Hierbei spielte neben praktischen Optimierungen, insbesondere eine 
 parallele Ausführung eine entscheidende Rolle. Die Parallelisierung des Algorithmus zeigte eine deutliche Beschleunigung der Laufzeit, ohne
 die Qualität der Kompression zu beeinträchtigen. Es ist jedoch zu beachten, dass wir mit einer oberen Schranke für den Grad der Parallelisierung
@@ -12,6 +12,6 @@ abgewägt werden muss.
 Die beschriebenen Schwächen bzw. Grenzen des implementierten Algorithmus bieten Raum für zukünftige Verbesserungen. So können weitergehende
 Optimierungen der Parallelisierung, die auf einer hardwarenahen Steuerung der Speicherzugriffe basieren, die Grenzen der Bandbreite des Speichersystems
 besser ausnutzen. Im Laufe der Ausarbeitung dieses Algorithmus wurden alternative Techniken und Bibliotheken getestet, die jedoch zum Zeitpunkt
-der Finalisierung dieser Arbeit nicht zufriedenstellend optimiert waren. Beispielsweise könnte die Verwendung eines Bloom-Filters (\cite{bloom}) das Volumen
+der Finalisierung dieser Arbeit nicht zufriedenstellend optimiert waren. Beispielsweise könnte die Verwendung eines Bloom-Filters \cite{bloom} das Volumen
 der Suchoperationen von Referenzen reduzieren. Weiterhin wäre eine Paralleliserung der weiteren zwei Phasen des approximativen LZ77-Kompressionsalgorithmus
-(\cite{ApproxLZ77}) eine sinnvolle Erweiterung.
+\cite{ApproxLZ77} eine sinnvolle Erweiterung.

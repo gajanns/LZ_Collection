@@ -3,7 +3,7 @@
 \section{Testumgebung}
 Die folgenden Experimente wurden auf mithilfe einer AMD EPYC 7763 64-Core CPU mit 16 nutzbaren Hardwarethreads und 64GB Arbeitsspeicher durchgeführt. Das System
 verwendet Ubuntu 24.04 als Betriebssystem und GCC in der Version 13.2.0 als Compiler. Die Algorithmen wurden in C++20 implementiert und mit der Optimierungsstufe
-\texttt{-O3} kompiliert. Die Ausführung der Algorithmen mit einer spezifischen Anzahl von Threads wurde softwareseitig über OpenMP-Instruktionen (\cite{openmp}) realisiert. 
+\texttt{-O3} kompiliert. Die Ausführung der Algorithmen mit einer spezifischen Anzahl von Threads wurde softwareseitig über OpenMP-Instruktionen \cite{openmp} realisiert. 
 
 \section{Implementierung}
 
@@ -21,22 +21,22 @@ Spezialisierungen teilen sich jedoch eine gemeinsame Definition eines Faktors im
 \subsection{Externe Bibliotheken}
 Im Folgenden werden die genutzten externen Bibliotheken aufgelistet, die im Rahmen der Implementierung der Algorithmen, sowie deren Evaluation genutzt wurden.
 \subsubsection{Malloc Count} \label{malloccount}
-Malloc Count (\cite{malloc_count}) ist eine C++-Bibliothek, die es ermöglicht, Speicherallokationen und -freigaben auf dem Heap zu überwachen und zu messen. Im
+Malloc Count \cite{malloc_count} ist eine C++-Bibliothek, die es ermöglicht, Speicherallokationen und -freigaben auf dem Heap zu überwachen und zu messen. Im
 Rahmen unserer Evaluation gibt uns diese Bibliothek die Spitze des allokierten Speichers innerhalb der Ausführung der Algorithmen aus.
 
 \subsubsection{Unordered-Dense-Map} \label{unordereddense}
-Die Unordered-Dense-Map (\cite{unordered_dense}) stellt eine performante Hashtabelle dar, die insbesondere in der Dauer ihrer Suchoperationen gegenüber
+Die Unordered-Dense-Map \cite{unordered_dense} stellt eine performante Hashtabelle dar, die insbesondere in der Dauer ihrer Suchoperationen gegenüber
 der std::unordered\_map aus der Standardbibliothek deutlich trumpft. Dies Hashtabelle wurde in Approx.LZ77 und Approx.LZ77Par für die Speicherung der
 RFPs in jeder Runde verwendet. Im Rahmen der Entwicklung von Approx.LZ77Par hat sich die Verwendung mehrerer Instanzen von Unordered-Dense-Map im Vergleich
-zu anderen inherent parallelen Hashtabellen (\cite{oneapi}) (\cite{sharded_map}) als effizienter herausgestellt.
+zu anderen inherent parallelen Hashtabellen \cite{oneapi} \cite{sharded_map} als effizienter herausgestellt.
 
 \subsubsection{LibSaiS}
-Für die Implementierung der exakten LZ77-Faktorisierung, die als Referenzalgorithmus fungiert, wurde die Bibliothek LibSaiS (\cite{libsais}) zu Hilfe genommen. Diese
+Für die Implementierung der exakten LZ77-Faktorisierung, die als Referenzalgorithmus fungiert, wurde die Bibliothek LibSaiS \cite{libsais} zu Hilfe genommen. Diese
 Bibliothek stellt eine effiziente Implementierung für die Konstruktion des Suffix-Arrays bereit.
 
 \subsubsection{STL - Sortierung}
 Die Standardbibliothek von C++ stellt bereits Implementierungen von Sortieralgorithmen bereit. Diese wurden in der Implementierung von LZ77 und Approx.LZ77 für
-die nachträgliche Sortierung der Faktoren verwendet. Insbesondere wurden Execution Policies (\cite{execpol}) genutzt, um die Sortierung parallelisieren zu können.
+die nachträgliche Sortierung der Faktoren verwendet. Insbesondere wurden Execution Policies \cite{execpol} genutzt, um die Sortierung parallelisieren zu können.
 
 \subsection{Parametrisierte Einstellung}
 Die folgenden Einstellungen definieren eine Kalibrierung von Approx. LZ77 und Approx. LZ77Par in der jeweils optimierten(opt) bzw. unoptimierten(unopt) Variante. 
@@ -67,11 +67,11 @@ Ausführung von Approx.LZ77Par wurde die Ausführung standardmäßig mit 16 Thre
 \section{Messung}
 
 \subsection{Eingabedaten}
-Die folgenden Algorithmen wurden auf verschiedenen Dateien aus dem Pizza \& Chili-Corpus (\cite{corpus}) getestet. Die verwendeten Dateien decken verschiedene Kontexte und damit
+Die folgenden Algorithmen wurden auf verschiedenen Dateien aus dem Pizza \& Chili-Corpus \cite{corpus} getestet. Die verwendeten Dateien decken verschiedene Kontexte und damit
 Kompressionspotentiale ab.
 \begin{table}[ht]
     \centering
-    \caption{Auflistung der verwendeten Eingabedaten aus dem Pizza \& Chili-Corpus(\cite{corpus})}
+    \caption{Auflistung der verwendeten Eingabedaten aus dem Pizza \& Chili-Corpus \cite{corpus}}
     \label{inputdata}
     \begin{tabular}{|c|c|c|c|c|}
         \hline
@@ -117,7 +117,7 @@ konstruiert werden. Um dieses Phänomen zu illustrieren, geben wir im Folgenden 
     \end{cases}
 \end{equation}
 Im Falle von LZ77 bestimmt ein Bit, ob es sich um eine Referenz oder ein einzelnes Zeichen handelt. Im Falle einer Referenz wird die Länge und die Position der Referenz
-mithilfe von $\log_2(n)$ Bits kodiert. Im Falle eines einzelnen Zeichens wird die ASCII-Kodierung des Zeichens verwendet, die 8 Bits benötigt.
+mithilfe von $\log_2(n)$ Bits kodiert. Im Falle eines einzelnen Zeichens wird die bereits definierte Kodierung $K_{IN}$ aus \ref{eq:bin} mit 8 Bits genutzt.
 \begin{equation}
     |K^{Approx.LZ77}_{OUT}(f)|= 1 + \begin{cases}
         \log_2(n)+\log_2(\log_2(n)) & \text{falls } |f| > 1 \\
@@ -233,7 +233,8 @@ Weiterhin fällt auf, dass die InitTables- und Postprocess-Routine im optimierte
 PreMatching zurückführen, da Blöcke in InitTables vorgefiltert werden und so weniger Einfügeoperationen stattfinden, sowie im Rundenübergang die Spaltung der Blöcke 
 durch vorberechnete RFPs beschleunigt wird. Dieser Effekt verfällt enstprechend nach der vorberechneten Runde, hier die 24.te Runde. Daneben zeigt sich die Wirkung von 
 ScanSkip in den Ausfällen der ReferenceScan-Routine in den ersten vier und der letzten Runde. Die Kombination aus der Filterung von Blöcken durch PreMatching und der
-Eliminierung von Duplikaten in InitTables führt in beiden Fällen zu einer relativ kleinen RFPTable. In der Gesamtheit haben wir die Sinnhaftigkeit der Nutzung der 
+Eliminierung von Duplikaten in InitTables führt in beiden Fällen zu einer relativ kleinen RFPTable. Zudem zeigt der Vergleich der Faktorraten in \ref{messwerte}, dass die
+Optimierungen nur eine geringe Abweichung der Faktorraten veursachen. In der Gesamtheit haben wir die Sinnhaftigkeit der Nutzung der 
 Optimierungen in Approx.LZ77 bestätigt. Die hier beschriebenen Effekte sind aufgrund des identischen Programmablaufs auch auf Approx.LZ77Par übertragbar.
 
 \subsection{Approx. LZ77Par}
@@ -244,7 +245,8 @@ Als Konsequenz ist die Anzahl der genutzten Threads in der InitTables-Routine au
 Die Verschlechterung der Laufzeit im Übergang von 8 auf 9 Threads ist auf diese Beschränkung zurückzuführen. Weiterhin zeigt die Laufzeitmessung in \ref{runtime_threads},
 dass die Laufzeit von Approx.LZ77Par mit wachsender Anzahl an Threads eine asymptotische Grenze erreicht. Analog dazu zeigt die Aufzeichnung des Speedups auch
 obere Schranke. Die beschriebenen Asymptoten in der Laufzeitmessung sind auf externe Faktoren zurückzuführen, wie der Bandbreite der Speicherzugriffe und Symptomen von 
-False-Sharing \ref{shared}.
+False-Sharing (\ref{shared}). Dies folgt aus der Nutzung von Datenstrukturen für die RFPTable und RefTable, die auf einem kontinuierlichen Speicherbereich angelegt sind.
+Eine logische Abgrenzung der Speicherzugriffe kann daher nichtsdestotrotz auf der Ebene der Cache-Lines gegenseitige Invalidierungen verursachen \cite{mccool}.
 Der Speicherverbrauch von Approx.LZ77Par ist in \ref{memory} ebenfalls aufgezeichnet. Es fällt auf, dass der Speicherverbrauch von Approx.LZ77Par im Vergleich zu Approx.LZ77 
-in den meisten Fällen geringer ausfällt. Dies ist auf die Verwendung von mehreren Instanzen von Unordered-Dense-Map \ref{unordereddense} zurückzuführen, die aufgrund ihrer 
-inhärenten Struktur einen geringen gesamten Speicherverbrauch aufweisen.
+in den meisten Fällen geringer ausfällt. Dies ist auf die Aufteilung der RFPTable auf mehrere Instanzen von Unordered-Dense-Map aus \ref{unordereddense} zurückzuführen, die 
+aufgrund ihrer inhärenten Struktur einen geringeren gesamten Speicherverbrauch aufweisen.

@@ -33,17 +33,17 @@ stets die längste Zeichenfolge zu referenzieren, die bereits links von der aktu
     \RETURN $F$
 \end{algorithmic}
 \end{algorithm}
-In \ref{alg:complz77} wird der Algorithmus zur Generierung einer exakten LZ77-Faktorisierung illustriert, welcher in (\cite{exactLemZiv}) beschrieben ist. Der 
+In \ref{alg:complz77} wird der Algorithmus zur Generierung einer exakten LZ77-Faktorisierung illustriert, welcher in \cite{exactLemZiv} beschrieben ist. Der 
 Algorithmus erzeugt zunächst ein Suffix-Array, welches allen Suffixen der Eingabe einen lexikografischen Rang zuweist. Anhand des lexikografischen Rangs 
 können Kandidaten für Referenzen effizient bestimmt werden. Hierfür werden mithilfe des Suffix-Arrays zwei Arrays, das Next Smaller Value(NSV) und das 
 Previous Smaller Value(PSV) erzeugt.
 
 Sei $S$ eine Eingabezeichenfolge und $SA$ das Suffix-Array von $S$. Das Next Smaller Value(NSV) und das Previous Smaller Value(PSV) sind definiert als:
 \begin{equation} \label{eq_nsv}
-    NSV[k] = \min\{i > k | SA[i] < SA[k]\}
+    NSV[k] = SA[\min\{SA^{-1}[i] > SA^{-1}[k] | i < k\}]
 \end{equation}
 \begin{equation} \label{eq_psv}
-    PSV[k] = \max\{i < k | SA[i] < SA[k]\}
+    PSV[k] = SA[\max\{SA^{-1}[i] < SA^{-1}[k] | i < k\}]
 \end{equation}
 für $1\leq k \leq n$.
 
@@ -57,7 +57,7 @@ terminiert, wenn die gesamte Eingabe abgearbeitet wurde.
 
 \subsection{Theoretisches Laufzeit- und Speicherverhalten}
 Für die Berechnung des Suffix-Arrays stehen zahlreiche effiziente Algorithmen in der Literatur zur Verfügung, wobei viele auf dem SA-IS-Algorithmus 
-(\cite{sais}) basieren. Ein möglicher Algorithmus für die kombinierte Berechnung des NSV- und PSV-Arrays ist in (\cite{nsvpsv}) beschrieben. Die Laufzeit für
+\cite{sais} basieren. Ein möglicher Algorithmus für die kombinierte Berechnung des NSV- und PSV-Arrays ist in \cite{nsvpsv} beschrieben. Die Laufzeit für
 die Generierung des Suffix-Arrays, NSV-Arrays und PSV-Arrays lässt sich durch die genannten Algorithmen auf $O(n)$ abschätzen. In der abschließenden 
 Schleife repräsentiert die $k$-te Iteration den $k$-ten Faktor, wobei die Iteration für die Berechnung der Faktorlänge $O(|f_k|)$ Laufzeit benötigt. 
 Damit ergibt sich eine Gesamtlaufzeit von $O(n +\underbrace{\sum_{i=1}^{z} |f_i|}_{n}) = O(n)$ für die Generierung der exakten LZ77-Faktorisierung.
@@ -68,8 +68,8 @@ so werden bereits $12n$ Byte Speicher benötigt. In dieser Betrachtung wurde jed
 
 \section{Approximation der LZ77-Faktorisierung(Approx. LZ77)}
 \subsection{Konzept}
-Im Rahmen dieser Arbeit wird in Anlehnung an (\cite{ApproxLZ77}) die erste Phase einer speichereffizienten Approximation des LZ77-Algorithmus betrachtet, welche wir im Folgendem
-mit Approx. LZ77 bezeichnen. Wie in (\cite{ApproxLZ77}) beschrieben, kann die Kombination aller drei Phasen des Algorithmus eine 2-Approximation bezüglich der Faktorrate 
+Im Rahmen dieser Arbeit wird in Anlehnung an \cite{ApproxLZ77} die erste Phase einer speichereffizienten Approximation des LZ77-Algorithmus betrachtet, welche wir im Folgendem
+mit Approx. LZ77 bezeichnen. Wie in \cite{ApproxLZ77} beschrieben, kann die Kombination aller drei Phasen des Algorithmus eine 2-Approximation bezüglich der Faktorrate 
 ermöglichen. Die resultierenden Faktoren entsprechen jedoch ebenfalls dem LZSS-Schema \ref{eq:faktor}, sodass eine verlustfreie Dekompression mit \ref{alg:decomp} möglich ist. 
 Im Gegensatz zur exakten LZ77-Faktorisierung werden Referenzen nicht 
 durch einen Greedy-Ansatz mit einem Scan von links nach rechts gefunden. Stattdessen wird eine Approximation der exakten LZ77-Faktorisierung erzeugt, die einen Tradeoff 
@@ -239,7 +239,7 @@ RefTable und eine $P$-elementige Menge von Instanzen der RFPTable, die jeweils e
 In \ref{fig:parrefscan} wird der parallele Scan der Eingabe $S$ nach zusätzlichen Referenzen dargestellt. Die Eingabe $S$ wird in $P$ Teile aufgeteilt. Auf jede Teilfolge wird die sequenzielle Routine
 ReferenceScan angewendet, wobei die RefTable durch alle Prozessoren gemeinsam aktualisiert wird und ein potenziell paralleler Lesezugriff auf Instanzen der RFPTable stattfindet. 
 Schließlich müssen die implizit erzeugten Faktoren in die Menge der Faktoren $F$ eingefügt werden. Da die Reihenfolge der Faktoren erhalten bleiben muss, wird eine nachträgliche parallele Sortierung
-verwendet. Die Implementierung der parallelen Sortierung ist jedoch nicht Gegenstand dieser konzeptuellen Analyse und wird daher nicht weiter betrachtet. Eine mögliche Implementierung ist in (\cite{parallelcomputing}) 
+verwendet. Die Implementierung der parallelen Sortierung ist jedoch nicht Gegenstand dieser konzeptuellen Analyse und wird daher nicht weiter betrachtet. Eine mögliche Implementierung ist in \cite{parallelcomputing} 
 beschrieben.
 
 \subsection{Theoretisches Laufzeit- und Speicherverhalten}

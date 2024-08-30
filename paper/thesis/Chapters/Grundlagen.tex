@@ -10,18 +10,18 @@ der Form $S[1..k]$ mit $1\leq k\leq n$ wird als Präfix von $S$ bezeichnet. Im G
 $S_1$ und $S_2$ beschreibt der Ausdruck $S_1\cdot S_2$ die Konkatenation der beiden Teilfolgen.
 
 \section{Ausgabe $\rightarrow$ Faktorisierung}
-Ein charakteristisches Merkmal der Familie der Lempel-Ziv-Kompressionsverfahren (\cite{LemZiv}) ist die Repräsentation der Ausgabe in Form einer Faktorisierung. Für eine Eingabe $S=e_1...e_n$ 
+Ein charakteristisches Merkmal der Familie der Lempel-Ziv-Kompressionsverfahren \cite{LemZiv} ist die Repräsentation der Ausgabe in Form einer Faktorisierung. Für eine Eingabe $S=e_1...e_n$ 
 wird eine Faktorisierung $F=f_1\cdot\cdot\cdot f_z$ mit $z\leq n$ derart erzeugt, dass die Eingabe $S$ durch die Faktorisierung in eine äquivalente Folge von nichtleeren Teilfolgen 
 zerlegt wird. Dabei ist jeder Faktor $f_i$ mit $1\leq i\leq z$ als nichtleerer Präfix von $S[|f_1\cdot\cdot\cdot f_{i-1}|+1..n]$ definiert, der bereits in $S[1..|f_1\cdot\cdot\cdot f_i|]$ 
 vorkommt, oder als einzelnes referenzloses Zeichen. Die im Folgenden betrachteten Algorithmen können speziell der Klasse der LZ77-Kompressionsverfahren zugeordnet werden, dessen Faktoren im Schema 
-des Lempel-Ziv-Storer-Szymanski(LZSS) (\cite{lzss}) repräsentiert werden sollen. 
+des Lempel-Ziv-Storer-Szymanski(LZSS) \cite{lzss} repräsentiert werden sollen. 
 
 \begin{equation} \label{eq:faktor}
     F = f_1\cdot\cdot\cdot f_z \text{ mit } f_i = \begin{cases} (\text{Länge}, \text{Position}) & \text{falls Referenz} \\ (0, \text{Zeichen}) & \text{sonst} \end{cases}
 \end{equation}
 
 Zur Darstellung von Referenzen wird das Tupel aus der Position des vorherigen Vorkommens und der Länge des Faktors genutzt. Einzelne Zeichen können wiederum durch das Tupel aus dem 
-Platzhalter $0$ und dem entsprechenden Zeichen dargestellt werden. Das in \ref{eq:faktor} definierte Format beschreibt die gewünschte Ausgabe der im Folgenden betrachteten Algorithmen.
+Platzhalter, $0,$ und dem entsprechenden Zeichen dargestellt werden. Das in \ref{eq:faktor} definierte Format beschreibt die gewünschte Ausgabe der im Folgenden betrachteten Algorithmen.
 
 \section{Kompression} \label{comp}
 
@@ -64,7 +64,7 @@ $S=e_1...e_n$. Der beschriebene Algorithmus iteriert durch alle Faktoren und fü
 Algorithmus auf $O(n)$ geschätzt werden.
 
 \subsection{String-Matching $\rightarrow$ Rabin-Karp}
-Im Rahmen des approximativen Algorithmus, welcher in dieser Arbeit beschrieben wird, werden Vergleiche von Zeichenfolgen mithilfe des Rabin-Karp-Fingerprints (RFP) (\cite{rfp})
+Im Rahmen des approximativen Algorithmus, welcher in dieser Arbeit beschrieben wird, werden Vergleiche von Zeichenfolgen mithilfe des Rabin-Karp-Fingerprints(RFP) \cite{rfp}
 durchgeführt. Sei
 $p\in \mathbb{P}$ eine Primzahl und $b\in \mathbb{N}$ eine Basis, so kann der RFP einer Zeichenfolge $S$ der Länge $n$ durch den Ausdruck
 \begin{equation}
@@ -111,7 +111,7 @@ Die Kodierung $K_{IN}: \Sigma^* \rightarrow \{0,1\}^*$ überführt unsere Eingab
 Die Umkehrabbildung $K^{-1}_{IN}: \{0,1\}^* \rightarrow \Sigma^*$ definiert die Dekodierung und überführt eine binäre Repräsentation in eine Zeichenfolge
 aus dem Alphabet $\Sigma$. Im Rahmen dieser Arbeit gehen wir davon aus, dass unsere Eingabe $S$ über dem Alphabet $\Sigma=\{1,...,255\}$ erzeugt wurde und 
 jedes Zeichen durch 8 Bits bzw. 1 Byte dargestellt wird. Für die Länge, $|S|_{Bin}$, der binären Repräsentation folgt,
-\begin{equation}
+\begin{equation} \label{eq:bin}
     |S|_{Bin} = |K_{IN}(S)| = 8*|S|.
 \end{equation}
 
@@ -141,10 +141,10 @@ gegeben. In beiden Fällen wird ein niedriger Wert bevorzugt, da dieser auf eine
 Das Ziel dieser Arbeit ist die Entwicklung und Evaluation eines parallel Kompressionsalgorithmus. Im Folgenden definieren wir die Rahmenbedingungen und Konzepte der Parallelität.
 
 \subsection{Shared-Memory-Modell} \label{shared}
-Unser Algorithmus agiert auf einem Shared-Memory-Modell (\cite{jaja}) mit $P$ Ausführungseinheiten, welches im Gegensatz zum Distributed-Memory-Modell allen beteiligten 
+Unser Algorithmus agiert auf einem Shared-Memory-Modell \cite{jaja} mit $P$ Ausführungseinheiten, welches im Gegensatz zum Distributed-Memory-Modell allen beteiligten 
 Ausführungseinheiten bzw. Prozessoren einen gemeinsamen Zugriff auf den Speicher ermöglicht. Im Rahmen der parallelen Programmierung muss der simultane Lese- bzw. Schreibzugriff auf
 Speicherbereiche synchronisiert werden, um Konflikte zu vermeiden. Die Konsequenz einer mangelnden oder ineffizienten Synchronisation können Inkonsistenzen in der Korrektheit und
-Performanz des Algorithmus sein. In der Praxis manifestieren sich diese Probleme beispielsweise in Form von Data-Races oder False-Sharing (\cite{parallelcomputing}). 
+Performanz des Algorithmus sein. In der Praxis manifestieren sich diese Probleme beispielsweise in Form von Data-Races oder False-Sharing \cite{parallelcomputing}. 
 Unser parallel modellierte Algorithmus muss explizit seine Korrektheit bewahren mit dem Ziel einer möglichst hohen Beschleunigung der Laufzeit.
 
 \subsection{Metriken}
@@ -155,5 +155,5 @@ paralleler Algorithmus mit $P$ Prozessoren $T(n,p=P)$ an Zeit benötige. Der Spe
     SP(n,P) = \frac{T(n,1)}{T(n,P)}.
 \end{equation}
 Ein idealer Speedup ist gegeben durch $SP(n,P)=P$. Verschiedene Effekte im Rahmen des Speicherzugriffs, der Synchronisation und der Kommunikation über mehrere Prozessoren können jedoch
-die Effizienz der Parallelisierung stark beeinträchtigen. Insbesondere können sequenzielle Abschnitte im Algorithmus auf Basis des Amdahl'schen Gesetzes (\cite{mccool}) eine obere Schranke 
+die Effizienz der Parallelisierung stark beeinträchtigen. Insbesondere können sequenzielle Abschnitte im Algorithmus auf Basis des Amdahl'schen Gesetzes \cite{mccool} eine obere Schranke 
 für den Speedup setzen. 

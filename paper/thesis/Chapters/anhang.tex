@@ -1,8 +1,8 @@
 % anhang.tex
 \chapter{Weitere Informationen}
 \section{Alternative Eingabedaten} \label{alternative}
-Im Folgenden sind die vollständigen Laufzeitmessungen für die restlichen Eingabedaten aus \ref{inputdata}. Während die absoluten Werte
-der Laufzeit für die verschiedenen Eingabedaten variieren, zeigen die Kurven der Laufzeitmessungen eine ähnliche Tendenz und bestätigen die
+Im Folgenden sind die vollständigen Messungen für die restlichen Eingabedaten aus \ref{inputdata}. Während die absoluten Werte
+der Laufzeit und des Speicherverbrauchs für die verschiedenen Eingabedaten variieren, zeigen die Kurven der Laufzeitmessungen eine ähnliche Tendenz und bestätigen die
 Aussagen der Auswertung.
 \begin{figure} [H]
     \centering
@@ -15,6 +15,13 @@ Aussagen der Auswertung.
     \centering
     \caption{Laufzeitmessung von Approx.LZ77Par mit verschiedener Anzahl an Threads für sources}
     \includegraphics[scale=0.68]{Images/progressive_speedup_sources.pdf}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \caption{Speicherverbrauch von LZ77, Approx.LZ77 und Approx.LZ77Par(16 Threads) auf verschiedenen Präfixen von sources. Aufgezeichnet wurde das Verhältnis
+    von allokiertem Speicher zur Eingabegröße.}
+    \includegraphics[scale=0.65]{Images/progressive_mem_sources.pdf}
 \end{figure}
 
 \begin{figure}[H]
@@ -32,6 +39,13 @@ Aussagen der Auswertung.
 
 \begin{figure}[H]
     \centering
+    \caption{Speicherverbrauch von LZ77, Approx.LZ77 und Approx.LZ77Par(16 Threads) auf verschiedenen Präfixen von english. Aufgezeichnet wurde das Verhältnis
+    von allokiertem Speicher zur Eingabegröße.}
+    \includegraphics[scale=0.65]{Images/progressive_mem_english.pdf}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
     \caption{Laufzeitmessung von LZ77, Approx.LZ77 und Approx.LZ77Par(16 Threads) auf verschiedenen Präfixen von dna. Als Vergleichsmaß wurde 
     die lineare Regression der Kurven gestrichelt eingezeichnet.}
     \includegraphics[scale=0.68]{Images/progressive_dna.pdf}
@@ -41,6 +55,13 @@ Aussagen der Auswertung.
     \centering
     \caption{Laufzeitmessung von Approx.LZ77Par mit verschiedener Anzahl an Threads für dna}
     \includegraphics[scale=0.68]{Images/progressive_speedup_dna.pdf}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \caption{Speicherverbrauch von LZ77, Approx.LZ77 und Approx.LZ77Par(16 Threads) auf verschiedenen Präfixen von dna. Aufgezeichnet wurde das Verhältnis
+    von allokiertem Speicher zur Eingabegröße.}
+    \includegraphics[scale=0.65]{Images/progressive_mem_dna.pdf}
 \end{figure}
 
 \begin{figure}[H]
@@ -55,14 +76,21 @@ Aussagen der Auswertung.
     \caption{Laufzeitmessung von Approx.LZ77Par mit verschiedener Anzahl an Threads für xml}
     \includegraphics[scale=0.68]{Images/progressive_speedup_xml.pdf}
 \end{figure}
-\pagebreak
+
+\begin{figure}[H]
+    \centering
+    \caption{Speicherverbrauch von LZ77, Approx.LZ77 und Approx.LZ77Par(16 Threads) auf verschiedenen Präfixen von xml. Aufgezeichnet wurde das Verhältnis
+    von allokiertem Speicher zur Eingabegröße.}
+    \includegraphics[scale=0.65]{Images/progressive_mem_xml.pdf}
+\end{figure}
+
 \section{Alternative Testumgebung}
 Für die folgenden Messwerte wurden die Algorithmen auf einem Rechner mit einem AMD EYPC 7452 32-Core Prozessor mit 128 nutzbaren Threads ausgeführt.
 Die Einstellungen der Algorithmen, die in \ref{settings} für die optimierte Ausführung etabliert wurden, wurden beibehalten.
 
 \begin{table}[ht]
     \centering
-    \caption{Messwerte der Algorithmen auf verschiedenen Eingabedateien}
+    \caption{Messwerte der Algorithmen auf verschiedenen Eingabedateien. Die Messungen wurden auf einem alternativen System mit 128 nutzbaren Threads durchgeführt.}
     \begin{tabular} { |c|c|c|c|c|c| }
         \hline
         \textbf{Eingabe} & \textbf{Algorithmus} & \textbf{Laufzeit[s]} & \textbf{Speicher} & \textbf{FR} & \textbf{CR*} \\
@@ -89,3 +117,10 @@ Die Einstellungen der Algorithmen, die in \ref{settings} für die optimierte Aus
         \hline
     \end{tabular}
 \end{table}
+
+\begin{figure}[ht]
+    \centering
+    \caption{Laufzeitmessung von Approx.LZ77Par mit verschiedener Anzahl an Threads für proteins. Die Messungen wurden auf einem alternativen System mit 128 nutzbaren Threads durchgeführt.}
+    \includegraphics[scale=0.7]{Images/progressive_speedup_alternative.pdf}
+\end{figure}
+
