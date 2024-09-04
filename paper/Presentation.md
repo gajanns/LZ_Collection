@@ -5,8 +5,10 @@ paginate: true
 header: ![width:70px opacity:.5](images/tu_logo.svg)
 math: mathjax
 style: |
-  fish {
-    margin-left:auto;
+  h2{
+    position: absolute;
+    top: 25px;
+    left: 125px;
   }
 ---
 
@@ -29,18 +31,29 @@ Gajann Sivarajah
 (Länge, Position) & \text{, falls Referenz} \\
 (0, Zeichen) & \text{, sonst}
 \end{cases}$
+
 ### Algorithmus: $COMP_{LZ}:S\rightarrow F$ $\Longleftrightarrow$ $DECOMP_{LZ}:F\rightarrow S$
 ---
 
 ## LZ-Kompression - Gütemaße
+
+<style scoped>
+img[src="images/scale.svg"]{
+  position: absolute;
+  top: 300px;
+  left: 600px;
+  width:600px;
+}
+</style>
+
 ### Qualität:
 - $FR=\cfrac{z}{n}\Longleftrightarrow CR=\cfrac{|F|_{Bin}}{|S|_{Bin}}$
 
-### Zeit:
-- $T(n,p)$, hier $n:=200MB$ und $p=16 \lor 128$
+### Perfomanz:
+- Speicher: $Mem_{Peak}$
+- Zeit: $T(n, p)$
 
-### Speicher:
-- $Mem_{Peak}:=$ Spitze der allokierten Speichers
+![](images/scale.svg)
 
 ---
 
@@ -172,14 +185,6 @@ Gajann Sivarajah
 ## Evaluation - Zeit
 
 ---
-<style scoped>
-h2{
-  position: absolute;
-  top: 95px;
-  left: 75px;
-  right: 75px;
-}
-</style>
 
 ## Evaluation - Optimierungen
 ![bg horizontal 85%](images/opt_stack.svg)
@@ -187,13 +192,15 @@ h2{
 
 ---
 
-## Zusammenfassung
+## Fazit
+
+### Zusammenfassung
 - Approx. LZ77 $\rightarrow$ Approx. LZ77Par : Korrektheit nachgewiesen
 - Zeitersparnis durch Optimierungen nachgewiesen
 - Zeit(Approx. LZ77Par) $<$ Zeit(LZ77) $<$ Zeit(Approx. LZ77)
 - Speicher(Approx. LZ77Par) $\approx$ Speicher(Approx. LZ77) < Speicher(LZ77)
 
-## Offene Punkte
+### Offene Punkte
 - Alternative Techniken (Hashtabelle, Bloom-Filter,...)
 - Dynamische Generierung der Parameter $r_{PreMatch}$ und $k_{min}$
 - Zweite und Dritte Phase des Approximationsalgorithmus
