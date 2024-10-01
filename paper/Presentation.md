@@ -78,6 +78,10 @@ img[src="images/scale.svg"]{
 
 ---
 
+# (exakte) LZ77-Faktorisierung
+
+---
+
 ## LZ77
 
 ### Konzept:
@@ -96,12 +100,33 @@ $\large{\Rightarrow \text{Greedy-Ansatz}}$
 
 ---
 
+# Approx.LZ77
+
+---
+
 ## Approx. LZ77 - Konzept
 
 ### Ablauf:
 - $\large{\text{Rundenbasierter Algorithmus}}$
 - $\large{\text{Runde }r\Rightarrow \text{Extrahiere Faktoren der Länge } \cfrac{n}{2^r}}$
 - $\large{\text{Endrunde }r_{End}=\log{n}\Rightarrow \text{S ist komplett faktorisiert}}$
+
+---
+
+## Approx. LZ77 - Konzept
+### Runde:
+- $\large{\text{(Noch unverarbeitete) Zeichenfolge in Blöcke aufteilen}}$
+- $\large{\text{Unter den Blöcken Duplikate/Referenzen finden}(\bf{InitTables})}$
+![width:850px](images/inittables.svg)
+
+---
+
+## Approx. LZ77 - Konzept
+### Runde:
+- $\large{\text{(Noch unverarbeitete) Zeichenfolge in Blöcke aufteilen}}$
+- $\large{\text{Unter den Blöcken Duplikate/Referenzen finden}(\bf{InitTables})}$
+- $\large{\text{Freie Suche nach Referenzen in S}(\bf{ReferenceScan})}$
+![width:850px](images/referencescan.svg)
 
 ---
 
@@ -116,8 +141,8 @@ $\large{\Rightarrow \text{Greedy-Ansatz}}$
 
 ## Approx. LZ77 - Konzept
 ### InitTables
+- $\large{\text{String-Matching} \Rightarrow \text{Rabin-Karp-Fingerprint }(RFP)}$
 * $\large{\text{Erzeuge }RFPTable\text{ und }RefTable}$:
-  - $\large{\text{String-Matching} \Rightarrow \text{Rabin-Karp-Fingerprint }(RFP)}$
   - $\large{RFPTable(RFP)=\text{Linkester Block mit RFP als Hash}}$
   - $\large{RefTable(Block)=\begin{cases}
     \text{Referenzposition}& \text{,falls bekannt} \\
@@ -140,6 +165,10 @@ $\large{\Rightarrow \text{Greedy-Ansatz}}$
 
 ---
 
+# Parallelisierung - Approx.LZ77Par
+
+---
+
 ## Approx. LZ77Par - InitBlocks
 ![width:1200px](images/parallel_initnodes.svg)
 
@@ -153,6 +182,10 @@ $\large{\Rightarrow \text{Greedy-Ansatz}}$
 
 ## Approx. LZ77Par - ReferenceScan
 ![width:1200px](images/parallel_referencescan.svg)
+
+---
+
+# Praktische Optimierungen
 
 ---
 
@@ -173,8 +206,8 @@ $\large{\Rightarrow \text{Greedy-Ansatz}}$
 
 ## Optimierungen - DynStart
 
-$\large{\Rightarrow r_{init}=\cfrac{\log{n}}{2}}$
-$\large{\Rightarrow r_{DynStart}=r_{init}-\lfloor \log{longestChain(B_{init}^{marked})}\rfloor}$
+$\Large{\Rightarrow r_{init}=\cfrac{\log{n}}{2}}$
+$\Large{\Rightarrow r_{DynStart}=r_{init}-\lfloor \log{longestChain(B_{init}^{marked})}\rfloor}$
 
 ---
 
@@ -196,9 +229,13 @@ $\large{\Rightarrow \text{Stoppe Algorithmus in Runde } r_{DynEnd}=\log{n}-\lcei
 
 ## Optimierungen - ScanSkip
 - $\large{|F_{ReferenceScan}|\leq |RFPTable|=|Blocks|-|F_{InitTables}|}$
-- $\large{k=\cfrac{|RFPTable|}{|Blocks|}}$
+* $\large{k=\cfrac{|RFPTable|}{|Blocks|}}$
 
-- $\large{\text{Führe ReferenceScan nur bei } \bf{k\geq k_{min}\in [0,1]} \text{ durch}}$
+* $\large{\text{Führe ReferenceScan nur bei } \bf{k\geq k_{min}\in [0,1]} \text{ durch}}$
+
+---
+
+# Praktische Evaluation
 
 ---
 
@@ -267,6 +304,7 @@ $\large{\Rightarrow \text{Stoppe Algorithmus in Runde } r_{DynEnd}=\log{n}-\lcei
 - $\text{Zweite und Dritte Phase des Approximationsalgorithmus}$
 
 ---
+
 <style scoped>
   h1{
     margin-left:auto;
