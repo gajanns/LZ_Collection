@@ -146,7 +146,7 @@ $\large{\Rightarrow \text{Greedy-Ansatz}}$
   - $\large{RFPTable(RFP)=\text{Linkester Block mit RFP als Hash}}$
   - $\large{RefTable(Block)=\begin{cases}
     \text{Referenzposition}& \text{,falls bekannt} \\
-    \text{Blockposition} Block&\text{, sonst}
+    \text{Blockposition} &\text{, sonst}
      \end{cases}}$
 * $\large{\text{Blöcke außerhalb der RFPTable } \Rightarrow \textbf{Faktoren}}$
 
@@ -221,7 +221,7 @@ $\large{\Rightarrow (\exists b\in \{b_1,...,b_i\}) \notin B^{marked}_* \Rightarr
 
 ## Optimierungen - DynEnd
 - $\large{\text{Kodierung }K_{OUT}: F\rightarrow \{0,1\}^*}$
-- $\large{Min_{Ref}:=\textbf{Mindestanzahl Bits Referenz-Faktor}}$
+- $\large{Min_{Ref}:=\textbf{Mindestanzahl Bits für Referenz-Faktor}}$
 - $\large{Max_{Lit}:=\textbf{Maximale Bits für referenzloses Zeichen}}$
 - $\large{len_{ref}<len_{min}=\lceil \cfrac{Min_{Ref}}{Max_{Lit}} \rceil \Rightarrow \text{ Kodierung lohnt sich nicht}}$
 $\large{\Rightarrow \text{Neue Endrunde: } r_{DynEnd}=\log{n}-\lceil \log{len_{min}}\rceil}$
