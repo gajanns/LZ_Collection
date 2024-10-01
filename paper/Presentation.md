@@ -169,11 +169,6 @@ $\large{\Rightarrow \text{Greedy-Ansatz}}$
 
 ---
 
-## Approx. LZ77Par - InitBlocks
-![width:1200px](images/parallel_initnodes.svg)
-
----
-
 ## Approx. LZ77Par - InitTables
 ![width:1200px](images/parallel_inittables.svg)
 
