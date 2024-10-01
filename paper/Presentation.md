@@ -133,9 +133,9 @@ $\large{\Rightarrow \text{Greedy-Ansatz}}$
 ## Approx. LZ77 - Konzept
 ### Runde:
 - $\large{\text{(Noch unverarbeitete) Zeichenfolge in Blöcke aufteilen}}$
-* $\large{\text{Unter den Blöcken Duplikate/Referenzen finden}(\bf{InitTables})}$
-* $\large{\text{Freie Suche nach Referenzen in S}(\bf{ReferenceScan})}$
-* $\large{\textbf{Block + Referenz}\Rightarrow \textbf{Faktor}}$
+- $\large{\text{Unter den Blöcken Duplikate/Referenzen finden}(\bf{InitTables})}$
+- $\large{\text{Freie Suche nach Referenzen in S}(\bf{ReferenceScan})}$
+- $\large{\textbf{Block + Referenz}\Rightarrow \textbf{Faktor}}$
 
 ---
 
