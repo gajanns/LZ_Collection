@@ -10,6 +10,10 @@ style: |
     position: absolute;
     top: 25px;
     left: 125px;
+    font-size:40px
+  }
+  h3{
+  font-size:35px
   }
   img[src="images/tu_logo.svg"]{
     background-color:#191724;
@@ -26,27 +30,39 @@ Gajann Sivarajah
 
 <!-- footer: Gajann Sivarajah-->
 
-## LZ-Kompression - Konzept
-### Eingabe: $S=e_1...e_n$
-- $e_i\in\Sigma =\{0,...,255\}$
-### Ausgabe: $F=(f_1,...,f_z)$
-- $f_1\cdot\cdot\cdot f_z=S$
-- $f_i = \begin{cases}
+## LZ-Kompression - Schema
+
+<style scoped>
+img[src="images/comp.svg"]{
+  display:block;
+  margin-top: 100px;
+  margin-bottom:25px;
+  margin-left:auto;
+  margin-right:auto;
+  width:1000px;
+}
+</style>
+
+![](images/comp.svg)
+
+* ### Eingabe: $\large{S=e_1...e_n}$
+  - $\large{e_i\in\Sigma =\{0,...,255\}}$
+* ### Ausgabe: $\large{F=(f_1,...,f_z) \text{ mit } S=f_1\cdot\cdot\cdot f_z}$
+  - $\large{f_i = \begin{cases}
 (Länge, Position) & \text{, falls Referenz} \\
 (0, Zeichen) & \text{, sonst}
-\end{cases}$
+\end{cases}}$
 
-### Algorithmus: $COMP_{LZ}:S\rightarrow F$ $\Longleftrightarrow$ $DECOMP_{LZ}:F\rightarrow S$
 ---
 
-## LZ-Kompression - Gütemaße
+## LZ-Kompression - Metriken
 
 <style scoped>
 img[src="images/scale.svg"]{
   position: absolute;
-  top: 250px;
-  left: 630px;
-  width:620px;
+  top: 200px;
+  left: 595px;
+  width:670px;
 }
 </style>
 
@@ -54,8 +70,9 @@ img[src="images/scale.svg"]{
 - $FR=\cfrac{|F|}{|S|}\Longleftrightarrow CR=\cfrac{|F_{Bin}|}{|S_{Bin}|}$
 
 ### Perfomanz:
-- $Speicher:\cfrac{Mem_{Peak}}{|S|}$
-- $Zeit: T(|S|,P)$
+- $Speicher: \cfrac{Peak\_Alloc}{|S|}[Byte]$
+- $Zeit: T(|S|,P)[Sekunden]$
+  - $P:=Anzahl \text{ }Prozessoren$
 
 ![](images/scale.svg)
 
@@ -64,59 +81,66 @@ img[src="images/scale.svg"]{
 ## LZ77
 
 ### Konzept:
-- Scanne von links nach rechts
-- Maximiere jeden Faktor $|f_i|\rightarrow Greedy$
+- $\large{\text{Scanne S von links nach rechts}}$
+- $\large{\text{Maximiere stets Präfix mit vorherigem Vorkommen}}$
+$\large{\Rightarrow \text{Greedy-Ansatz}}$
 
-### Zeit / Speicher:
-- Zeit: $O(n)$
-- Speicher: $O(n)$
+### Performanz:
+- $\large{\text{Zeit: }O(n)}$
+- $\large{\text{Speicher: }O(n) (>12n \text{ Bytes})}$
+
+---
+
+## LZ77 - Beispiel
+![bg 85%](images/lz77.svg)
 
 ---
 
 ## Approx. LZ77 - Konzept
 
 ### Ablauf:
-- Rundenbasierter Algorithmus
-- Runde $r\Rightarrow$ Extrahiere Faktoren der Länge $\cfrac{|S|}{2^r}$
-- Letzte Runde $r_{End}=\log{|S|}\Rightarrow$ Alle Zeichen sind faktorisiert
+- $\large{\text{Rundenbasierter Algorithmus}}$
+- $\large{\text{Runde }r\Rightarrow \text{Extrahiere Faktoren der Länge } \cfrac{n}{2^r}}$
+- $\large{\text{Endrunde }r_{End}=\log{n}\Rightarrow \text{S ist komplett faktorisiert}}$
 
 ---
 
 ## Approx. LZ77 - Konzept
 ### Runde:
-- (Noch unverarbeitete) Zeichenfolge in Blöcke aufteilen
-- Unter den Blöcken Duplikate/Referenzen finden($InitTables$)
-- Freie Suche nach Referenzen in S ($ReferenceScan$)
-- Extrahiere Faktoren aus Referenzen
+- $\large{\text{(Noch unverarbeitete) Zeichenfolge in Blöcke aufteilen}}$
+* $\large{\text{Unter den Blöcken Duplikate/Referenzen finden}(\bf{InitTables})}$
+* $\large{\text{Freie Suche nach Referenzen in S}(\bf{ReferenceScan})}$
+* $\large{\textbf{Block + Referenz}\Rightarrow \textbf{Faktor}}$
 
 ---
 
 ## Approx. LZ77 - Konzept
 ### InitTables
-- Erzeuge $RFPTable$ und $RefTable$:
-    - $RFPTable(RFP)=\text{Linkester Block mit RFP als Hash}$
-    - $RefTable(Block)=\begin{cases}
-    \text{Position einer Referenz zu }Block & \text{,falls bekannt} \\
-    \text{Position von } Block&\text{, sonst}
-     \end{cases}$
-- Blöcke, die nicht in $RFPTable$ eingetragen werden $\Rightarrow$ **Faktoren**
+* $\large{\text{Erzeuge }RFPTable\text{ und }RefTable}$:
+  - $\large{\text{String-Matching} \Rightarrow \text{Rabin-Karp-Fingerprint }(RFP)}$
+  - $\large{RFPTable(RFP)=\text{Linkester Block mit RFP als Hash}}$
+  - $\large{RefTable(Block)=\begin{cases}
+    \text{Referenzposition}& \text{,falls bekannt} \\
+    \text{Blockposition} Block&\text{, sonst}
+     \end{cases}}$
+* $\large{\text{Blöcke, die nicht in RFPTable eingetragen werden }\Rightarrow \textbf{Faktoren}}$
 
 ---
 
 ## Approx. LZ77 - Konzept
 ### ReferenceScan
-- Scan von links nach rechts $\Rightarrow$ Bewege RFP-Fenster
-- Treffer in RFPTable + Links von Eintrag in RefTable $\Rightarrow$ **Faktor**
+- $\large{\text{Scan von links nach rechts }\Rightarrow \text{Bewege RFP-Fenster(Rolling-Hash)}}$
+- $\large{\text{Treffer in RFPTable + Links vom RefTable-Eintrag} \Rightarrow \textbf{Faktor}}$
 
 ---
 
-## Approx. LZ77 - Güte
-### Zeit: $O(n\log{n})$
-### Speicher: $O(z)$
+## Approx. LZ77 - Performanz
+### Zeit: $\large{O(n\log{n})}$
+### Speicher: $\large{O(z)}$
 
 ---
 
-## Approx. LZ77Par - S $\Rightarrow$ Blöcke
+## Approx. LZ77Par - InitBlocks
 ![width:1200px](images/parallel_initnodes.svg)
 
 ---
@@ -147,87 +171,107 @@ img[src="images/scale.svg"]{
 
 ---
 
-## Optimierungen - DynEnd
-- Kodierung $K_{OUT}: F\rightarrow \{0,1\}^*$
-- $Min_{Ref}:=\textbf{Mindestanzahl Bits für referenzierenden Faktor}$
-- $Max_{Lit}:=\textbf{Maximale Bits für referenzloses Zeichen}$
-- Kodierung eines referenzierenden Faktors lohnt sich für mehr als
-$\lceil \cfrac{Min_{Ref}}{Max_{Lit}} \rceil$ referenzierte Zeichen
-$\Rightarrow$ Stoppe Algorithmus in Runde $\log{|S|}-\lceil \log{\cfrac{Min_{Ref}}{Max_{Lit}}}\rceil$
+## Optimierungen - DynStart
+
+$\large{\Rightarrow r_{init}=\cfrac{\log{n}}{2}}$
+$\large{\Rightarrow r_{DynStart}=r_{init}-\lfloor \log{longestChain(B_{init}^{marked})}\rfloor}$
+
 ---
 
 ## Optimierungen - PreMatching
-- Auslassen?
+- $\large{\text{Berechne Runde } r_{PreMatch} \text{ vor}}$
+- $\large{\text{Nutze RFPs für Konkatenation von Blöcken}}$
+- $\large{\text{Nutze nicht-markierte Blöcke als Filter}}$
+$\large{\Rightarrow (\exists b\in \{b_1,...,b_i\}) \notin B^{marked}_* \Rightarrow (b_1\cdot \cdot \cdot b_i) \notin B^{marked}_*}$
 
+---
+
+## Optimierungen - DynEnd
+- $\large{\text{Kodierung }K_{OUT}: F\rightarrow \{0,1\}^*}$
+- $\large{Min_{Ref}:=\textbf{Mindestanzahl Bits für referenzierenden Faktor}}$
+- $\large{Max_{Lit}:=\textbf{Maximale Bits für referenzloses Zeichen}}$
+- $\large{len_{ref}<len_{min}=\lceil \cfrac{Min_{Ref}}{Max_{Lit}} \rceil \Rightarrow \text{ Kodierung lohnt sich nicht}}$
+$\large{\Rightarrow \text{Stoppe Algorithmus in Runde } r_{DynEnd}=\log{n}-\lceil \log{len_{min}}\rceil}$
 ---
 
 ## Optimierungen - ScanSkip
-- $|F_{ReferenceScan}|\leq |RFPTable|=|Blocks|-|F_{InitTables}|$
-- $k=\cfrac{|RFPTable|}{|Blocks|}$
+- $\large{|F_{ReferenceScan}|\leq |RFPTable|=|Blocks|-|F_{InitTables}|}$
+- $\large{k=\cfrac{|RFPTable|}{|Blocks|}}$
 
-- Führe ReferenceScan nur bei $k\geq k_{min}\in [0,1]$ durch
+- $\large{\text{Führe ReferenceScan nur bei } \bf{k\geq k_{min}\in [0,1]} \text{ durch}}$
 
 ---
 
-<style scoped>
-  td{background-color:#2F2B43; color:white} 
-  tr{background-color:#2F2B43; color:white;}
-  table{margin-left: auto; margin-right: auto;}
-</style>
-
-
 ## Evaluation - Qualität(FR)
-
-|**COMP**|**proteins**|**sources**|&nbsp;&nbsp;&nbsp;&nbsp;**dna**&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;**xml**&nbsp;&nbsp;&nbsp;&nbsp;|**english**|
-|--------|:----------:|:---------:|:-----:|:-----:|:---------:|
-|**LZ77**|$9.95\%$|$5.50\%$|$6.66\%$|$3.35\%$|$6.66\%$|
-|**Approx. LZ77**|$15.34\%$|$10.05\%$|$10.71\%$|$6.62\%$|$10.42\%$|
-|**Approx. LZ77Par**|$15.34\%$|$10.05\%$|$10.71\%$|$6.62\%$|$10.42\%$|
+![](images/fr_chart.svg)
 
 ---
 
 ## Evaluation - Speicher
+![](images/mem_chart.svg)
 
+---
+
+## Evaluation - Zeit
+![bg 65%](images/progressive_proteins.svg)
+
+---
+
+## Evaluation - Speedup
 <style scoped>
-  td{background-color:#2F2B43; color:white} 
-  tr{background-color:#2F2B43; color:white;}
-  table{margin-left: auto; margin-right: auto;}
+  li{
+    position:absolute;
+    top:600px;
+    left:80px;
+  }
 </style>
 
-|**COMP**|**proteins**|**sources**|&nbsp;&nbsp;&nbsp;&nbsp;**dna**&nbsp;&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;&nbsp;**xml**&nbsp;&nbsp;&nbsp;&nbsp;|**english**|
-|--------|:----------:|:---------:|:-----:|:-----:|:---------:|
-|**LZ77**|$14.88$|$13.44$|$13.44$|$12.72$|$13.44$|
-|**Approx. LZ77**|$9.94$|$6.42$|$8.38$|$3.46$|$7.06$|
-|**Approx. LZ77Par**|$10.21$|$5.90$|$6.66$|$3.46$|$6.16$|
+![bg horizontal 100%](images/progressive_speedup_proteins.svg)
+![bg 75%](images/progressive_speedup_alternative.svg)
+
+- $SP(P=16)\approx 6.19$
 
 ---
+<style scoped>
+  li{
+    position:absolute;
+    top:600px;
+    left:700px;
+  }
+</style>
 
-## Evaluation - Zeit - Sequentiell
-![bg 60%](images/progressive_proteins.svg)
+## Evaluation - Speedup
+![bg horizontal 75%](images/progressive_speedup_proteins.svg)
+![bg 100%](images/progressive_speedup_alternative.svg)
 
+- $SP(P=128)\approx 12$
 ---
 
-## Evaluation - Zeit - Parallel
-![bg horizontal 85%](images/progressive_speedup_proteins.svg)
-![bg 93%](images/progressive_speedup_alternative.svg)
-
----
-
-## Evaluation - Optimierungen
-![bg horizontal 85%](images/opt_stack.svg)
-![bg 85%](images/unopt_stack.svg)
+## Evaluation - Optimierungen (proteins)
+![bg horizontal 90%](images/unopt_stack.svg)
+![bg 90%](images/opt_stack.svg)
 
 ---
 
 ## Fazit
 
 ### Zusammenfassung
-- Approx. LZ77 $\rightarrow$ Approx. LZ77Par : Korrektheit nachgewiesen
-- Zeitersparnis durch Optimierungen stichprobenartig nachgewiesen
-- Zeit(Approx. LZ77Par) $<$ Zeit(LZ77) $<$ Zeit(Approx. LZ77)
-- Speicher(Approx. LZ77Par) $\approx$ Speicher(Approx. LZ77) < Speicher(LZ77)
+- $\text{Approx. LZ77 }\rightarrow \text{Approx. LZ77Par : Korrektheit bestätigt}$
+- $\text{Zeitersparnis durch Optimierungen stichprobenartig nachgewiesen}$
+- $\text{Zeit(Approx. LZ77Par) < Zeit(LZ77) < Zeit(Approx. LZ77)}$
+- $\text{Speicher(Approx. LZ77Par) }\approx\text{ Speicher(Approx. LZ77) < Speicher(LZ77)}$
 
 ### Offene Punkte
-- Alternative Techniken (Hashtabelle, Bloom-Filter,...)
-- Dynamische Generierung der Parameter $r_{PreMatch}$ und $k_{min}$
-- Zweite und Dritte Phase des Approximationsalgorithmus
+- $\text{Alternative Techniken (Hashtabelle, Bloom-Filter,...)}$
+- $\text{Dynamische Generierung der Parameter }r_{PreMatch}\text{ und }k_{min}$
+- $\text{Zweite und Dritte Phase des Approximationsalgorithmus}$
+
+---
+<style scoped>
+  h1{
+    margin-left:auto;
+    margin-right:auto;
+    font-size:80px;
+  }
+</style>
+# Vielen Dank
