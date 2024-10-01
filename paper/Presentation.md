@@ -211,20 +211,13 @@ $\Large{\Rightarrow r_{DynStart}=r_{init}-\lfloor \log{longestChain(B_{init}^{ma
 
 ---
 
-## Optimierungen - PreMatching
-- $\large{\text{Berechne Runde } r_{PreMatch} \text{ vor}}$
-- $\large{\text{Nutze RFPs für Konkatenation von Blöcken}}$
-- $\large{\text{Nutze nicht-markierte Blöcke als Filter}}$
-$\large{\Rightarrow (\exists b\in \{b_1,...,b_i\}) \notin B^{marked}_* \Rightarrow (b_1\cdot \cdot \cdot b_i) \notin B^{marked}_*}$
-
----
-
 ## Optimierungen - DynEnd
 - $\large{\text{Kodierung }K_{OUT}: F\rightarrow \{0,1\}^*}$
 - $\large{Min_{Ref}:=\textbf{Mindestanzahl Bits für Referenz-Faktor}}$
 - $\large{Max_{Lit}:=\textbf{Maximale Bits für referenzloses Zeichen}}$
 - $\large{len_{ref}<len_{min}=\lceil \cfrac{Min_{Ref}}{Max_{Lit}} \rceil \Rightarrow \text{ Kodierung lohnt sich nicht}}$
 $\large{\Rightarrow \text{Neue Endrunde: } r_{DynEnd}=\log{n}-\lceil \log{len_{min}}\rceil}$
+
 ---
 
 ## Optimierungen - ScanSkip
@@ -300,7 +293,7 @@ $\large{\Rightarrow \text{Neue Endrunde: } r_{DynEnd}=\log{n}-\lceil \log{len_{m
 
 ### Offene Punkte
 - $\text{Alternative Techniken (Hashtabelle, Bloom-Filter,...)}$
-- $\text{Dynamische Generierung der Parameter }r_{PreMatch}\text{ und }k_{min}$
+- $\text{Dynamische Kalibrierung der Optimierungen}$
 - $\text{Zweite und Dritte Phase des Approximationsalgorithmus}$
 
 ---
