@@ -148,14 +148,14 @@ $\large{\Rightarrow \text{Greedy-Ansatz}}$
     \text{Referenzposition}& \text{,falls bekannt} \\
     \text{Blockposition} Block&\text{, sonst}
      \end{cases}}$
-* $\large{\text{Blöcke, die nicht in RFPTable eingetragen werden }\Rightarrow \textbf{Faktoren}}$
+* $\large{\text{Blöcke außerhalb der RFPTable } \Rightarrow \textbf{Faktoren}}$
 
 ---
 
 ## Approx. LZ77 - Konzept
 ### ReferenceScan
-- $\large{\text{Scan von links nach rechts }\Rightarrow \text{Bewege RFP-Fenster(Rolling-Hash)}}$
-- $\large{\text{Treffer in RFPTable + Links vom RefTable-Eintrag} \Rightarrow \textbf{Faktor}}$
+- $\large{\text{Scan von links nach rechts }\Rightarrow \text{Bewege RFP-Fenster}}$
+- $\large{\text{Treffer in RFPTable + Links vom Block} \Rightarrow \textbf{Faktor}}$
 
 ---
 
@@ -221,10 +221,10 @@ $\large{\Rightarrow (\exists b\in \{b_1,...,b_i\}) \notin B^{marked}_* \Rightarr
 
 ## Optimierungen - DynEnd
 - $\large{\text{Kodierung }K_{OUT}: F\rightarrow \{0,1\}^*}$
-- $\large{Min_{Ref}:=\textbf{Mindestanzahl Bits für referenzierenden Faktor}}$
+- $\large{Min_{Ref}:=\textbf{Mindestanzahl Bits Referenz-Faktor}}$
 - $\large{Max_{Lit}:=\textbf{Maximale Bits für referenzloses Zeichen}}$
 - $\large{len_{ref}<len_{min}=\lceil \cfrac{Min_{Ref}}{Max_{Lit}} \rceil \Rightarrow \text{ Kodierung lohnt sich nicht}}$
-$\large{\Rightarrow \text{Stoppe Algorithmus in Runde } r_{DynEnd}=\log{n}-\lceil \log{len_{min}}\rceil}$
+$\large{\Rightarrow \text{Neue Endrunde: } r_{DynEnd}=\log{n}-\lceil \log{len_{min}}\rceil}$
 ---
 
 ## Optimierungen - ScanSkip
